@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "alefbeth",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "Start-AlefBeth.ps1", "-NoBrowser"],
+      "port": 8351
+    }
+  ]
+}

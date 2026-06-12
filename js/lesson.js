@@ -23,8 +23,13 @@ function buildQueue(lesson) {
 }
 
 function srsReviewExercises(lesson, max) {
+  const own = new Set([
+    ...(lesson.newItems || []),
+    ...(lesson.syllables || []),
+    ...(lesson.reviewWords || []),
+  ]);
   const due = dueIds(state.srs)
-    .filter((id) => !(lesson.newItems || []).includes(id))
+    .filter((id) => !own.has(id))
     .slice(0, max);
   return due.map((id) => reviewExercise(id, lesson.id));
 }

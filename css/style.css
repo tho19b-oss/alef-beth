@@ -296,7 +296,7 @@ a { color: var(--accent); text-decoration: none; }
   font-weight: 700;
   color: var(--text);
 }
-.matchbtn.sel { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--card)); }
+.matchbtn.sel { border-color: var(--accent); background: rgba(59, 130, 246, 0.12); }
 .matchbtn.matched { opacity: 0.35; border-color: var(--primary); pointer-events: none; }
 .matchbtn.bad { border-color: var(--danger); animation: shake 0.4s; }
 

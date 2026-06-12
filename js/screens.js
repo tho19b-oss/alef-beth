@@ -149,7 +149,7 @@ export function renderSettings(host) {
   } else if (hasHebrewVoice()) {
     voiceLine = `Hebräische Stimme aktiv: <b>${hebrewVoiceName()}</b>`;
   } else {
-    voiceLine = `Keine hebräische Stimme gefunden. Tipp: Microsoft Edge mitbringt
+    voiceLine = `Keine hebräische Stimme gefunden. Tipp: Microsoft Edge bringt
       hebräische Online-Stimmen mit – oder installiere unter Windows
       „Einstellungen → Zeit und Sprache → Sprache“ das hebräische Sprachpaket.
       Die App funktioniert auch ohne Audio.`;

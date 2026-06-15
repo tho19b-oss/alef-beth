@@ -1,7 +1,7 @@
 // Service Worker: App-Shell vorab cachen (cache-first), damit die App offline läuft.
 // Bei Änderungen VERSION hochzählen – alte Caches werden beim Aktivieren gelöscht.
 
-const VERSION = 'v7';
+const VERSION = 'v8';
 const CACHE = `alefbeth-${VERSION}`;
 
 const ASSETS = [
@@ -49,8 +49,8 @@ self.addEventListener('message', (event) => {
     event.waitUntil(
       self.registration.showNotification('Alef Beth – Zeit zum Lernen! 📖', {
         body: 'Deine Hebräisch-Übungen warten auf dich.',
-        icon: '/icons/icon-192.png',
-        badge: '/icons/icon-192.png',
+        icon: 'icons/icon-192.png',
+        badge: 'icons/icon-192.png',
         tag: 'daily-reminder',
         renotify: false,
       })
@@ -66,7 +66,7 @@ self.addEventListener('notificationclick', (event) => {
       for (const client of clientList) {
         if ('focus' in client) return client.focus();
       }
-      return self.clients.openWindow('/');
+      return self.clients.openWindow(self.registration.scope);
     })
   );
 });
@@ -77,8 +77,8 @@ self.addEventListener('periodicsync', (event) => {
     event.waitUntil(
       self.registration.showNotification('Alef Beth – Zeit zum Lernen! 📖', {
         body: 'Deine Hebräisch-Übungen warten auf dich.',
-        icon: '/icons/icon-192.png',
-        badge: '/icons/icon-192.png',
+        icon: 'icons/icon-192.png',
+        badge: 'icons/icon-192.png',
         tag: 'daily-reminder',
       })
     );

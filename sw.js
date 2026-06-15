@@ -1,7 +1,7 @@
 // Service Worker: App-Shell vorab cachen (cache-first), damit die App offline läuft.
 // Bei Änderungen VERSION hochzählen – alte Caches werden beim Aktivieren gelöscht.
 
-const VERSION = 'v4';
+const VERSION = 'v6';
 const CACHE = `alefbeth-${VERSION}`;
 
 const ASSETS = [
@@ -15,6 +15,7 @@ const ASSETS = [
   'icons/icon-192.png',
   'icons/icon-512.png',
   'js/app.js',
+  'js/notify.js',
   'js/util.js',
   'js/state.js',
   'js/srs.js',
@@ -40,6 +41,48 @@ self.addEventListener('activate', (event) => {
       .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
+});
+
+// Lern-Erinnerung: Seite schickt { type: 'SHOW_REMINDER' }, SW zeigt Notification.
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SHOW_REMINDER') {
+    event.waitUntil(
+      self.registration.showNotification('Alef Beth – Zeit zum Lernen! 📖', {
+        body: 'Deine Hebräisch-Übungen warten auf dich.',
+        icon: '/icons/icon-192.png',
+        badge: '/icons/icon-192.png',
+        tag: 'daily-reminder',
+        renotify: false,
+      })
+    );
+  }
+});
+
+// Tap auf Notification → App in den Vordergrund holen oder öffnen.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if ('focus' in client) return client.focus();
+      }
+      return self.clients.openWindow('/');
+    })
+  );
+});
+
+// Periodic Background Sync (Chrome Android / installierte PWA): tägliche Erinnerung.
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'srs-reminder') {
+    event.waitUntil(
+      self.registration.showNotification('Alef Beth – Zeit zum Lernen! 📖', {
+        body: 'Deine Hebräisch-Übungen warten auf dich.',
+        icon: '/icons/icon-192.png',
+        badge: '/icons/icon-192.png',
+        tag: 'daily-reminder',
+      })
+    );
+  }
 });
 
 self.addEventListener('fetch', (event) => {

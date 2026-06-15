@@ -10,7 +10,7 @@ const DEFAULTS = {
   streak: { count: 0, lastDay: null },
   lessons: {},   // lessonId -> { score, completedAt }
   srs: {},       // itemId  -> { streak, due, seen }
-  settings: { audio: true, theme: 'auto' },
+  settings: { audio: true, theme: 'auto', notifications: { enabled: false, time: '19:00' } },
 };
 
 function load() {
@@ -22,7 +22,11 @@ function load() {
         ...DEFAULTS,
         ...s,
         streak: { ...DEFAULTS.streak, ...(s.streak || {}) },
-        settings: { ...DEFAULTS.settings, ...(s.settings || {}) },
+        settings: {
+          ...DEFAULTS.settings,
+          ...(s.settings || {}),
+          notifications: { ...DEFAULTS.settings.notifications, ...(s.settings?.notifications || {}) },
+        },
         lessons: s.lessons || {},
         srs: s.srs || {},
       };

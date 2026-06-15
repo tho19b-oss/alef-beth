@@ -1,9 +1,10 @@
-// Screens: Lernpfad (Home), Wiederholen, Alphabet-Tabelle, Einstellungen.
+﻿// Screens: Lernpfad (Home), Wiederholen, Alphabet-Tabelle, Einstellungen.
 
 import { UNITS, isUnlocked, getItem } from '../data/curriculum.js';
 import { LETTERS } from '../data/letters.js';
 import { NIKUD } from '../data/nikud.js';
 import { state, save, currentStreak, resetAll } from './state.js';
+import { scheduleReminder } from './notify.js';
 import { dueIds, nextDue } from './srs.js';
 import { speak, ttsSupported, hasHebrewVoice, hebrewVoiceName, audioActive } from './audio.js';
 
@@ -124,7 +125,7 @@ export function renderAlphabet(host) {
     <button class="alpharow" data-tts="${v.example}">
       <span class="a-glyph he">${v.display}</span>
       <span><span class="a-name">${v.name}</span><br>
-      <span class="a-sub">${v.soundLabel} – Beispiel: <span class="he">${v.example}</span> „${v.exampleTranslit}“</span></span>
+      <span class="a-sub">${v.soundLabel} – Beispiel: <span class="he">${v.example}</span> „${v.exampleTranslit}"</span></span>
       ${speaker}
     </button>`).join('');
 
@@ -151,9 +152,12 @@ export function renderSettings(host) {
   } else {
     voiceLine = `Keine hebräische Stimme gefunden. Tipp: Microsoft Edge bringt
       hebräische Online-Stimmen mit – oder installiere unter Windows
-      „Einstellungen → Zeit und Sprache → Sprache“ das hebräische Sprachpaket.
+      „Einstellungen → Zeit und Sprache → Sprache" das hebräische Sprachpaket.
       Die App funktioniert auch ohne Audio.`;
   }
+
+  const notif = state.settings.notifications;
+  const notifSupported = 'Notification' in window;
 
   host.innerHTML = `
     <h1>Einstellungen</h1>
@@ -177,6 +181,29 @@ export function renderSettings(host) {
 
     <div class="hint">🔊 ${voiceLine}</div>
 
+    <h2>Benachrichtigungen</h2>
+
+    <div class="setting-row">
+      <label for="set-notif">Tägliche Erinnerung</label>
+      <span class="switch">
+        <input type="checkbox" id="set-notif" ${notif.enabled ? 'checked' : ''} ${notifSupported ? '' : 'disabled'}>
+        <span class="slider"></span>
+      </span>
+    </div>
+
+    <div class="setting-row" id="notif-time-row" ${notif.enabled ? '' : 'hidden'}>
+      <label for="set-notif-time">Erinnerungszeit</label>
+      <input type="time" id="set-notif-time" value="${notif.time}">
+    </div>
+
+    <div class="hint" id="notif-hint">${
+      !notifSupported
+        ? 'Dein Browser unterstützt leider keine Benachrichtigungen.'
+        : notif.enabled
+          ? 'Erinnerung aktiv – funktioniert, solange der Browser geöffnet ist.'
+          : 'Aktiviere die Erinnerung, um täglich zur eingestellten Uhrzeit benachrichtigt zu werden.'
+    }</div>
+
     <h2>Fortschritt</h2>
     <div class="setting-row">
       <span>⚡ ${state.xp} XP · 🔥 ${currentStreak()} Tage-Serie ·
@@ -188,7 +215,7 @@ export function renderSettings(host) {
     <div class="hint">
       <b>Alef Beth</b> – Hebräisch lesen lernen: vom Alphabet über die Vokalzeichen
       bis zu Wörtern aus Siddur und Alltag. Funktioniert offline und lässt sich am
-      Handy „Zum Startbildschirm hinzufügen“.<br><br>
+      Handy „Zum Startbildschirm hinzufügen".<br><br>
       Viel Erfolg auf deinem Weg – <span class="he">בְּהַצְלָחָה</span>!
     </div>`;
 
@@ -201,6 +228,37 @@ export function renderSettings(host) {
     save();
     document.documentElement.dataset.theme = state.settings.theme;
   });
+
+  const notifToggle = host.querySelector('#set-notif');
+  const notifTimeRow = host.querySelector('#notif-time-row');
+  const notifHint = host.querySelector('#notif-hint');
+
+  notifToggle?.addEventListener('change', async (e) => {
+    if (e.target.checked) {
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') {
+        e.target.checked = false;
+        notifHint.textContent = 'Berechtigung verweigert – bitte in den Browser-Einstellungen erlauben.';
+        return;
+      }
+      state.settings.notifications.enabled = true;
+      notifTimeRow.hidden = false;
+      notifHint.textContent = 'Erinnerung aktiv – funktioniert, solange der Browser geöffnet ist.';
+    } else {
+      state.settings.notifications.enabled = false;
+      notifTimeRow.hidden = true;
+      notifHint.textContent = 'Aktiviere die Erinnerung, um täglich zur eingestellten Uhrzeit benachrichtigt zu werden.';
+    }
+    save();
+    scheduleReminder();
+  });
+
+  host.querySelector('#set-notif-time')?.addEventListener('change', (e) => {
+    state.settings.notifications.time = e.target.value;
+    save();
+    scheduleReminder();
+  });
+
   host.querySelector('#set-reset').addEventListener('click', () => {
     if (confirm('Wirklich den gesamten Lernfortschritt löschen? Das lässt sich nicht rückgängig machen.')) {
       resetAll();

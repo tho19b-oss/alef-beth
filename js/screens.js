@@ -158,6 +158,21 @@ export function renderSettings(host) {
 
   const notif = state.settings.notifications;
   const notifSupported = 'Notification' in window;
+  // Effektiv aktiv nur, wenn eingeschaltet UND der Browser die Erlaubnis erteilt hat.
+  const notifOn = notif.enabled && notifSupported && Notification.permission === 'granted';
+
+  const NOTIF_BLOCKED_MSG = 'Benachrichtigungen sind für diese Seite im Browser blockiert. '
+    + 'Öffne die Website-Einstellungen (Schloss- bzw. Info-Symbol links in der Adressleiste) → '
+    + '„Benachrichtigungen" → „Zulassen" und lade die Seite neu.';
+
+  function notifHintText() {
+    if (!notifSupported) return 'Dein Browser unterstützt leider keine Benachrichtigungen.';
+    if (Notification.permission === 'denied') return NOTIF_BLOCKED_MSG;
+    if (state.settings.notifications.enabled && Notification.permission === 'granted') {
+      return 'Erinnerung aktiv – funktioniert, solange der Browser bzw. die App im Hintergrund geöffnet ist.';
+    }
+    return 'Aktiviere die Erinnerung, um täglich zur eingestellten Uhrzeit benachrichtigt zu werden.';
+  }
 
   host.innerHTML = `
     <h1>Einstellungen</h1>
@@ -186,23 +201,17 @@ export function renderSettings(host) {
     <div class="setting-row">
       <label for="set-notif">Tägliche Erinnerung</label>
       <span class="switch">
-        <input type="checkbox" id="set-notif" ${notif.enabled ? 'checked' : ''} ${notifSupported ? '' : 'disabled'}>
+        <input type="checkbox" id="set-notif" ${notifOn ? 'checked' : ''} ${notifSupported ? '' : 'disabled'}>
         <span class="slider"></span>
       </span>
     </div>
 
-    <div class="setting-row" id="notif-time-row" ${notif.enabled ? '' : 'hidden'}>
+    <div class="setting-row" id="notif-time-row" ${notifOn ? '' : 'hidden'}>
       <label for="set-notif-time">Erinnerungszeit</label>
       <input type="time" id="set-notif-time" value="${notif.time}">
     </div>
 
-    <div class="hint" id="notif-hint">${
-      !notifSupported
-        ? 'Dein Browser unterstützt leider keine Benachrichtigungen.'
-        : notif.enabled
-          ? 'Erinnerung aktiv – funktioniert, solange der Browser geöffnet ist.'
-          : 'Aktiviere die Erinnerung, um täglich zur eingestellten Uhrzeit benachrichtigt zu werden.'
-    }</div>
+    <div class="hint" id="notif-hint">${notifHintText()}</div>
 
     <h2>Fortschritt</h2>
     <div class="setting-row">
@@ -235,15 +244,23 @@ export function renderSettings(host) {
 
   notifToggle?.addEventListener('change', async (e) => {
     if (e.target.checked) {
-      const perm = await Notification.requestPermission();
+      // Nur im Zustand 'default' zeigt der Browser den Erlaubnis-Dialog. Bei 'denied'
+      // liefert requestPermission() sofort 'denied' zurück, ohne erneut zu fragen.
+      let perm = Notification.permission;
+      if (perm === 'default') perm = await Notification.requestPermission();
       if (perm !== 'granted') {
         e.target.checked = false;
-        notifHint.textContent = 'Berechtigung verweigert – bitte in den Browser-Einstellungen erlauben.';
+        state.settings.notifications.enabled = false;
+        notifTimeRow.hidden = true;
+        save();
+        notifHint.textContent = perm === 'denied'
+          ? NOTIF_BLOCKED_MSG
+          : 'Berechtigung nicht erteilt. Tippe erneut und wähle „Zulassen“.';
         return;
       }
       state.settings.notifications.enabled = true;
       notifTimeRow.hidden = false;
-      notifHint.textContent = 'Erinnerung aktiv – funktioniert, solange der Browser geöffnet ist.';
+      notifHint.textContent = 'Erinnerung aktiv – funktioniert, solange der Browser bzw. die App im Hintergrund geöffnet ist.';
     } else {
       state.settings.notifications.enabled = false;
       notifTimeRow.hidden = true;

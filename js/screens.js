@@ -166,7 +166,12 @@ export function renderSettings(host) {
     + '„Benachrichtigungen" → „Zulassen" und lade die Seite neu.';
 
   function notifHintText() {
-    if (!notifSupported) return 'Dein Browser unterstützt leider keine Benachrichtigungen.';
+    if (!notifSupported) {
+      return 'Benachrichtigungen sind hier nicht verfügbar – meist, weil die Seite in einem '
+        + 'In-App-Browser läuft (z. B. aus einem Chat oder einer Mail geöffnet). Öffne sie direkt '
+        + 'in Chrome (Menü ⋮ → „In Chrome öffnen“), dann Menü ⋮ → „App installieren“. '
+        + 'In der installierten App lässt sich die Erinnerung aktivieren.';
+    }
     if (Notification.permission === 'denied') return NOTIF_BLOCKED_MSG;
     if (state.settings.notifications.enabled && Notification.permission === 'granted') {
       return 'Erinnerung aktiv – funktioniert, solange der Browser bzw. die App im Hintergrund geöffnet ist.';

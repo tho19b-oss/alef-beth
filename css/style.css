@@ -340,20 +340,39 @@ a { color: var(--accent); text-decoration: none; }
   text-align: center;
 }
 .introcard .glyph-xl { margin: 6px 0; }
-.introcard .intro-name { font-family: var(--serif); font-size: 1.5rem; font-weight: 800; margin: 4px 0; }
-.introcard .intro-sound { color: var(--text); margin: 6px 0; }
-.introcard .intro-mnemonic {
-  color: var(--muted);
-  font-style: italic;
-  font-size: 0.95rem;
-  margin: 10px 0 4px;
-}
-.introcard .intro-extra {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px dashed var(--border);
+.introcard .intro-name { font-family: var(--serif); font-size: 1.5rem; font-weight: 800; margin: 4px 0 2px; }
+.intro-pill {
+  display: inline-block;
+  background: var(--gold-soft);
+  color: var(--gold);
+  border-radius: 999px;
+  padding: 3px 14px;
+  font-weight: 700;
   font-size: 0.95rem;
 }
+.vtiles { display: flex; gap: 10px; margin: 16px 0 4px; }
+.vtile {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 6px;
+}
+.vtile-glyph { font-size: 42px; line-height: 1.15; }
+.vtile-snd { font-weight: 700; color: var(--primary); margin-top: 4px; }
+.vtile-sub { color: var(--muted); font-size: 0.8rem; }
+.intro-rows { text-align: left; margin: 16px 0 2px; border-top: 1px solid var(--border); }
+.intro-row {
+  display: flex;
+  gap: 12px;
+  padding: 8px 2px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.95rem;
+}
+.intro-row:last-child { border-bottom: 0; }
+.ir-label { flex: 0 0 92px; color: var(--muted); }
+.ir-val { color: var(--text); }
+.introcard .tts-btn { margin-top: 16px; }
 .infocard {
   background: var(--card);
   border: 1px solid var(--border);

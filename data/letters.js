@@ -12,7 +12,7 @@ export const LETTERS = [
   },
   {
     id: 'bet', glyph: 'ב', name: 'Bet', translit: 'w / b',
-    sound: 'w wie in „Wein“ – mit Punkt (בּ): b wie in „Ball“',
+    sound: 'w wie in „Wein“',
     mnemonic: 'Ein Haus (hebräisch „bajit“) mit offener Tür nach links.',
     ttsWord: 'בֵּית', lookAlikes: ['kaf'],
     dagesh: { glyph: 'בּ', translit: 'b' }, final: null,
@@ -67,7 +67,7 @@ export const LETTERS = [
   },
   {
     id: 'kaf', glyph: 'כ', name: 'Kaf', translit: 'ch / k',
-    sound: 'ch wie in „Bach“ – mit Punkt (כּ): k wie in „Kind“',
+    sound: 'ch wie in „Bach“',
     mnemonic: 'Eine gebogene Handfläche (hebräisch „kaf“).',
     ttsWord: 'כַּף', lookAlikes: ['bet'],
     dagesh: { glyph: 'כּ', translit: 'k' }, final: 'kaf-sofit',
@@ -104,7 +104,7 @@ export const LETTERS = [
   },
   {
     id: 'pe', glyph: 'פ', name: 'Pe', translit: 'f / p',
-    sound: 'f wie in „Fisch“ – mit Punkt (פּ): p wie in „Post“',
+    sound: 'f wie in „Fisch“',
     mnemonic: 'Ein Mund (hebräisch „pe“) mit einem Zahn darin.',
     ttsWord: 'פֵּא', lookAlikes: ['kaf'],
     dagesh: { glyph: 'פּ', translit: 'p' }, final: 'pe-sofit',
@@ -129,7 +129,7 @@ export const LETTERS = [
   },
   {
     id: 'shin', glyph: 'שׁ', name: 'Schin', translit: 'sch',
-    sound: 'sch wie in „Schule“ – mit Punkt links (שׂ „Sin“): scharfes s',
+    sound: 'sch wie in „Schule“',
     mnemonic: 'Drei züngelnde Flammen – sch wie ein zischendes Feuer.',
     ttsWord: 'שִׁין', lookAlikes: [], dagesh: null, final: null,
     variant: { glyph: 'שׂ', name: 'Sin', translit: 's (scharf)' },

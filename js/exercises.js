@@ -51,42 +51,71 @@ function optionItemsFor(ex, item, field) {
 
 // ---------- Intro-Karte (neues Lernitem) ----------
 
+function introRow(label, valueHtml) {
+  return `<div class="intro-row"><span class="ir-label">${label}</span><span class="ir-val">${valueHtml}</span></div>`;
+}
+
+function variantTile(glyph, sound, sub) {
+  return `<div class="vtile"><div class="he vtile-glyph">${glyph}</div>`
+    + `<div class="vtile-snd">${sound}</div><div class="vtile-sub">${sub}</div></div>`;
+}
+
 function renderIntro(ex, host) {
   const item = getItem(ex.itemId);
   const tts = ttsText(item);
-  const extras = [];
-
-  if (item.type === 'letter') {
-    if (item.dagesh) extras.push(`Mit Punkt (Dagesch): <span class="he">${item.dagesh.glyph}</span> = ${item.dagesh.translit}`);
-    if (item.variant) extras.push(`Mit Punkt links: <span class="he">${item.variant.glyph}</span> = ${item.variant.name} → ${item.variant.translit}`);
-    if (item.final) {
-      const f = getItem(item.final);
-      extras.push(`Am Wortende: <span class="he">${f.glyph}</span> (${f.name})`);
-    }
-    if (item.baseId) {
-      const b = getItem(item.baseId);
-      extras.push(`Die Endform von <span class="he">${b.glyph}</span> (${b.name})`);
-    }
-  }
-  if (item.type === 'vowel') {
-    extras.push(`Beispiel: <span class="he glyph-md">${item.example}</span> → „${item.exampleTranslit}“`);
-  }
 
   const heading = item.type === 'letter' ? 'Neuer Buchstabe'
     : item.type === 'vowel' ? 'Neues Vokalzeichen' : 'Neues Wort';
-  const nameLine = item.type === 'word' ? '' : `<div class="intro-name">${mainLabel(item)}</div>`;
-  const soundLine = item.type === 'word'
-    ? `<p class="intro-sound"><b>${item.translit}</b> – ${item.meaning}</p>`
-    : `<p class="intro-sound">${item.sound}</p>`;
+
+  // Kopf: Name + Umschrift-Pille (Wörter tragen ihren Text in den Zeilen)
+  const nameHtml = item.type === 'word' ? '' : `<div class="intro-name">${mainLabel(item)}</div>`;
+  const pill = item.type === 'letter' ? item.translit
+    : item.type === 'vowel' ? item.soundLabel : '';
+  const pillHtml = pill ? `<div class="intro-pill">${pill}</div>` : '';
+
+  // Kachel-Vergleich: nur Buchstaben mit Lautvarianten (Dagesch oder Sin/Schin)
+  let tiles = '';
+  if (item.type === 'letter' && (item.dagesh || item.variant)) {
+    const baseSound = item.translit.split('/')[0].trim();
+    const cells = item.dagesh
+      ? [variantTile(item.glyph, baseSound, 'ohne Punkt'),
+         variantTile(item.dagesh.glyph, item.dagesh.translit, 'mit Punkt')]
+      : [variantTile(item.glyph, baseSound, 'Punkt rechts'),
+         variantTile(item.variant.glyph, item.variant.translit, 'Punkt links')];
+    tiles = `<div class="vtiles">${cells.join('')}</div>`;
+  }
+
+  // Strukturierte, beschriftete Zeilen
+  const rows = [];
+  if (item.type === 'letter') {
+    rows.push(introRow('Laut', item.sound));
+    if (item.final) {
+      const f = getItem(item.final);
+      rows.push(introRow('Am Wortende', `<span class="he">${f.glyph}</span> (${f.name})`));
+    }
+    if (item.baseId) {
+      const b = getItem(item.baseId);
+      rows.push(introRow('Grundform', `<span class="he">${b.glyph}</span> (${b.name})`));
+    }
+    if (item.mnemonic) rows.push(introRow('Merkhilfe', item.mnemonic));
+  } else if (item.type === 'vowel') {
+    const [laut, ...rest] = item.sound.split(' – ');
+    rows.push(introRow('Laut', laut));
+    if (rest.length) rows.push(introRow('Zeichen', rest.join(' – ')));
+    rows.push(introRow('Beispiel', `<span class="he">${item.example}</span> → „${item.exampleTranslit}“`));
+  } else {
+    rows.push(introRow('Aussprache', item.translit));
+    rows.push(introRow('Bedeutung', item.meaning));
+  }
 
   host.innerHTML = `
     <p class="ex-q">${heading}</p>
     <div class="introcard">
       <div class="he ${item.type === 'word' ? 'glyph-lg' : 'glyph-xl'}">${display(item)}</div>
-      ${nameLine}
-      ${soundLine}
-      ${item.mnemonic ? `<p class="intro-mnemonic">💡 ${item.mnemonic}</p>` : ''}
-      ${extras.length ? `<div class="intro-extra">${extras.join('<br>')}</div>` : ''}
+      ${nameHtml}
+      ${pillHtml}
+      ${tiles}
+      <div class="intro-rows">${rows.join('')}</div>
       ${ttsButton(tts)}
     </div>`;
   wireTts(host);

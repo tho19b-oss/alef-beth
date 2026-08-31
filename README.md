@@ -31,7 +31,8 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
 - **Nachschlagen:** Alphabet- und Nikud-Tabelle mit Sprachausgabe
 - **Am Rechner:** Tasten 1–4 wählen eine Antwort, Enter geht weiter
 - **Version sichtbar:** Unter *Mehr → Version* steht die installierte Fassung,
-  daneben ein Knopf „Nach Update suchen“
+  daneben ein Knopf „Nach Update suchen“. Eine neue Fassung wird automatisch
+  übernommen – mitten in einer Lektion erst, wenn sie beendet ist
 - **Offline & installierbar:** Nach dem ersten Laden funktioniert die App ohne
   Internet und lässt sich „Zum Startbildschirm hinzufügen“ (PWA)
 
@@ -86,7 +87,7 @@ einer Lektion in `data/curriculum.js` eintragen – fertig.
 
 Beim Ändern von Dateien: Der Service Worker liefert aus dem Cache, ein Reload
 allein zeigt die Änderung also nicht. Entweder `VERSION` in `sw.js` hochzählen
-(dann erscheint in der App der Hinweis „Neue Version verfügbar“) oder in den
+(dann lädt die App sich beim nächsten Start selbst neu) oder in den
 Entwicklertools unter *Application → Storage* den Cache leeren. Wird eine
 Item-ID gelöscht oder umbenannt, räumt die App gespeicherte Fortschritte dazu
 beim nächsten Start selbst auf.

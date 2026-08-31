@@ -74,7 +74,30 @@ function route() {
   if (!inLesson) app.focus({ preventScroll: true });
 }
 
-window.addEventListener('hashchange', route);
+// ---- Updates -----------------------------------------------------------
+// Eine neue Fassung soll sofort sichtbar sein und nicht erst beim übernächsten
+// Start. Sobald der neue Worker die Seite übernimmt (sw.js ruft skipWaiting und
+// clients.claim), wird neu geladen – nur nicht mitten in einer Übung: dort
+// wartet der Reload, bis die Lektion verlassen wird. Der Fortschritt ist zu dem
+// Zeitpunkt längst gespeichert, lesson.js ruft save() vor dem Endscreen.
+const hadController = !!navigator.serviceWorker?.controller;
+let updatePending = false;
+let reloading = false;
+
+const isInLesson = () => document.body.classList.contains('in-lesson');
+
+function applyUpdate() {
+  if (reloading) return; // nicht zweimal neu laden
+  reloading = true;
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  location.reload();
+}
+
+window.addEventListener('hashchange', () => {
+  route();
+  // Ein Update, das während der Lektion eintraf, jetzt nachholen.
+  if (updatePending && !isInLesson()) applyUpdate();
+});
 // Bei „Automatisch“ dem Systemwechsel folgen, ohne dass die App neu geladen wird.
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
   if (state.settings.theme === 'auto') applyTheme();
@@ -82,7 +105,7 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
 // Kommt die hebräische Stimme erst nachträglich, den aktuellen Screen neu zeichnen
 // (Alphabet-Liste und Einstellungen zeigen dann die Hörsymbole).
 window.addEventListener('hebrewvoiceready', () => {
-  if (!document.body.classList.contains('in-lesson')) route();
+  if (!isInLesson()) route();
 });
 
 applyTheme();
@@ -90,16 +113,15 @@ route();
 scheduleReminder();
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    // Beim allerersten Besuch übernimmt der Worker eine bis dahin ungesteuerte
+    // Seite. Das ist kein Update – neu laden wäre da nur störend.
+    if (!hadController) return;
+    if (isInLesson()) updatePending = true;
+    else applyUpdate();
+  });
+
   navigator.serviceWorker.register('sw.js').then(async (swReg) => {
-    // Neue Version im Hintergrund gefunden → beim nächsten Start greift sie.
-    swReg.addEventListener('updatefound', () => {
-      const sw = swReg.installing;
-      sw?.addEventListener('statechange', () => {
-        if (sw.state === 'installed' && navigator.serviceWorker.controller) {
-          showUpdateHint();
-        }
-      });
-    });
     if ('periodicSync' in swReg) {
       try {
         const perm = await navigator.permissions.query({ name: 'periodic-background-sync' });
@@ -113,16 +135,4 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   }).catch((e) => {
     console.warn('Service Worker konnte nicht registriert werden:', e);
   });
-}
-
-// Dezenter Hinweis statt eines erzwungenen Reloads – niemand soll mitten in
-// einer Übung aus der Lektion geworfen werden.
-function showUpdateHint() {
-  if (document.getElementById('update-hint')) return;
-  const bar = document.createElement('div');
-  bar.id = 'update-hint';
-  bar.className = 'update-hint';
-  bar.innerHTML = '<span>Neue Version verfügbar.</span><button type="button">Neu laden</button>';
-  bar.querySelector('button').addEventListener('click', () => location.reload());
-  document.body.appendChild(bar);
 }

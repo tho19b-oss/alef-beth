@@ -30,6 +30,8 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
   pro Lektion
 - **Nachschlagen:** Alphabet- und Nikud-Tabelle mit Sprachausgabe
 - **Am Rechner:** Tasten 1–4 wählen eine Antwort, Enter geht weiter
+- **Version sichtbar:** Unter *Mehr → Version* steht die installierte Fassung,
+  daneben ein Knopf „Nach Update suchen“
 - **Offline & installierbar:** Nach dem ersten Laden funktioniert die App ohne
   Internet und lässt sich „Zum Startbildschirm hinzufügen“ (PWA)
 
@@ -72,7 +74,12 @@ Vanilla HTML/CSS/JS ohne Build-Schritt und ohne Abhängigkeiten.
 | `js/exercises.js` | Übungstypen |
 | `js/srs.js` | Spaced-Repetition-Logik |
 | `js/theme.js` | Hell/Dunkel inkl. Farbe der Statusleiste |
+| `js/version.js` | fragt die laufende Version beim Service Worker ab |
 | `sw.js` | Offline-Cache – **nach Änderungen `VERSION` hochzählen!** |
+
+Die Versionsnummer steht **nur** in `sw.js`. Die Einstellungen fragen sie per
+`postMessage` beim laufenden Service Worker ab – es gibt also keine zweite
+Konstante, die beim Hochzählen vergessen werden könnte.
 
 Neue Wörter hinzufügen: Eintrag in `data/words.js` ergänzen und die ID in
 einer Lektion in `data/curriculum.js` eintragen – fertig.

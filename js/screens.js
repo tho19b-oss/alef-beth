@@ -8,6 +8,7 @@ import { scheduleReminder, parseTime, DEFAULT_TIME } from './notify.js';
 import { applyTheme } from './theme.js';
 import { dueIds, nextDue } from './srs.js';
 import { speak, ttsSupported, hasHebrewVoice, hebrewVoiceName, audioActive } from './audio.js';
+import { activeVersion, checkForUpdate } from './version.js';
 
 // ---------- Home / Lernpfad ----------
 
@@ -262,6 +263,15 @@ export function renderSettings(host) {
     </div>
     <button class="btn danger" id="set-reset">Allen Fortschritt löschen</button>
 
+    <h2>Version</h2>
+    <div class="setting-row">
+      <span>Installierte Fassung</span>
+      <span class="version-tag" id="app-version">wird geprüft …</span>
+    </div>
+    <button class="btn secondary" id="check-update">Nach Update suchen</button>
+    <div class="hint" id="update-status">Prüft, ob auf dem Server eine neuere
+      Fassung liegt. Die App braucht dafür kurz Internet.</div>
+
     <h2>Über diese App</h2>
     <div class="hint">
       <b>Alef Beth</b> – Hebräisch lesen lernen: vom Alphabet über die Vokalzeichen
@@ -271,6 +281,8 @@ export function renderSettings(host) {
       keine Daten übertragen.<br><br>
       Viel Erfolg auf deinem Weg – <span class="he">בְּהַצְלָחָה</span>!
     </div>`;
+
+  renderVersion(host);
 
   host.querySelector('#set-audio').addEventListener('change', (e) => {
     state.settings.audio = e.target.checked;
@@ -326,6 +338,41 @@ export function renderSettings(host) {
   host.querySelector('#set-reset').addEventListener('click', () => {
     if (confirm('Wirklich den gesamten Lernfortschritt löschen? Das lässt sich nicht rückgängig machen.')) {
       resetAll();
+    }
+  });
+}
+
+// Versionszeile füllen und den Update-Knopf verdrahten.
+async function renderVersion(host) {
+  const tag = host.querySelector('#app-version');
+  const btn = host.querySelector('#check-update');
+  const status = host.querySelector('#update-status');
+
+  const version = await activeVersion();
+  if (!tag.isConnected) return; // Screen inzwischen gewechselt
+  if (version) {
+    tag.textContent = version;
+  } else {
+    // Kein Service Worker aktiv: beim allerersten Aufruf normal, danach ein
+    // Zeichen dafür, dass die App nicht offline-fähig läuft.
+    tag.textContent = 'noch nicht offline';
+    tag.classList.add('muted');
+  }
+
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    status.textContent = 'Suche …';
+    const result = await checkForUpdate();
+    if (!btn.isConnected) return;
+    btn.disabled = false;
+    if (result === 'update') {
+      status.textContent = 'Neue Version gefunden – sie wird geladen. Gleich erscheint '
+        + 'unten der Hinweis „Neue Version verfügbar“ zum Neuladen.';
+    } else if (result === 'aktuell') {
+      status.textContent = `Alles aktuell – ${version || 'die installierte Fassung'} ist die neueste.`;
+    } else {
+      status.textContent = 'Konnte nicht nachsehen – keine Internetverbindung oder der '
+        + 'Server ist gerade nicht erreichbar.';
     }
   });
 }

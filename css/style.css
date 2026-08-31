@@ -604,6 +604,16 @@ a { color: var(--accent-ink); text-decoration: none; }
 }
 .switch input:checked + .slider { background: var(--primary); }
 .switch input:checked + .slider::before { transform: translateX(22px); }
+.version-tag {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-weight: 700;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 0.9rem;
+}
+.version-tag.muted { color: var(--muted); font-weight: 400; }
 .hint {
   color: var(--muted);
   font-size: 0.85rem;

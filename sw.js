@@ -1,7 +1,7 @@
 // Service Worker: App-Shell vorab cachen (cache-first), damit die App offline läuft.
 // Bei Änderungen VERSION hochzählen – alte Caches werden beim Aktivieren gelöscht.
 
-const VERSION = 'v10';
+const VERSION = 'v11';
 const CACHE = `alefbeth-${VERSION}`;
 
 const ASSETS = [
@@ -18,6 +18,7 @@ const ASSETS = [
   'js/notify.js',
   'js/theme.js',
   'js/util.js',
+  'js/version.js',
   'js/state.js',
   'js/srs.js',
   'js/audio.js',
@@ -44,8 +45,8 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Lern-Erinnerung: Seite schickt { type: 'SHOW_REMINDER' }, SW zeigt Notification.
 self.addEventListener('message', (event) => {
+  // Lern-Erinnerung: Seite schickt { type: 'SHOW_REMINDER' }, SW zeigt Notification.
   if (event.data?.type === 'SHOW_REMINDER') {
     event.waitUntil(
       self.registration.showNotification('Alef Beth – Zeit zum Lernen! 📖', {
@@ -56,6 +57,11 @@ self.addEventListener('message', (event) => {
         renotify: false,
       })
     );
+  }
+  // Versionsabfrage für die Einstellungen. VERSION lebt nur hier – so kann die
+  // Anzeige nicht von der tatsächlich ausgelieferten Fassung abweichen.
+  if (event.data?.type === 'GET_VERSION') {
+    event.ports[0]?.postMessage({ version: VERSION });
   }
 });
 

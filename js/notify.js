@@ -5,6 +5,20 @@ import { state } from './state.js';
 
 let _timeout = null;
 
+export const DEFAULT_TIME = '19:00';
+
+// "HH:MM" → { h, m }, oder null bei Unsinn. Ein leeres Zeitfeld (der Nutzer kann
+// die Eingabe löschen) ergäbe sonst NaN → setTimeout(NaN) feuert sofort und
+// die Erinnerung würde sich in einer Endlosschleife selbst neu planen.
+export function parseTime(value) {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(String(value ?? '').trim());
+  if (!m) return null;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  if (h > 23 || min > 59) return null;
+  return { h, m: min };
+}
+
 export function scheduleReminder() {
   clearTimeout(_timeout);
   _timeout = null;
@@ -14,10 +28,10 @@ export function scheduleReminder() {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   if (!('serviceWorker' in navigator)) return;
 
-  const [h, m] = notif.time.split(':').map(Number);
+  const time = parseTime(notif.time) || parseTime(DEFAULT_TIME);
   const now = new Date();
   const target = new Date(now);
-  target.setHours(h, m, 0, 0);
+  target.setHours(time.h, time.m, 0, 0);
   if (target <= now) target.setDate(target.getDate() + 1); // bereits vorbei → morgen
 
   _timeout = setTimeout(async () => {

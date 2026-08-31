@@ -3,9 +3,13 @@
   "short_name": "Alef Beth",
   "description": "Lerne das hebräische Alphabet und Hebräisch lesen – vom Alef-Bet über Nikud bis zu Wörtern aus dem Siddur.",
   "lang": "de",
+  "dir": "ltr",
+  "id": "./",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
+  "orientation": "portrait",
+  "categories": ["education"],
   "background_color": "#f3e9d2",
   "theme_color": "#f3e9d2",
   "icons": [

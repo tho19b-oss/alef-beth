@@ -2,6 +2,7 @@
 // Lektionen, SRS-Einträge und Einstellungen.
 
 import { todayStr } from './util.js';
+import { hasItem } from '../data/curriculum.js';
 
 const KEY = 'alefbeth-state-v1';
 
@@ -12,6 +13,17 @@ const DEFAULTS = {
   srs: {},       // itemId  -> { streak, due, seen }
   settings: { audio: true, theme: 'auto', notifications: { enabled: false, time: '19:00' } },
 };
+
+// Einträge zu Lernitems, die es nicht mehr gibt (umbenannte oder gelöschte
+// Wörter/Silben), aussortieren. Sonst wirft getItem() später mitten in einer
+// Übung – und die App bliebe mit leerem Bildschirm stehen.
+function pruneSrs(srs) {
+  const clean = {};
+  for (const [id, entry] of Object.entries(srs || {})) {
+    if (hasItem(id) && entry && typeof entry.due === 'number') clean[id] = entry;
+  }
+  return clean;
+}
 
 function load() {
   try {
@@ -28,7 +40,7 @@ function load() {
           notifications: { ...DEFAULTS.settings.notifications, ...(s.settings?.notifications || {}) },
         },
         lessons: s.lessons || {},
-        srs: s.srs || {},
+        srs: pruneSrs(s.srs),
       };
     }
   } catch (e) {

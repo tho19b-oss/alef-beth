@@ -20,6 +20,12 @@ export function getItem(id) {
   return it;
 }
 
+// Gibt es dieses Lernitem (noch)? Für gespeicherte Fortschritte, die aus einer
+// älteren Datenversion stammen könnten.
+export function hasItem(id) {
+  return REGISTRY.has(id);
+}
+
 // ---------- Generische Anzeige-Helfer ----------
 
 // Großes hebräisches Zeichen / Wort des Items
@@ -92,7 +98,7 @@ export const UNITS = [
       { id: 'u2l1', kind: 'nikud', title: 'Patach & Kamatz (a)', icon: 'אַ', newItems: ['patach', 'kamatz'], syllables: ['syl-ba', 'syl-scha', 'syl-ta', 'syl-ma', 'syl-la', 'syl-ra'] },
       { id: 'u2l2', kind: 'nikud', title: 'Schwa', icon: 'אְ', newItems: ['sheva'], syllables: ['syl-bschwa', 'syl-schschwa', 'syl-lschwa', 'syl-bra', 'syl-schma'] },
       { id: 'u2l3', kind: 'nikud', title: 'Zere & Segol (e)', icon: 'אֵ', newItems: ['tzere', 'segol'], syllables: ['syl-be', 'syl-le', 'syl-te', 'syl-me', 'syl-sche'] },
-      { id: 'u2l4', kind: 'nikud', title: 'Chirik (i) & Cholam (o)', icon: 'אִ', newItems: ['chirik', 'cholam', 'cholam-male'], syllables: ['syl-bi', 'syl-mi', 'syl-schi', 'syl-lo', 'syl-ro', 'syl-to'] },
+      { id: 'u2l4', kind: 'nikud', title: 'Chirik (i) & Cholam (o)', icon: 'אִ', newItems: ['chirik', 'cholam', 'cholam-male'], syllables: ['syl-bi', 'syl-mi', 'syl-schi', 'syl-lo', 'syl-ro', 'syl-to', 'syl-scho'] },
       { id: 'u2l5', kind: 'nikud', title: 'Kubuz, Schuruk & Chataf (u)', icon: 'אֻ', newItems: ['kubutz', 'shuruk', 'chataf-patach', 'chataf-segol', 'chataf-kamatz'], syllables: ['syl-mu', 'syl-ku', 'syl-ru', 'syl-bu', 'syl-schu', 'syl-cha'] },
     ],
   },

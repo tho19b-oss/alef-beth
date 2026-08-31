@@ -55,6 +55,8 @@ while ($listener.IsListening) {
             $bytes = [System.IO.File]::ReadAllBytes($full)
             $res.StatusCode = 200
             $res.ContentType = $type
+            # Beim Entwickeln soll ein Reload wirklich die neue Datei holen.
+            $res.Headers.Add('Cache-Control', 'no-store, must-revalidate')
             $res.ContentLength64 = $bytes.Length
             if (-not $isHead) { $res.OutputStream.Write($bytes, 0, $bytes.Length) }
             Write-Host "200  $($req.HttpMethod)  /$rel"

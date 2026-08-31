@@ -23,9 +23,13 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
   Hören & Wählen (Sprachausgabe), Lese-Drills
 - **Spaced Repetition:** Der „Üben“-Tab zeigt fällige Karten – richtig
   beantwortete Karten kommen in immer größeren Abständen wieder
-  (1 → 3 → 7 → 14 → 30 → 90 Tage)
-- **Motivation:** XP, Tages-Serie (Streak), Fortschritt pro Lektion
+  (1 → 3 → 7 → 14 → 30 → 90 Tage). Ist gerade nichts fällig, gibt es „freies
+  Üben“: Das holt Wackelkandidaten zurück nach vorn, schiebt aber keine
+  Termine nach hinten.
+- **Motivation:** XP, Tages-Serie (Streak), Gesamtfortschritt und Fortschritt
+  pro Lektion
 - **Nachschlagen:** Alphabet- und Nikud-Tabelle mit Sprachausgabe
+- **Am Rechner:** Tasten 1–4 wählen eine Antwort, Enter geht weiter
 - **Offline & installierbar:** Nach dem ersten Laden funktioniert die App ohne
   Internet und lässt sich „Zum Startbildschirm hinzufügen“ (PWA)
 
@@ -42,7 +46,9 @@ verhält sie sich wie eine installierte App und funktioniert offline.
 ## Sprachausgabe
 
 Die App nutzt die eingebaute Sprachausgabe des Browsers (`he-IL`).
-Falls keine hebräische Stimme gefunden wird:
+Findet sie keine hebräische Stimme, bleibt sie bewusst stumm – eine deutsche
+Stimme würde hebräische Buchstaben als Kauderwelsch vorlesen. Alles andere
+funktioniert ohne Audio genauso. So bekommst du eine hebräische Stimme:
 
 - **Windows:** Microsoft Edge verwenden (bringt Online-Stimmen mit) oder unter
   *Einstellungen → Zeit und Sprache → Sprache* das hebräische Sprachpaket
@@ -61,11 +67,19 @@ Vanilla HTML/CSS/JS ohne Build-Schritt und ohne Abhängigkeiten.
 | `data/letters.js` | Buchstaben & Endformen (Name, Laut, Eselsbrücke …) |
 | `data/nikud.js` | Vokalzeichen & Lesesilben |
 | `data/words.js` | Wortschatz (Hebräisch, Umschrift, Bedeutung) |
-| `data/curriculum.js` | Einheiten & Lektionen |
+| `data/curriculum.js` | Einheiten & Lektionen, Item-Registry |
 | `js/lesson.js` | Lektions-Player & Übungs-Warteschlangen |
 | `js/exercises.js` | Übungstypen |
 | `js/srs.js` | Spaced-Repetition-Logik |
+| `js/theme.js` | Hell/Dunkel inkl. Farbe der Statusleiste |
 | `sw.js` | Offline-Cache – **nach Änderungen `VERSION` hochzählen!** |
 
 Neue Wörter hinzufügen: Eintrag in `data/words.js` ergänzen und die ID in
 einer Lektion in `data/curriculum.js` eintragen – fertig.
+
+Beim Ändern von Dateien: Der Service Worker liefert aus dem Cache, ein Reload
+allein zeigt die Änderung also nicht. Entweder `VERSION` in `sw.js` hochzählen
+(dann erscheint in der App der Hinweis „Neue Version verfügbar“) oder in den
+Entwicklertools unter *Application → Storage* den Cache leeren. Wird eine
+Item-ID gelöscht oder umbenannt, räumt die App gespeicherte Fortschritte dazu
+beim nächsten Start selbst auf.

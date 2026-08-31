@@ -13,14 +13,22 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <main id="app" aria-live="polite"></main>
+  <!-- tabindex="-1": nach jedem Screenwechsel wird hierher fokussiert, damit
+       Screenreader am Anfang des neuen Bildschirms landen. -->
+  <main id="app" tabindex="-1"></main>
 
-  <nav id="bottomnav">
-    <a href="#/" data-route="home"><span class="nav-ico">🏠</span><span>Lernen</span></a>
-    <a href="#/review" data-route="review"><span class="nav-ico-wrap"><span class="nav-ico">🔁</span><span class="badge" id="nav-badge" hidden></span></span><span>Üben</span></a>
-    <a href="#/alphabet" data-route="alphabet"><span class="nav-ico nav-he">א</span><span>Alef-Bet</span></a>
-    <a href="#/settings" data-route="settings"><span class="nav-ico">⚙️</span><span>Mehr</span></a>
+  <nav id="bottomnav" aria-label="Hauptnavigation">
+    <a href="#/" data-route="home"><span class="nav-ico" aria-hidden="true">🏠</span><span>Lernen</span></a>
+    <a href="#/review" data-route="review"><span class="nav-ico-wrap"><span class="nav-ico" aria-hidden="true">🔁</span><span class="badge" id="nav-badge" hidden></span></span><span>Üben</span></a>
+    <a href="#/alphabet" data-route="alphabet"><span class="nav-ico nav-he" aria-hidden="true">א</span><span>Alef-Bet</span></a>
+    <a href="#/settings" data-route="settings"><span class="nav-ico" aria-hidden="true">⚙️</span><span>Mehr</span></a>
   </nav>
+
+  <noscript>
+    <p style="max-width:540px;margin:2rem auto;padding:0 1rem">
+      Für Alef Beth muss JavaScript aktiviert sein.
+    </p>
+  </noscript>
 
   <script type="module" src="js/app.js"></script>
 </body>

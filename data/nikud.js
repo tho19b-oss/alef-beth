@@ -1,5 +1,8 @@
-// Nikud – die Vokalzeichen. display zeigt das Zeichen an einem gepunkteten
-// Platzhalterkreis (◌), example ist eine Beispielsilbe mit bekanntem Buchstaben.
+// Nikud – die Vokalzeichen.
+// display  = das Zeichen an einem Träger-Bet (בַ), damit man die Position sieht;
+//            der Punkt im Bet bleibt weg, es geht hier nur um das Vokalzeichen.
+// mark     = das Vokalzeichen allein (kombinierendes Unicode-Zeichen).
+// example  = Beispielsilbe mit einem bereits bekannten Buchstaben.
 
 export const NIKUD = [
   {

@@ -1,10 +1,11 @@
-﻿// Screens: Lernpfad (Home), Wiederholen, Alphabet-Tabelle, Einstellungen.
+// Screens: Lernpfad (Home), Wiederholen, Alphabet-Tabelle, Einstellungen.
 
-import { UNITS, isUnlocked, getItem } from '../data/curriculum.js';
+import { UNITS, isUnlocked, getItem, orderedLessons } from '../data/curriculum.js';
 import { LETTERS } from '../data/letters.js';
 import { NIKUD } from '../data/nikud.js';
 import { state, save, currentStreak, resetAll } from './state.js';
-import { scheduleReminder } from './notify.js';
+import { scheduleReminder, parseTime, DEFAULT_TIME } from './notify.js';
+import { applyTheme } from './theme.js';
 import { dueIds, nextDue } from './srs.js';
 import { speak, ttsSupported, hasHebrewVoice, hebrewVoiceName, audioActive } from './audio.js';
 
@@ -12,14 +13,30 @@ import { speak, ttsSupported, hasHebrewVoice, hebrewVoiceName, audioActive } fro
 
 export function renderHome(host) {
   const due = dueIds(state.srs).length;
+  const total = orderedLessons().length;
+  const done = orderedLessons().filter((l) => state.lessons[l.id]).length;
+  const pct = Math.round((done / total) * 100);
+
   host.innerHTML = `
     <header class="topbar">
-      <div class="brand"><span class="logo he">א</span> Alef Beth</div>
+      <div class="brand"><span class="logo he" aria-hidden="true">א</span> Alef Beth</div>
       <div class="stats">
-        <span class="statchip" title="Tage-Serie">🔥 ${currentStreak()}</span>
-        <span class="statchip" title="Erfahrungspunkte">⚡ ${state.xp}</span>
+        <span class="statchip" title="Tage-Serie"><span aria-hidden="true">🔥</span>
+          <span class="sr-only">Tage-Serie:</span> ${currentStreak()}</span>
+        <span class="statchip" title="Erfahrungspunkte"><span aria-hidden="true">⚡</span>
+          <span class="sr-only">Erfahrungspunkte:</span> ${state.xp}</span>
       </div>
     </header>
+
+    <div class="progress-card">
+      <div class="pc-head">
+        <span class="pc-label">${done === total ? 'Alle Lektionen geschafft! 🎉' : 'Dein Weg durchs Alef-Bet'}</span>
+        <span class="pc-count">${done} / ${total}</span>
+      </div>
+      <div class="pc-bar" role="progressbar" aria-label="Abgeschlossene Lektionen"
+           aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></div>
+    </div>
+
     ${due > 0 ? `
       <div class="banner">
         <span><b>${due}</b> ${due === 1 ? 'Karte ist' : 'Karten sind'} zur Wiederholung fällig</span>
@@ -76,20 +93,21 @@ export function renderReview(host) {
       die App merkt sich, was bald wieder fällig ist.</div>`;
   } else if (!due.length) {
     const next = nextDue(state.srs);
-    const when = next
-      ? new Date(next).toLocaleString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })
-      : '–';
+    const when = next ? formatDue(next) : '–';
     body = `
       <div class="endscreen" style="padding-top:6vh">
-        <div class="end-emoji">🌟</div>
+        <div class="end-emoji" aria-hidden="true">🌟</div>
         <h1>Alles wiederholt!</h1>
-        <p>Du hast <b>${learned}</b> Zeichen und Wörter im Training.<br>
+        <p>Du hast <b>${learned}</b> ${learned === 1 ? 'Zeichen' : 'Zeichen und Wörter'} im Training.<br>
         Die nächsten Karten sind fällig: <b>${when}</b>.</p>
+        <button class="btn secondary" id="free-practice">Trotzdem eine Runde üben</button>
+        <p class="hint" style="margin-top:14px">Freies Üben schadet nichts: Es verschiebt
+        keine Termine nach hinten, holt aber Wackelkandidaten zurück nach vorn.</p>
       </div>`;
   } else {
     body = `
       <div class="endscreen" style="padding-top:6vh">
-        <div class="end-emoji">🔁</div>
+        <div class="end-emoji" aria-hidden="true">🔁</div>
         <h1>${due.length} ${due.length === 1 ? 'Karte' : 'Karten'} fällig</h1>
         <p>Kurz wiederholen, bevor es weitergeht – dein Gedächtnis dankt es dir.</p>
         <button class="btn" id="start-review">Wiederholung starten</button>
@@ -100,39 +118,54 @@ export function renderReview(host) {
   host.querySelector('#start-review')?.addEventListener('click', () => {
     location.hash = '#/review/run';
   });
+  host.querySelector('#free-practice')?.addEventListener('click', () => {
+    location.hash = '#/review/practice';
+  });
+}
+
+// „heute um 19:40“ / „morgen“ statt eines Datums, wenn es ganz nah liegt.
+// (Falsch beantwortete Karten kommen schon nach 10 Minuten zurück – da hilft
+// ein Datum ohne Uhrzeit niemandem.)
+function formatDue(ts) {
+  const d = new Date(ts);
+  const days = Math.round((new Date(ts).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 86400000);
+  if (days <= 0) return `heute um ${d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr`;
+  if (days === 1) return 'morgen';
+  return d.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
 }
 
 // ---------- Alphabet-Tabelle ----------
 
 export function renderAlphabet(host) {
-  const speaker = audioActive() ? '<span class="a-spk">🔊</span>' : '';
+  // Ohne hebräische Stimme wären die Zeilen tote Knöpfe – dann als Liste zeigen.
+  const canSpeak = audioActive();
+  const tag = canSpeak ? 'button' : 'div';
+  const speaker = canSpeak ? '<span class="a-spk" aria-hidden="true">🔊</span>' : '';
+  const row = (tts, glyph, name, sub) => `
+    <${tag} class="alpharow"${canSpeak ? ` data-tts="${tts}" aria-label="${name} anhören"` : ''}>
+      <span class="a-glyph he">${glyph}</span>
+      <span><span class="a-name">${name}</span><br>
+      <span class="a-sub">${sub}</span></span>
+      ${speaker}
+    </${tag}>`;
 
   const letterRows = LETTERS.map((l) => {
     let glyphs = l.glyph;
     if (l.dagesh) glyphs += ` ${l.dagesh.glyph}`;
     if (l.variant) glyphs += ` ${l.variant.glyph}`;
     const finalNote = l.final ? ` · Ende: ${getItem(l.final).glyph}` : '';
-    return `
-      <button class="alpharow" data-tts="${l.ttsWord}">
-        <span class="a-glyph he">${glyphs}</span>
-        <span><span class="a-name">${l.name}</span><br>
-        <span class="a-sub">${l.translit}${finalNote}</span></span>
-        ${speaker}
-      </button>`;
+    return row(l.ttsWord, glyphs, l.name, `${l.translit}${finalNote}`);
   }).join('');
 
-  const nikudRows = NIKUD.map((v) => `
-    <button class="alpharow" data-tts="${v.example}">
-      <span class="a-glyph he">${v.display}</span>
-      <span><span class="a-name">${v.name}</span><br>
-      <span class="a-sub">${v.soundLabel} – Beispiel: <span class="he">${v.example}</span> „${v.exampleTranslit}"</span></span>
-      ${speaker}
-    </button>`).join('');
+  const nikudRows = NIKUD.map((v) => row(
+    v.example, v.display, v.name,
+    `${v.soundLabel} – Beispiel: <span class="he">${v.example}</span> „${v.exampleTranslit}“`,
+  )).join('');
 
   host.innerHTML = `
     <h1>Das Alef-Bet</h1>
-    <p class="hint">Zum Nachschlagen – tippe eine Zeile an, um den Namen zu hören.
-    Gelesen wird von rechts nach links.</p>
+    <p class="hint">Zum Nachschlagen – gelesen wird von rechts nach links.${
+      canSpeak ? ' Tippe eine Zeile an, um den Namen zu hören.' : ''}</p>
     ${letterRows}
     <h2>Nikud – die Vokalzeichen</h2>
     ${nikudRows}`;
@@ -144,16 +177,18 @@ export function renderAlphabet(host) {
 // ---------- Einstellungen ----------
 
 export function renderSettings(host) {
+  const voiceOk = ttsSupported() && hasHebrewVoice();
   let voiceLine;
   if (!ttsSupported()) {
     voiceLine = 'Dieser Browser unterstützt keine Sprachausgabe.';
-  } else if (hasHebrewVoice()) {
+  } else if (voiceOk) {
     voiceLine = `Hebräische Stimme aktiv: <b>${hebrewVoiceName()}</b>`;
   } else {
-    voiceLine = `Keine hebräische Stimme gefunden. Tipp: Microsoft Edge bringt
+    voiceLine = `Keine hebräische Stimme gefunden – die App bleibt deshalb stumm,
+      statt Hebräisch mit deutscher Stimme vorzulesen. Tipp: Microsoft Edge bringt
       hebräische Online-Stimmen mit – oder installiere unter Windows
-      „Einstellungen → Zeit und Sprache → Sprache" das hebräische Sprachpaket.
-      Die App funktioniert auch ohne Audio.`;
+      „Einstellungen → Zeit und Sprache → Sprache“ das hebräische Sprachpaket.
+      Alles andere funktioniert auch ohne Audio.`;
   }
 
   const notif = state.settings.notifications;
@@ -163,7 +198,7 @@ export function renderSettings(host) {
 
   const NOTIF_BLOCKED_MSG = 'Benachrichtigungen sind für diese Seite im Browser blockiert. '
     + 'Öffne die Website-Einstellungen (Schloss- bzw. Info-Symbol links in der Adressleiste) → '
-    + '„Benachrichtigungen" → „Zulassen" und lade die Seite neu.';
+    + '„Benachrichtigungen“ → „Zulassen“ und lade die Seite neu.';
 
   function notifHintText() {
     if (!notifSupported) {
@@ -185,7 +220,8 @@ export function renderSettings(host) {
     <div class="setting-row">
       <label for="set-audio">Sprachausgabe (Hebräisch vorlesen)</label>
       <span class="switch">
-        <input type="checkbox" id="set-audio" ${state.settings.audio ? 'checked' : ''}>
+        <input type="checkbox" id="set-audio" ${state.settings.audio ? 'checked' : ''}
+          ${voiceOk ? '' : 'disabled'}>
         <span class="slider"></span>
       </span>
     </div>
@@ -221,7 +257,8 @@ export function renderSettings(host) {
     <h2>Fortschritt</h2>
     <div class="setting-row">
       <span>⚡ ${state.xp} XP · 🔥 ${currentStreak()} Tage-Serie ·
-      ${Object.keys(state.lessons).length} Lektionen abgeschlossen</span>
+      ${Object.keys(state.lessons).length} von ${orderedLessons().length} Lektionen ·
+      ${Object.keys(state.srs).length} Karten im Training</span>
     </div>
     <button class="btn danger" id="set-reset">Allen Fortschritt löschen</button>
 
@@ -229,7 +266,9 @@ export function renderSettings(host) {
     <div class="hint">
       <b>Alef Beth</b> – Hebräisch lesen lernen: vom Alphabet über die Vokalzeichen
       bis zu Wörtern aus Siddur und Alltag. Funktioniert offline und lässt sich am
-      Handy „Zum Startbildschirm hinzufügen".<br><br>
+      Handy „Zum Startbildschirm hinzufügen“.<br><br>
+      Dein Fortschritt bleibt auf diesem Gerät – es gibt kein Konto, und es werden
+      keine Daten übertragen.<br><br>
       Viel Erfolg auf deinem Weg – <span class="he">בְּהַצְלָחָה</span>!
     </div>`;
 
@@ -240,7 +279,7 @@ export function renderSettings(host) {
   host.querySelector('#set-theme').addEventListener('change', (e) => {
     state.settings.theme = e.target.value;
     save();
-    document.documentElement.dataset.theme = state.settings.theme;
+    applyTheme();
   });
 
   const notifToggle = host.querySelector('#set-notif');
@@ -276,7 +315,10 @@ export function renderSettings(host) {
   });
 
   host.querySelector('#set-notif-time')?.addEventListener('change', (e) => {
-    state.settings.notifications.time = e.target.value;
+    // Ein geleertes Zeitfeld nicht übernehmen, sondern auf den Standard zurückfallen.
+    const parsed = parseTime(e.target.value);
+    state.settings.notifications.time = parsed ? e.target.value : DEFAULT_TIME;
+    if (!parsed) e.target.value = DEFAULT_TIME;
     save();
     scheduleReminder();
   });

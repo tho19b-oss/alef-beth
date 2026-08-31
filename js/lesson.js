@@ -2,7 +2,7 @@
 // spielt sie ab (falsche Antworten kommen ans Ende zurück), vergibt XP
 // und aktualisiert SRS, Streak und Lektionsfortschritt.
 
-import { getLesson, getItem, learnedPool } from '../data/curriculum.js';
+import { getLesson, getItem, learnedPool, isUnlocked } from '../data/curriculum.js';
 import { renderExercise, isPassive } from './exercises.js';
 import { state, save, addXp, touchStreak, completeLesson, currentStreak } from './state.js';
 import { applyResult, dueIds } from './srs.js';
@@ -244,17 +244,35 @@ export function runLesson(lessonId, host) {
     location.hash = '#/';
     return;
   }
+  // Auch per Adresszeile aufgerufene Lektionen respektieren den Lernpfad.
+  if (!isUnlocked(lesson.id, state.lessons)) {
+    location.hash = '#/';
+    return;
+  }
   runSession(host, buildQueue(lesson), { mode: 'lesson', lesson });
 }
 
+const REVIEW_BATCH = 12;
+
 export function runReview(host) {
-  const due = dueIds(state.srs).slice(0, 12);
+  const due = dueIds(state.srs).slice(0, REVIEW_BATCH);
   if (!due.length) {
     location.hash = '#/review';
     return;
   }
   const q = shuffle(due.map((id) => reviewExercise(id)));
   runSession(host, q, { mode: 'review' });
+}
+
+// Freies Üben, wenn nichts fällig ist: eine Runde aus dem bereits Gelernten.
+export function runFreePractice(host) {
+  const known = Object.keys(state.srs);
+  if (!known.length) {
+    location.hash = '#/review';
+    return;
+  }
+  const q = sample(known, REVIEW_BATCH).map((id) => reviewExercise(id));
+  runSession(host, q, { mode: 'practice' });
 }
 
 // ---------- Der Player ----------
@@ -265,14 +283,17 @@ function runSession(host, queue, opts) {
   const failed = new Set();
   let firstTry = 0;
   let firstTryCorrect = 0;
+  const exitHash = opts.mode === 'lesson' ? '#/' : '#/review';
 
   host.innerHTML = `
     <div class="lesson-top">
-      <button class="quit-x" aria-label="Lektion beenden">✕</button>
-      <div class="pbar"><div class="pbar-fill"></div></div>
+      <button class="quit-x" aria-label="Lektion beenden" title="Beenden">✕</button>
+      <div class="pbar" role="progressbar" aria-label="Fortschritt" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="pbar-fill"></div>
+      </div>
     </div>
     <div id="ex-area"></div>
-    <div class="feedback" hidden>
+    <div class="feedback" role="status" aria-live="polite" hidden>
       <div class="feedback-inner">
         <div class="fb-title"></div>
         <div class="fb-detail"></div>
@@ -285,20 +306,28 @@ function runSession(host, queue, opts) {
   const fbTitle = fb.querySelector('.fb-title');
   const fbDetail = fb.querySelector('.fb-detail');
   const fbBtn = fb.querySelector('.fb-continue');
+  const pbar = host.querySelector('.pbar');
   const pbarFill = host.querySelector('.pbar-fill');
 
   host.querySelector('.quit-x').addEventListener('click', () => {
     if (confirm('Lektion wirklich beenden? Der Fortschritt dieser Runde geht verloren.')) {
       if ('speechSynthesis' in window) speechSynthesis.cancel();
-      location.hash = opts.mode === 'review' ? '#/review' : '#/';
+      location.hash = exitHash;
     }
   });
 
-  fbBtn.addEventListener('click', () => {
-    fb.hidden = true;
+  fbBtn.addEventListener('click', nextStep);
+
+  function nextStep() {
+    hideFeedback();
     idx += 1;
     step();
-  });
+  }
+
+  function hideFeedback() {
+    fb.hidden = true;
+    document.body.classList.remove('fb-open');
+  }
 
   function showFeedback(correct, detail) {
     fb.classList.remove('good', 'bad');
@@ -315,15 +344,54 @@ function runSession(host, queue, opts) {
       fbDetail.innerHTML = detail ? `Richtig wäre: ${detail}` : '';
     }
     fb.hidden = false;
+
+    // Die Leiste liegt fix über dem Inhalt. Unten Platz schaffen und – falls die
+    // markierte Antwort darunter verschwindet – so weit scrollen, dass man sie sieht.
+    document.body.classList.add('fb-open');
+    document.body.style.setProperty('--fb-space', `${fb.offsetHeight + 24}px`);
+    if (area.getBoundingClientRect().bottom > fb.getBoundingClientRect().top) {
+      // scrollHeight erzwingt ein Layout, der zusätzliche Platz unten ist also
+      // schon berücksichtigt: ans Seitenende scrollen holt die markierte
+      // Antwort über die Leiste.
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+    }
     fbBtn.focus();
   }
+
+  // Am Rechner: 1–4 wählt eine Antwort, Enter/Leertaste geht weiter.
+  function onKey(e) {
+    // Die Übungsfläche gehört zu dieser Runde; ist sie aus dem Dokument
+    // verschwunden, läuft die Runde nicht mehr – Listener abmelden.
+    if (!area.isConnected) {
+      document.removeEventListener('keydown', onKey);
+      return;
+    }
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (!fb.hidden) {
+      // Liegt der Fokus auf „Weiter“, erledigt der Button das selbst –
+      // sonst würde die Übung zwei Schritte auf einmal springen.
+      if ((e.key === 'Enter' || e.key === ' ') && document.activeElement !== fbBtn) {
+        e.preventDefault();
+        nextStep();
+      }
+      return;
+    }
+    const n = Number(e.key);
+    if (!Number.isInteger(n) || n < 1) return;
+    const buttons = area.querySelectorAll('.option:not(:disabled)');
+    if (buttons[n - 1]) { e.preventDefault(); buttons[n - 1].click(); }
+  }
+  document.addEventListener('keydown', onKey);
 
   function step() {
     if (idx >= queue.length) {
       finish();
       return;
     }
-    pbarFill.style.width = `${Math.round((idx / queue.length) * 100)}%`;
+    const pct = Math.round((idx / queue.length) * 100);
+    pbarFill.style.width = `${pct}%`;
+    pbar.setAttribute('aria-valuenow', String(pct));
+    window.scrollTo(0, 0);
     const ex = queue[idx];
     renderExercise(ex, area, (correct, detail) => {
       if (!ex.retry) {
@@ -342,12 +410,22 @@ function runSession(host, queue, opts) {
   }
 
   function finish() {
+    hideFeedback();
+    document.removeEventListener('keydown', onKey);
     pbarFill.style.width = '100%';
+    pbar.setAttribute('aria-valuenow', '100');
+    window.scrollTo(0, 0);
 
     // SRS aktualisieren: jedes beteiligte Item gilt als richtig,
     // wenn es in dieser Runde nie falsch beantwortet wurde.
+    // Freies Üben zählt nur negativ – sonst könnte man Karten durch
+    // wiederholtes Vorab-Üben künstlich auf 90 Tage schieben.
     const itemIds = [...new Set(queue.filter((e) => e.itemId && !e.retry).map((e) => e.itemId))];
-    for (const id of itemIds) applyResult(state.srs, id, !failed.has(id));
+    for (const id of itemIds) {
+      const correct = !failed.has(id);
+      if (opts.mode === 'practice' && correct) continue;
+      applyResult(state.srs, id, correct);
+    }
 
     const accuracy = firstTry ? Math.round((firstTryCorrect / firstTry) * 100) : 100;
     const bonus = opts.mode === 'lesson' ? 20 : 10;
@@ -356,10 +434,14 @@ function runSession(host, queue, opts) {
     touchStreak();
     save();
 
+    const title = opts.mode === 'lesson' ? 'Lektion geschafft!'
+      : opts.mode === 'practice' ? 'Runde geschafft!'
+      : 'Wiederholung geschafft!';
+
     host.innerHTML = `
       <div class="endscreen">
-        <div class="end-emoji">${accuracy >= 90 ? '🎉' : accuracy >= 60 ? '👏' : '💪'}</div>
-        <h1>${opts.mode === 'lesson' ? 'Lektion geschafft!' : 'Wiederholung geschafft!'}</h1>
+        <div class="end-emoji" aria-hidden="true">${accuracy >= 90 ? '🎉' : accuracy >= 60 ? '👏' : '💪'}</div>
+        <h1>${title}</h1>
         <div class="end-stats">
           <div class="end-stat"><div class="v">+${xp + bonus}</div><div class="k">XP</div></div>
           <div class="end-stat"><div class="v">${accuracy} %</div><div class="k">richtig</div></div>
@@ -367,9 +449,9 @@ function runSession(host, queue, opts) {
         </div>
         <button class="btn" id="end-continue">Weiter</button>
       </div>`;
-    host.querySelector('#end-continue').addEventListener('click', () => {
-      location.hash = opts.mode === 'review' ? '#/review' : '#/';
-    });
+    const cont = host.querySelector('#end-continue');
+    cont.addEventListener('click', () => { location.hash = exitHash; });
+    cont.focus();
   }
 
   step();

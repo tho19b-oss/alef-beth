@@ -49,6 +49,11 @@ function optionItemsFor(ex, item, field) {
   return [item, ...pickDistractors(item, ex.poolIds || [], 3, field === 'meaning' ? 'meaning' : 'main')];
 }
 
+// Ziffer für die Tastaturbedienung (per CSS nur auf Geräten mit Maus sichtbar)
+function optKey(i) {
+  return `<span class="opt-key" aria-hidden="true">${i + 1}</span>`;
+}
+
 // ---------- Intro-Karte (neues Lernitem) ----------
 
 function introRow(label, valueHtml) {
@@ -157,15 +162,16 @@ function renderMc(ex, host, onAnswered) {
   if (ex.options) {
     options = shuffle(ex.options.map((o) => ({ correct: !!o.correct, label: o.label })));
     optionsHtml = options.map((o, i) =>
-      `<button class="option" data-i="${i}"><span class="opt-main">${o.label}</span></button>`);
+      `<button class="option" data-i="${i}">${optKey(i)}<span class="opt-main">${o.label}</span></button>`);
   } else if (ex.dir === 'de2he') {
     options = shuffle(optionItemsFor(ex, item, field).map((it) => ({ it, correct: it.id === item.id })));
     optionsHtml = options.map((o, i) =>
-      `<button class="option" data-i="${i}"><span class="opt-main he glyph-md">${display(o.it)}</span></button>`);
+      `<button class="option" data-i="${i}">${optKey(i)}<span class="opt-main he glyph-md">${display(o.it)}</span></button>`);
   } else {
     options = shuffle(optionItemsFor(ex, item, field).map((it) => ({ it, correct: it.id === item.id })));
     optionsHtml = options.map((o, i) => `
       <button class="option" data-i="${i}">
+        ${optKey(i)}
         <span class="opt-main">${optLabel(o.it, field)}</span>
         ${optSub(o.it, field) ? `<span class="opt-sub">${optSub(o.it, field)}</span>` : ''}
       </button>`);
@@ -217,7 +223,7 @@ function renderListen(ex, host, onAnswered) {
     <p class="ex-q">Was hörst du?</p>
     <div class="ex-prompt">${ttsButton(tts, true)}</div>
     <div class="options">${options.map((o, i) =>
-      `<button class="option" data-i="${i}"><span class="opt-main he glyph-md">${display(o.it)}</span></button>`).join('')}
+      `<button class="option" data-i="${i}">${optKey(i)}<span class="opt-main he glyph-md">${display(o.it)}</span></button>`).join('')}
     </div>`;
   wireTts(host);
   speak(tts);

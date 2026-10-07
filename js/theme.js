@@ -1,5 +1,5 @@
 // Erscheinungsbild anwenden: data-theme setzen und die Farbe der Browser-
-// bzw. Statusleiste mitziehen.
+// bzw. Statusleiste mitziehen; dazu der Schalter für weniger Bewegung.
 
 import { state } from './state.js';
 
@@ -24,4 +24,12 @@ export function applyTheme() {
     document.head.appendChild(meta);
   }
   meta.content = dark ? COLORS.dark : COLORS.light;
+}
+
+// „Bewegung reduzieren“: html[data-motion="reduced"] schaltet in components.css
+// alle Animationen auf ihren Endzustand, die Helfer lassen Konfetti und
+// Funken weg. Die Systemeinstellung wirkt unabhängig davon immer.
+export function applyMotion() {
+  if (state.settings.reduceMotion) document.documentElement.dataset.motion = 'reduced';
+  else delete document.documentElement.dataset.motion;
 }

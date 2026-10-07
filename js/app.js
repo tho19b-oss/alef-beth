@@ -5,25 +5,12 @@ import { renderHome, renderReview, renderAlphabet, renderSettings } from './scre
 import { runLesson, runReview, runFreePractice } from './lesson.js';
 import { scheduleReminder } from './notify.js';
 import { dueIds } from './srs.js';
-import { applyTheme } from './theme.js';
+import { applyTheme, applyMotion } from './theme.js';
 import { replay } from './ui.js';
 
 const app = document.getElementById('app');
-
-// Hebräische Textstellen als solche auszeichnen: Screenreader und Browser
-// wählen dadurch die richtige Aussprache bzw. Schrift. Die Screens erzeugen
-// ihr Markup an vielen Stellen – ein Observer trifft sie alle.
-function tagHebrew(root) {
-  if (root.classList?.contains('he') && !root.lang) root.lang = 'he';
-  root.querySelectorAll?.('.he:not([lang])').forEach((el) => { el.lang = 'he'; });
-}
-new MutationObserver((records) => {
-  for (const r of records) {
-    for (const node of r.addedNodes) {
-      if (node.nodeType === 1) tagHebrew(node);
-    }
-  }
-}).observe(app, { childList: true, subtree: true });
+// Hebräische Textstellen tragen lang="he" direkt im Markup (he() in ui.js):
+// Screenreader und Browser wählen dadurch Aussprache und Schrift richtig.
 
 const NAV_ROUTES = ['home', 'review', 'alphabet', 'settings'];
 
@@ -118,6 +105,7 @@ window.addEventListener('hebrewvoiceready', () => {
 });
 
 applyTheme();
+applyMotion();
 route();
 scheduleReminder();
 

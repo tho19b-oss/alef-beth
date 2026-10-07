@@ -11,7 +11,12 @@ const DEFAULTS = {
   streak: { count: 0, lastDay: null },
   lessons: {},   // lessonId -> { score, completedAt }
   srs: {},       // itemId  -> { streak, due, seen }
-  settings: { audio: true, theme: 'auto', notifications: { enabled: false, time: '19:00' } },
+  settings: {
+    audio: true,
+    theme: 'auto',
+    reduceMotion: false,
+    notifications: { enabled: false, time: '19:00' },
+  },
 };
 
 // Einträge zu Lernitems, die es nicht mehr gibt (umbenannte oder gelöschte

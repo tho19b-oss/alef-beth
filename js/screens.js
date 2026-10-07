@@ -5,12 +5,14 @@ import { LETTERS } from '../data/letters.js';
 import { NIKUD } from '../data/nikud.js';
 import { state, save, currentStreak, resetAll } from './state.js';
 import { scheduleReminder, parseTime, DEFAULT_TIME } from './notify.js';
-import { applyTheme } from './theme.js';
+import { applyTheme, applyMotion } from './theme.js';
 import { dueIds, nextDue } from './srs.js';
 import { speak, ttsSupported, hasHebrewVoice, hebrewVoiceName, audioActive } from './audio.js';
 import { activeVersion, checkForUpdate } from './version.js';
 import { todayStr } from './util.js';
-import { icon, countUp, replay, setProgress, confetti, toast, reducedMotion } from './ui.js';
+import {
+  icon, he, countUp, replay, setProgress, confetti, toast, reducedMotion, confirmDialog,
+} from './ui.js';
 
 const num = (n) => n.toLocaleString('de-DE');
 
@@ -212,33 +214,39 @@ export function renderReview(host) {
   let body;
   if (!learned) {
     body = `
-      <div class="hint">Hier erscheinen deine Wiederholungen, sobald du die erste
-      Lektion abgeschlossen hast. Regelmäßiges Wiederholen ist der Schlüssel –
-      die App merkt sich, was bald wieder fällig ist.</div>`;
+      <div class="ab-hint">${icon('book')}<p class="text-body">Hier erscheinen deine Wiederholungen,
+        sobald du die erste Lektion abgeschlossen hast. Regelmäßiges Wiederholen ist der
+        Schlüssel – die App merkt sich, was bald wieder fällig ist.</p></div>
+      <a class="ab-btn text-button" href="#/">Zum Lernpfad</a>`;
   } else if (!due.length) {
     const next = nextDue(state.srs);
     const when = next ? formatDue(next) : '–';
     body = `
-      <div class="endscreen" style="padding-top:6vh">
-        <div class="end-emoji" aria-hidden="true">🌟</div>
-        <h1>Alles wiederholt!</h1>
-        <p>Du hast <b>${learned}</b> ${learned === 1 ? 'Zeichen' : 'Zeichen und Wörter'} im Training.<br>
-        Die nächsten Karten sind fällig: <b>${when}</b>.</p>
-        <button class="btn secondary" id="free-practice">Trotzdem eine Runde üben</button>
-        <p class="hint" style="margin-top:14px">Freies Üben schadet nichts: Es verschiebt
-        keine Termine nach hinten, holt aber Wackelkandidaten zurück nach vorn.</p>
-      </div>`;
+      <section class="ab-card review-card" aria-labelledby="review-title">
+        <div class="review-card__art review-card__art--done">${icon('check')}</div>
+        <h2 class="text-heading" id="review-title">Alles wiederholt!</h2>
+        <p class="review-card__text text-body">Du hast <b>${learned}</b> ${learned === 1 ? 'Zeichen' : 'Zeichen und Wörter'}
+          im Training. Die nächsten Karten sind fällig: <b>${when}</b>.</p>
+        <button class="ab-btn ab-btn--secondary text-button" type="button" id="free-practice">Trotzdem eine Runde üben</button>
+      </section>
+      <div class="ab-hint ab-hint--reward">${icon('sparkle')}<p class="text-body">Freies Üben schadet nichts:
+        Es verschiebt keine Termine nach hinten, holt aber Wackelkandidaten zurück nach vorn.</p></div>`;
   } else {
     body = `
-      <div class="endscreen" style="padding-top:6vh">
-        <div class="end-emoji" aria-hidden="true">🔁</div>
-        <h1>${due.length} ${due.length === 1 ? 'Karte' : 'Karten'} fällig</h1>
-        <p>Kurz wiederholen, bevor es weitergeht – dein Gedächtnis dankt es dir.</p>
-        <button class="btn" id="start-review">Wiederholung starten</button>
-      </div>`;
+      <section class="ab-card review-card" aria-labelledby="review-title">
+        <div class="review-card__art">${icon('repeat')}</div>
+        <p class="text-numeral" aria-hidden="true">${due.length}</p>
+        <h2 class="text-heading" id="review-title">${due.length === 1 ? 'Karte' : 'Karten'} fällig<span class="ab-sr">: ${due.length}</span></h2>
+        <p class="review-card__text text-body">Kurz wiederholen, bevor es weitergeht – dein Gedächtnis dankt es dir.</p>
+        <button class="ab-btn text-button" type="button" id="start-review">Wiederholung starten</button>
+      </section>`;
   }
 
-  host.innerHTML = `<h1>Üben &amp; Wiederholen</h1>${body}`;
+  host.innerHTML = `
+    <div class="screen">
+      <h1 class="screen__title text-title">Üben &amp; Wiederholen</h1>
+      ${body}
+    </div>`;
   host.querySelector('#start-review')?.addEventListener('click', () => {
     location.hash = '#/review/run';
   });
@@ -260,45 +268,69 @@ function formatDue(ts) {
 
 // ---------- Alphabet-Tabelle ----------
 
+// Wie fest sitzt ein Zeichen? Eine Wiederholungsstufe je Punkt (1 → 3 → 7 →
+// 14 → 30 → 90 Tage, siehe srs.js); ein Fehler setzt zurück.
+const LEVELS = 6;
+function pips(id) {
+  const entry = state.srs[id];
+  const level = entry ? Math.min(entry.streak, LEVELS) : 0;
+  const label = entry ? `Stufe ${level} von ${LEVELS}` : 'noch nicht gelernt';
+  let html = '';
+  for (let i = 0; i < LEVELS; i++) html += `<span class="ab-pip${i < level ? ' is-on' : ''}"></span>`;
+  return `<span class="ab-pips" role="img" aria-label="${label}">${html}</span>`;
+}
+
 export function renderAlphabet(host) {
   // Ohne hebräische Stimme wären die Zeilen tote Knöpfe – dann als Liste zeigen.
   const canSpeak = audioActive();
   const tag = canSpeak ? 'button' : 'div';
-  const speaker = canSpeak ? '<span class="a-spk" aria-hidden="true">🔊</span>' : '';
-  const row = (tts, glyph, name, sub) => `
-    <${tag} class="alpharow"${canSpeak ? ` data-tts="${tts}" aria-label="${name} anhören"` : ''}>
-      <span class="a-glyph he">${glyph}</span>
-      <span><span class="a-name">${name}</span><br>
-      <span class="a-sub">${sub}</span></span>
-      ${speaker}
+  const row = (id, tts, glyph, name, sub) => `
+    <${tag} class="ab-alpha"${canSpeak ? ` type="button" data-tts="${tts}" aria-label="${name} anhören"` : ''}>
+      <span class="ab-alpha__glyph">${he(glyph, 'glyph-md')}</span>
+      <span class="ab-alpha__text"><span class="text-strong">${name}</span><span class="ab-alpha__sub text-caption">${sub}</span></span>
+      ${pips(id)}
+      ${canSpeak ? `<span class="ab-alpha__spk">${icon('speaker')}</span>` : ''}
     </${tag}>`;
 
   const letterRows = LETTERS.map((l) => {
     let glyphs = l.glyph;
     if (l.dagesh) glyphs += ` ${l.dagesh.glyph}`;
     if (l.variant) glyphs += ` ${l.variant.glyph}`;
-    const finalNote = l.final ? ` · Ende: ${getItem(l.final).glyph}` : '';
-    return row(l.ttsWord, glyphs, l.name, `${l.translit}${finalNote}`);
+    const finalNote = l.final ? ` · Ende: ${he(getItem(l.final).glyph)}` : '';
+    return row(l.id, l.ttsWord, glyphs, l.name, `${l.translit}${finalNote}`);
   }).join('');
 
   const nikudRows = NIKUD.map((v) => row(
-    v.example, v.display, v.name,
-    `${v.soundLabel} – Beispiel: <span class="he">${v.example}</span> „${v.exampleTranslit}“`,
+    v.id, v.example, v.display, v.name,
+    `${v.soundLabel} – Beispiel: ${he(v.example)} „${v.exampleTranslit}“`,
   )).join('');
 
   host.innerHTML = `
-    <h1>Das Alef-Bet</h1>
-    <p class="hint">Zum Nachschlagen – gelesen wird von rechts nach links.${
-      canSpeak ? ' Tippe eine Zeile an, um den Namen zu hören.' : ''}</p>
-    ${letterRows}
-    <h2>Nikud – die Vokalzeichen</h2>
-    ${nikudRows}`;
+    <div class="screen">
+      <h1 class="screen__title text-title">Das Alef-Bet</h1>
+      <div class="ab-hint">${icon('book')}<p class="text-body">Zum Nachschlagen – gelesen wird von rechts
+        nach links.${canSpeak ? ' Tippe eine Zeile an, um den Namen zu hören.' : ''} Die Punkte zeigen,
+        wie fest ein Zeichen sitzt: Jede gelungene Wiederholung füllt einen mehr.</p></div>
+      <div class="ab-alphalist">${letterRows}</div>
+      <h2 class="screen__section text-heading">Nikud – die Vokalzeichen</h2>
+      <div class="ab-alphalist">${nikudRows}</div>
+    </div>`;
 
   host.querySelectorAll('[data-tts]').forEach((b) =>
-    b.addEventListener('click', () => speak(b.dataset.tts)));
+    b.addEventListener('click', () => speak(b.dataset.tts, { from: b })));
 }
 
 // ---------- Einstellungen ----------
+
+const switchHtml = (id, on, disabled = false) => `
+  <span class="ab-switch">
+    <input type="checkbox" id="${id}"${on ? ' checked' : ''}${disabled ? ' disabled' : ''}>
+    <span class="ab-switch__track"></span><span class="ab-switch__knob">${icon('check')}</span>
+  </span>`;
+
+const settingText = (forId, title, desc = '') => `
+  <label class="ab-setting__text" for="${forId}"><span class="text-strong">${title}</span>${
+    desc ? `<span class="ab-setting__desc text-caption">${desc}</span>` : ''}</label>`;
 
 export function renderSettings(host) {
   const voiceOk = ttsSupported() && hasHebrewVoice();
@@ -314,6 +346,10 @@ export function renderSettings(host) {
       „Einstellungen → Zeit und Sprache → Sprache“ das hebräische Sprachpaket.
       Alles andere funktioniert auch ohne Audio.`;
   }
+
+  // Wünscht das System schon weniger Bewegung, gilt das ohnehin – der Schalter
+  // zeigt es dann nur an.
+  const systemCalm = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const notif = state.settings.notifications;
   const notifSupported = 'Notification' in window;
@@ -338,71 +374,76 @@ export function renderSettings(host) {
     return 'Aktiviere die Erinnerung, um täglich zur eingestellten Uhrzeit benachrichtigt zu werden.';
   }
 
+  const lessonsDone = Object.keys(state.lessons).length;
+  const cards = Object.keys(state.srs).length;
+
   host.innerHTML = `
-    <h1>Einstellungen</h1>
+    <div class="screen">
+      <h1 class="screen__title text-title">Einstellungen</h1>
 
-    <div class="setting-row">
-      <label for="set-audio">Sprachausgabe (Hebräisch vorlesen)</label>
-      <span class="switch">
-        <input type="checkbox" id="set-audio" ${state.settings.audio ? 'checked' : ''}
-          ${voiceOk ? '' : 'disabled'}>
-        <span class="slider"></span>
-      </span>
-    </div>
+      <div class="ab-settings">
+        <div class="ab-setting">
+          ${settingText('set-audio', 'Sprachausgabe', 'Hebräisch vorlesen')}
+          ${switchHtml('set-audio', state.settings.audio, !voiceOk)}
+        </div>
+        <div class="ab-setting">
+          ${settingText('set-theme', 'Erscheinungsbild')}
+          <span class="ab-select"><select class="ab-input text-strong" id="set-theme">
+            <option value="auto" ${state.settings.theme === 'auto' ? 'selected' : ''}>Automatisch</option>
+            <option value="light" ${state.settings.theme === 'light' ? 'selected' : ''}>Hell</option>
+            <option value="dark" ${state.settings.theme === 'dark' ? 'selected' : ''}>Dunkel</option>
+          </select></span>
+        </div>
+        <div class="ab-setting">
+          ${settingText('set-motion', 'Bewegung reduzieren', systemCalm ? 'Vom System vorgegeben' : 'Keine Sprünge, kein Konfetti')}
+          ${switchHtml('set-motion', systemCalm || state.settings.reduceMotion, systemCalm)}
+        </div>
+      </div>
 
-    <div class="setting-row">
-      <label for="set-theme">Erscheinungsbild</label>
-      <select id="set-theme">
-        <option value="auto" ${state.settings.theme === 'auto' ? 'selected' : ''}>Automatisch</option>
-        <option value="light" ${state.settings.theme === 'light' ? 'selected' : ''}>Hell</option>
-        <option value="dark" ${state.settings.theme === 'dark' ? 'selected' : ''}>Dunkel</option>
-      </select>
-    </div>
+      <div class="ab-hint ab-hint--info">${icon('speaker')}<p class="text-body">${voiceLine}</p></div>
 
-    <div class="hint">🔊 ${voiceLine}</div>
+      <h2 class="screen__section text-heading">Benachrichtigungen</h2>
+      <div class="ab-settings">
+        <div class="ab-setting">
+          ${settingText('set-notif', 'Tägliche Erinnerung')}
+          ${switchHtml('set-notif', notifOn, !notifSupported)}
+        </div>
+        <div class="ab-setting" id="notif-time-row" ${notifOn ? '' : 'hidden'}>
+          ${settingText('set-notif-time', 'Erinnerungszeit')}
+          <input class="ab-input text-strong" type="time" id="set-notif-time" value="${notif.time}">
+        </div>
+      </div>
+      <div class="ab-hint">${icon('bell')}<p class="text-body" id="notif-hint">${notifHintText()}</p></div>
 
-    <h2>Benachrichtigungen</h2>
+      <h2 class="screen__section text-heading">Fortschritt</h2>
+      <div class="stats" role="list">
+        <span class="ab-chip ab-chip--xp text-label" role="listitem">${icon('bolt')}${num(state.xp)} XP</span>
+        <span class="ab-chip ab-chip--streak${currentStreak() ? '' : ' is-cold'} text-label" role="listitem">${icon('flame')}${currentStreak()} ${currentStreak() === 1 ? 'Tag' : 'Tage'} Serie</span>
+        <span class="ab-chip stats__lessons text-label" role="listitem">${icon('crown')}${lessonsDone} von ${orderedLessons().length} Lektionen</span>
+        <span class="ab-chip ab-chip--due text-label" role="listitem">${icon('repeat')}${cards} ${cards === 1 ? 'Karte' : 'Karten'} im Training</span>
+      </div>
+      <button class="ab-btn ab-btn--ghost ab-btn--danger text-button" type="button" id="set-reset">Allen Fortschritt löschen</button>
 
-    <div class="setting-row">
-      <label for="set-notif">Tägliche Erinnerung</label>
-      <span class="switch">
-        <input type="checkbox" id="set-notif" ${notifOn ? 'checked' : ''} ${notifSupported ? '' : 'disabled'}>
-        <span class="slider"></span>
-      </span>
-    </div>
+      <h2 class="screen__section text-heading">Version</h2>
+      <div class="ab-settings">
+        <div class="ab-setting">
+          <span class="ab-setting__text"><span class="text-strong">Installierte Fassung</span></span>
+          <span class="ab-version text-code" id="app-version">wird geprüft …</span>
+        </div>
+      </div>
+      <button class="ab-btn ab-btn--secondary text-button" type="button" id="check-update">Nach Update suchen</button>
+      <div class="ab-hint">${icon('sparkle')}<p class="text-body" id="update-status">Prüft, ob auf dem Server
+        eine neuere Fassung liegt. Die App braucht dafür kurz Internet.</p></div>
 
-    <div class="setting-row" id="notif-time-row" ${notifOn ? '' : 'hidden'}>
-      <label for="set-notif-time">Erinnerungszeit</label>
-      <input type="time" id="set-notif-time" value="${notif.time}">
-    </div>
-
-    <div class="hint" id="notif-hint">${notifHintText()}</div>
-
-    <h2>Fortschritt</h2>
-    <div class="setting-row">
-      <span>⚡ ${state.xp} XP · 🔥 ${currentStreak()} Tage-Serie ·
-      ${Object.keys(state.lessons).length} von ${orderedLessons().length} Lektionen ·
-      ${Object.keys(state.srs).length} Karten im Training</span>
-    </div>
-    <button class="btn danger" id="set-reset">Allen Fortschritt löschen</button>
-
-    <h2>Version</h2>
-    <div class="setting-row">
-      <span>Installierte Fassung</span>
-      <span class="version-tag" id="app-version">wird geprüft …</span>
-    </div>
-    <button class="btn secondary" id="check-update">Nach Update suchen</button>
-    <div class="hint" id="update-status">Prüft, ob auf dem Server eine neuere
-      Fassung liegt. Die App braucht dafür kurz Internet.</div>
-
-    <h2>Über diese App</h2>
-    <div class="hint">
-      <b>Alef Beth</b> – Hebräisch lesen lernen: vom Alphabet über die Vokalzeichen
-      bis zu Wörtern aus Siddur und Alltag. Funktioniert offline und lässt sich am
-      Handy „Zum Startbildschirm hinzufügen“.<br><br>
-      Dein Fortschritt bleibt auf diesem Gerät – es gibt kein Konto, und es werden
-      keine Daten übertragen.<br><br>
-      Viel Erfolg auf deinem Weg – <span class="he">בְּהַצְלָחָה</span>!
+      <h2 class="screen__section text-heading">Über diese App</h2>
+      <section class="ab-card about">
+        <p class="text-body"><b>Alef Beth</b> – Hebräisch lesen lernen: vom Alphabet über die
+          Vokalzeichen bis zu Wörtern aus Siddur und Alltag. Funktioniert offline und lässt
+          sich am Handy „Zum Startbildschirm hinzufügen“.</p>
+        <p class="text-body">Dein Fortschritt bleibt auf diesem Gerät – es gibt kein Konto, und
+          es werden keine Daten übertragen.</p>
+        <p class="text-body">Viel Erfolg auf deinem Weg – ${he('בְּהַצְלָחָה', 'glyph-sm')}!</p>
+      </section>
     </div>`;
 
   renderVersion(host);
@@ -415,6 +456,11 @@ export function renderSettings(host) {
     state.settings.theme = e.target.value;
     save();
     applyTheme();
+  });
+  host.querySelector('#set-motion').addEventListener('change', (e) => {
+    state.settings.reduceMotion = e.target.checked;
+    save();
+    applyMotion();
   });
 
   const notifToggle = host.querySelector('#set-notif');
@@ -440,6 +486,7 @@ export function renderSettings(host) {
       state.settings.notifications.enabled = true;
       notifTimeRow.hidden = false;
       notifHint.textContent = 'Erinnerung aktiv – funktioniert, solange der Browser bzw. die App im Hintergrund geöffnet ist.';
+      toast(`Erinnerung aktiv – täglich um ${state.settings.notifications.time} Uhr`, { tone: 'success', icon: 'bell' });
     } else {
       state.settings.notifications.enabled = false;
       notifTimeRow.hidden = true;
@@ -458,10 +505,16 @@ export function renderSettings(host) {
     scheduleReminder();
   });
 
-  host.querySelector('#set-reset').addEventListener('click', () => {
-    if (confirm('Wirklich den gesamten Lernfortschritt löschen? Das lässt sich nicht rückgängig machen.')) {
-      resetAll();
-    }
+  host.querySelector('#set-reset').addEventListener('click', async () => {
+    const ok = await confirmDialog({
+      art: 'close',
+      title: 'Allen Fortschritt löschen?',
+      text: 'XP, Serie, Lektionen und alle Karten sind danach weg. Das lässt sich nicht rückgängig machen.',
+      confirm: 'Endgültig löschen',
+      cancel: 'Behalten',
+      danger: true,
+    });
+    if (ok) resetAll();
   });
 }
 
@@ -479,7 +532,7 @@ async function renderVersion(host) {
     // Kein Service Worker aktiv: beim allerersten Aufruf normal, danach ein
     // Zeichen dafür, dass die App nicht offline-fähig läuft.
     tag.textContent = 'noch nicht offline';
-    tag.classList.add('muted');
+    tag.classList.add('is-muted');
   }
 
   btn.addEventListener('click', async () => {
@@ -489,8 +542,8 @@ async function renderVersion(host) {
     if (!btn.isConnected) return;
     btn.disabled = false;
     if (result === 'update') {
-      status.textContent = 'Neue Version gefunden – sie wird geladen. Gleich erscheint '
-        + 'unten der Hinweis „Neue Version verfügbar“ zum Neuladen.';
+      // app.js lädt neu, sobald der neue Service Worker übernommen hat.
+      status.textContent = 'Neue Version gefunden – sie wird geladen, die App startet gleich neu.';
     } else if (result === 'aktuell') {
       status.textContent = `Alles aktuell – ${version || 'die installierte Fassung'} ist die neueste.`;
     } else {

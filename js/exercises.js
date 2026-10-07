@@ -7,6 +7,7 @@
 import { getItem, display, mainLabel, subLabel, ttsText, pickDistractors } from '../data/curriculum.js';
 import { LETTERS } from '../data/letters.js';
 import { speak, audioActive } from './audio.js';
+import { sound } from './sound.js';
 import { shuffle } from './util.js';
 import { icon, he } from './ui.js';
 
@@ -279,7 +280,10 @@ function renderMatch(ex, host, onAnswered) {
       sel[side]?.classList.remove('is-selected');
       sel[side] = btn;
       btn.classList.add('is-selected');
-      if (!(sel.l && sel.r)) return;
+      if (!(sel.l && sel.r)) {
+        sound('paarTipp');
+        return;
+      }
 
       const a = sel.l;
       const b = sel.r;
@@ -292,6 +296,8 @@ function renderMatch(ex, host, onAnswered) {
         b.disabled = true;
         a.classList.add('is-match');
         b.classList.add('is-match');
+        // Jedes Paar einen Ton höher, das letzte schließt den Akkord.
+        sound('paar', { k: matched, n: items.length });
         matched += 1;
         const last = matched === items.length;
         setTimeout(() => {
@@ -306,6 +312,7 @@ function renderMatch(ex, host, onAnswered) {
       } else {
         mistakes += 1;
         locked = true;
+        sound('falsch');
         a.classList.add('is-miss');
         b.classList.add('is-miss');
         setTimeout(() => {

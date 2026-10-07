@@ -8,6 +8,7 @@ import { state, save, addXp, touchStreak, completeLesson, currentStreak } from '
 import { syncBadges } from './badges.js';
 import { applyResult, dueIds } from './srs.js';
 import { audioActive } from './audio.js';
+import { sound } from './sound.js';
 import { shuffle, sample } from './util.js';
 import {
   icon, he, replay, countUp, setProgress, confetti, feedback, swap, reducedMotion, confirmDialog,
@@ -418,6 +419,11 @@ function runSession(host, queue, opts) {
       if (ex.kind !== 'match') queue.push({ ...ex, retry: true });
     }
     updateCombo(correct);
+    // Paare finden hat seine Töne schon beim Finden gespielt.
+    if (ex.kind !== 'match') {
+      if (correct) sound('richtig', { step: combo - 1, flame: combo === COMBO_FROM });
+      else sound('falsch');
+    }
     openSheet({ tone: correct ? 'correct' : 'wrong', detail, xp: gain }, { reveal: true });
   }
 
@@ -584,6 +590,11 @@ function renderCelebration(host, { opts, accuracy, gained, streakBefore, streak,
   host.querySelector('#end-again')?.addEventListener('click', () => runLesson(opts.lesson.id, host));
   cont.focus({ preventScroll: true });
   window.scrollTo(0, 0);
+
+  // Der Klang folgt derselben Abstufung und startet mit dem Screen, damit
+  // seine Akkorde das Konfetti treffen. Er spielt auch bei reduzierter
+  // Bewegung – Ton und Bewegung lassen sich getrennt abschalten.
+  sound(badges.length ? 'abzeichen' : accuracy >= 60 ? 'lektion' : 'lektionSanft');
 
   // Feier-Stufe 3 (mit Abzeichen 4): Konfetti aus Krone bzw. Medaille, die
   // Zahlen zählen nacheinander hoch. Die Endwerte stehen schon im Markup – für

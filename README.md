@@ -31,6 +31,13 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
   kleinen Feiern (Konfetti nur bei Meilensteinen). Wer weniger Bewegung mag,
   schaltet unter *Mehr → Bewegung reduzieren* alle Animationen ab; die
   Systemeinstellung wird ohnehin beachtet
+- **Klang:** Glockenspiel-Töne in der Lektion. Eine richtige Antwort klingt
+  hell, in einer Kombo mit jedem Treffer einen Ton höher; ein Fehler gibt nur
+  ein leises Tock. Beim Paare-Finden klingt jedes Paar höher, das letzte
+  schließt den Akkord. Zum Abschluss gibt es einen kleinen Jingle, für ein
+  neues Abzeichen einen festlicheren, unter 60 % nur einen ruhigen Akkord.
+  Abschaltbar unter *Mehr → Soundeffekte*, unabhängig von der Sprachausgabe;
+  am iPhone gilt der Stummschalter
 - **Tagesziel:** ein Ring auf der Startseite füllt sich mit den XP des Tages
   (50, 100 oder 200 XP, einstellbar unter *Mehr*). Ist er voll, gibt es
   +20 XP zum Abholen – wer das vergisst, bekommt den Bonus am nächsten Tag
@@ -89,6 +96,7 @@ Vanilla HTML/CSS/JS ohne Build-Schritt und ohne Abhängigkeiten.
 | `data/curriculum.js` | Einheiten & Lektionen, Item-Registry |
 | `js/lesson.js` | Lektions-Player & Übungs-Warteschlangen |
 | `js/exercises.js` | Übungstypen |
+| `js/sound.js` | Soundeffekte: Glockenspiel per Web Audio erzeugt, ohne Audiodateien |
 | `js/srs.js` | Spaced-Repetition-Logik |
 | `js/badges.js` | Abzeichen: Bedingungen und Fortschritt |
 | `js/theme.js` | Hell/Dunkel inkl. Farbe der Statusleiste |
@@ -98,6 +106,10 @@ Vanilla HTML/CSS/JS ohne Build-Schritt und ohne Abhängigkeiten.
 Die Versionsnummer steht **nur** in `sw.js`. Die Einstellungen fragen sie per
 `postMessage` beim laufenden Service Worker ab – es gibt also keine zweite
 Konstante, die beim Hochzählen vergessen werden könnte.
+
+Neuer Klang: in `js/sound.js` unter `SOUNDS` ergänzen und an der passenden
+Stelle `sound('name')` aufrufen. Alle Töne stehen in D-Dur-Pentatonik (MIDI-
+Nummern), damit sich überlappende Klänge nicht beißen.
 
 Neue Wörter hinzufügen: Eintrag in `data/words.js` ergänzen und die ID in
 einer Lektion in `data/curriculum.js` eintragen – fertig.

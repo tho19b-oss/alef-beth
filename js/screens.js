@@ -11,6 +11,7 @@ import { scheduleReminder, parseTime, DEFAULT_TIME } from './notify.js';
 import { applyTheme, applyMotion } from './theme.js';
 import { dueIds, nextDue } from './srs.js';
 import { speak, ttsSupported, hasHebrewVoice, hebrewVoiceName, audioActive } from './audio.js';
+import { sound, soundSupported } from './sound.js';
 import { activeVersion, checkForUpdate } from './version.js';
 import { todayStr } from './util.js';
 import {
@@ -581,6 +582,10 @@ export function renderSettings(host) {
           ${switchHtml('set-audio', state.settings.audio, !voiceOk)}
         </div>
         <div class="ab-setting">
+          ${settingText('set-sounds', 'Soundeffekte', 'Töne bei Antworten und Feiern')}
+          ${switchHtml('set-sounds', soundSupported() && state.settings.sounds, !soundSupported())}
+        </div>
+        <div class="ab-setting">
           ${settingText('set-theme', 'Erscheinungsbild')}
           <span class="ab-select"><select class="ab-input text-strong" id="set-theme">
             <option value="auto" ${state.settings.theme === 'auto' ? 'selected' : ''}>Automatisch</option>
@@ -646,6 +651,12 @@ export function renderSettings(host) {
   host.querySelector('#set-audio').addEventListener('change', (e) => {
     state.settings.audio = e.target.checked;
     save();
+  });
+  host.querySelector('#set-sounds').addEventListener('change', (e) => {
+    state.settings.sounds = e.target.checked;
+    save();
+    // Hörprobe beim Einschalten: So klingt eine richtige Antwort.
+    if (e.target.checked) sound('richtig');
   });
   host.querySelector('#set-theme').addEventListener('change', (e) => {
     state.settings.theme = e.target.value;

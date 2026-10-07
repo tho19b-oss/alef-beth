@@ -1,19 +1,24 @@
 // Service Worker: App-Shell vorab cachen (cache-first), damit die App offline läuft.
 // Bei Änderungen VERSION hochzählen – alte Caches werden beim Aktivieren gelöscht.
 
-const VERSION = 'v12';
+const VERSION = 'v13';
 const CACHE = `alefbeth-${VERSION}`;
 
 const ASSETS = [
   '.',
   'index.html',
   'manifest.webmanifest',
+  'css/tokens.css',
+  'css/components.css',
   'css/style.css',
+  'fonts/rubik-latin.woff2',
   'fonts/frankruhllibre-hebrew.woff2',
   'fonts/frankruhllibre-latin.woff2',
   'icons/icon.svg',
   'icons/icon-192.png',
   'icons/icon-512.png',
+  'js/alefbeth.js',
+  'js/ui.js',
   'js/app.js',
   'js/notify.js',
   'js/theme.js',

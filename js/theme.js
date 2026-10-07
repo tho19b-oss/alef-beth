@@ -3,7 +3,8 @@
 
 import { state } from './state.js';
 
-const COLORS = { light: '#f3e9d2', dark: '#1c1814' };
+// Papierfarbe (--paper) aus tokens.css, hell und dunkel.
+const COLORS = { light: '#fcf7ef', dark: '#15110d' };
 
 export function prefersDark() {
   return matchMedia('(prefers-color-scheme: dark)').matches;

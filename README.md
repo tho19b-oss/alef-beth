@@ -36,6 +36,10 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
   ein leises Tock. Beim Paare-Finden klingt jedes Paar höher, das letzte
   schließt den Akkord. Zum Abschluss gibt es einen kleinen Jingle, für ein
   neues Abzeichen einen festlicheren, unter 60 % nur einen ruhigen Akkord.
+  Zurück auf der Startseite klackt das Schloss der nächsten Lektion, das volle
+  Tagesziel und der abgeholte Bonus klingen, eine geschaffte Einheit bekommt
+  ein kleines Erkennungsmotiv; unter *Erfolge* faucht die Flamme, wenn die
+  Serie wächst. Wie beim Konfetti gibt es pro Bildschirm nur eine große Feier.
   Abschaltbar unter *Mehr → Soundeffekte*, unabhängig von der Sprachausgabe;
   am iPhone gilt der Stummschalter
 - **Tagesziel:** ein Ring auf der Startseite füllt sich mit den XP des Tages

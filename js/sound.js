@@ -164,9 +164,20 @@ export function makeEngine(ctx, output = ctx.destination) {
     hiss(dest, t, { peak: peak * 0.35, tau: 0.004, f: Math.min(f * 2.2, 8000), q: 2 });
   }
 
-  // Die Kombo-Flamme faucht kurz auf.
+  // Eine Flamme faucht kurz auf.
   function flame(dest, t, v) {
     hiss(dest, t, { peak: 0.24 * v, attack: 0.1, tau: 0.09, f: 450, to: 2200, sweep: 0.25, q: 0.9 });
+  }
+
+  // Plopp: ein Ton, der blitzschnell nach oben gleitet – etwas erscheint.
+  function pop(dest, t, peak) {
+    tone(dest, 1050, t, { peak, attack: 0.002, tau: 0.035, from: 0.45, glide: 0.04 });
+  }
+
+  // Ein metallisches Klacken, wie ein Schloss.
+  function latch(dest, t, f) {
+    hiss(dest, t, { peak: 0.45, tau: 0.005, f, q: 4 });
+    tone(dest, f * 0.75, t, { peak: 0.08, attack: 0.001, tau: 0.012 });
   }
 
   // Weicher Klangteppich aus leicht verstimmten Dreiecksschwingungen.
@@ -260,6 +271,68 @@ export function makeEngine(ctx, output = ctx.destination) {
       sparkle(ch, t + 0.5, 1, 8, 0.06);
       return 2.6;
     },
+    // Tagesziel voll (Stufe 3): Der Ring füllt sich, zugleich ploppt die
+    // Krone. Ein schneller Lauf aufwärts, der Akkord trifft den Höhepunkt
+    // des Ploppens, dazu glitzert das kleine Konfetti.
+    tagesziel(t) {
+      const ch = channel(0.2);
+      [74, 76, 78, 81, 83].forEach((m, i) => bell(ch, m, t + i * 0.03, 0.3 + i * 0.07));
+      const top = t + 0.15;
+      pop(ch, top, 0.22);
+      chord(ch, [86, 90, 93], top, 0.45);
+      sparkle(ch, top + 0.05, 0.4, 3, 0.06);
+      return 1.1;
+    },
+    // Bonus abholen (Stufe 2): Klimpern beim Tippen, dann schwirren die
+    // Funken zum XP-Chip. Ihre Flugzeit ist zufällig (0,7–1 s), der Klang
+    // landet nach 0,85 s.
+    bonus(t) {
+      const ch = channel(0.22, 0.8);
+      bell(ch, 93, t, 0.5);
+      bell(ch, 98, t + 0.075, 0.7);
+      for (let i = 0; i < 7; i++) bell(ch, pick([98, 100, 102, 105]), t + 0.15 + i * 0.045, 0.09);
+      hiss(ch, t + 0.15, { peak: 0.035, attack: 0.3, tau: 0.12, f: 2500, to: 6000, sweep: 0.6, q: 2 });
+      const land = t + 0.85;
+      pop(ch, land, 0.12);
+      bell(ch, 98, land, 0.5);
+      bell(ch, 102, land + 0.07, 0.4);
+      return 1.4;
+    },
+    // Station frei (Lernpfad): Das Schloss klackt bei jedem Wackeln, nach
+    // 420 ms ploppt die Station in Granat auf.
+    stationFrei(t) {
+      const ch = channel(0.12);
+      latch(ch, t + 0.1, 3400);
+      latch(ch, t + 0.21, 2700);
+      pop(ch, t + 0.42, 0.28);
+      bell(ch, 86, t + 0.43, 0.6);
+      return 1;
+    },
+    // Einheit geschafft (Stufe 4): ein kleines Erkennungsmotiv, kurz, kurz,
+    // lang. Der volle Akkord kommt nach 0,55 s – zusammen mit dem Konfetti.
+    einheit(t) {
+      const ch = channel(0.26, 1.1);
+      bell(ch, 86, t, 0.7);
+      bell(ch, 86, t + 0.12, 0.7);
+      bell(ch, 93, t + 0.24, 0.9);
+      bell(ch, 98, t + 0.24, 0.35);
+      const hit = t + 0.55;
+      pad(ch, [62, 69, 74, 78], hit - 0.05, { attack: 0.08, hold: 0.6, release: 0.9, peak: 0.03 });
+      chord(ch, [74, 81, 86, 90, 98], hit, 0.42);
+      sparkle(ch, hit + 0.05, 0.9, 7, 0.06);
+      return 2.4;
+    },
+    // Serie verlängert (Erfolge): Die Flamme faucht auf, der heutige Punkt
+    // der Woche ploppt mit zwei Tönen.
+    serie(t) {
+      const ch = channel(0.2);
+      flame(ch, t, 1);
+      const p = t + 0.12;
+      pop(ch, p, 0.2);
+      bell(ch, 81, p, 0.55);
+      bell(ch, 86, p + 0.09, 0.7);
+      return 1;
+    },
   };
 
   return { play: (name, t, opts = {}) => SOUNDS[name](t, opts) };
@@ -269,7 +342,8 @@ export function makeEngine(ctx, output = ctx.destination) {
 
 let ctx = null;
 let engine = null;
-let quietAt = 0;   // Context-Zeit, zu der der letzte Klang verklungen ist
+let touched = false; // gab es schon eine Berührung? Vorher lässt der Browser keinen Ton zu
+let quietAt = 0;     // Context-Zeit, zu der der letzte Klang verklungen ist
 let sleepTimer = 0;
 
 function wakeContext() {
@@ -291,8 +365,10 @@ function sleepLater(seconds) {
 
 // Spielt einen Klang, sofern Soundeffekte eingeschaltet sind. Ein Fehler beim
 // Abspielen darf nie die Übung aufhalten – dann bleibt es eben still.
+// Vor der ersten Berührung (etwa wenn die App direkt auf „Erfolge“ startet)
+// bleibt es ebenfalls still: Der Ton käme sonst verspätet beim nächsten Tippen.
 export function sound(name, opts) {
-  if (!AC || !state.settings.sounds) return;
+  if (!AC || !touched || !state.settings.sounds) return;
   try {
     wakeContext();
     const start = ctx.currentTime + 0.02;
@@ -307,6 +383,7 @@ export function sound(name, opts) {
 // weckt den Context deshalb vorsorglich – so klingen auch die Feiern, die
 // zeitversetzt nach dem letzten Tippen kommen.
 function onTouch() {
+  touched = true;
   if (!AC || !state.settings.sounds) return;
   try {
     wakeContext();

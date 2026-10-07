@@ -47,6 +47,19 @@ body.in-lesson #bottomnav { display: none; }
 /* Der Text neben einem Knoten gehört mit zur Tippfläche (siehe screens.js). */
 .ab-step__text { cursor: pointer; }
 
+/* Karte „Heute“: Tagesziel-Ring (kleiner als im System) neben dem Text */
+.today { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) var(--space-5); }
+.today__ring { flex: none; width: 96px; height: 96px; }
+.today__ring .ab-goal__done { width: 52px; height: 52px; }
+.today__ring .ab-goal__done .ab-icon { width: 28px; height: 28px; }
+/* Schon vorher erreicht: nicht bei jedem Besuch erneut hüpfen */
+.today__ring.is-settled, .today__ring.is-settled .ab-goal__done { animation: none; }
+.today__text { display: grid; gap: 2px; min-width: 0; }
+.today__kicker { color: var(--gold-ink); }
+.today__note { color: var(--ink-soft); }
+/* Bonus abgeholt: der Banner blendet aus */
+.ab-banner.is-leaving { animation: ab-fade-out var(--dur-base) var(--ease-in) forwards; }
+
 /* ===== Lektion ===== */
 .lesson-stage { margin-top: var(--space-4); }
 /* Mehrzeilige Fragen (Bracha-Zeile, lange Bedeutungen) mittig umbrechen. */
@@ -58,6 +71,11 @@ body.in-lesson #bottomnav { display: none; }
 /* Paare: beide Spalten gleich hoch, sonst stehen die Zeilen versetzt (die
    hebräische Seite ist durch die größere Schrift ein paar Pixel höher). */
 .ab-pair { min-height: 68px; }
+/* Neues Abzeichen als Held der Feier: Medaille in Pokal-Größe */
+.celebrate-medal .ab-medal__art { margin: 0; }
+.celebrate-medal .ab-medal__disc { width: 120px; height: 120px; box-shadow: 0 8px 0 var(--_lc); }
+.celebrate-medal .ab-medal__disc::before { inset: 10px; }
+.celebrate-medal .ab-medal__disc .ab-icon { width: 60px; height: 60px; }
 
 /* ===== Üben, Alef-Bet, Einstellungen ===== */
 .screen { display: grid; gap: var(--space-3); }
@@ -83,6 +101,14 @@ body.in-lesson #bottomnav { display: none; }
 
 /* Alef-Bet: Zeichenfeld breit genug für Paare wie שׁ שׂ */
 .ab-alpha__glyph { width: 76px; }
+
+/* Erfolge */
+.screen__count { margin-left: var(--space-2); color: var(--ink-soft); }
+/* Serie 0: graue Flamme, die nicht flackert */
+.ab-streak.is-cold .ab-streak__flame { background: var(--well); }
+.ab-streak.is-cold .ab-streak__flame .ab-icon { color: var(--control); --icon-accent: var(--well); animation: none; }
+/* Flammen-Medaille mit goldenem Kern */
+.ab-medal--granat:not(.is-locked) .ab-icon { --icon-accent: var(--gold); }
 
 /* Einstellungen */
 .stats { display: flex; flex-wrap: wrap; gap: var(--space-2); }

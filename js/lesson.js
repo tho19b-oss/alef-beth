@@ -5,6 +5,7 @@
 import { getLesson, getItem, learnedPool, isUnlocked } from '../data/curriculum.js';
 import { renderExercise, isPassive } from './exercises.js';
 import { state, save, addXp, touchStreak, completeLesson, currentStreak } from './state.js';
+import { syncBadges } from './badges.js';
 import { applyResult, dueIds } from './srs.js';
 import { audioActive } from './audio.js';
 import { shuffle, sample } from './util.js';
@@ -309,6 +310,7 @@ function runSession(host, queue, opts) {
   const failed = new Set();
   let firstTry = 0;
   let firstTryCorrect = 0;
+  let listenCorrect = 0; // für das Abzeichen „Ohrenmensch“
   let sheetOpen = false;
   let sheetCtl = null;
   const exitHash = opts.mode === 'lesson' ? '#/' : '#/review';
@@ -410,6 +412,7 @@ function runSession(host, queue, opts) {
     }
     const gain = correct ? (ex.retry ? 5 : 10) : 0;
     xp += gain;
+    if (correct && ex.kind === 'listen') listenCorrect += 1;
     if (!correct) {
       if (ex.itemId) failed.add(ex.itemId);
       if (ex.kind !== 'match') queue.push({ ...ex, retry: true });
@@ -486,15 +489,17 @@ function runSession(host, queue, opts) {
     const bonus = opts.mode === 'lesson' ? 20 : 10;
     const streakBefore = currentStreak();
     if (opts.mode === 'lesson') completeLesson(opts.lesson.id, accuracy);
+    state.stats.listenCorrect += listenCorrect;
     addXp(xp + bonus);
     touchStreak();
     save();
+    const badges = syncBadges(); // neu erreichte Abzeichen
 
     // Kurz den vollen, goldenen Balken zeigen, dann die Feier.
     setTimeout(() => {
       if (!area.isConnected) return;
       swap(host, (h) => renderCelebration(h, {
-        opts, accuracy, gained: xp + bonus, streakBefore, streak: currentStreak(), exitHash,
+        opts, accuracy, gained: xp + bonus, streakBefore, streak: currentStreak(), exitHash, badges,
       }), { direction: 'fade', viewTransition: false });
     }, reducedMotion() ? 0 : 450);
   }
@@ -523,21 +528,37 @@ function celebrationText(mode, accuracy) {
   return 'Dranbleiben lohnt sich – die schwierigen Karten kommen bald wieder.';
 }
 
-function renderCelebration(host, { opts, accuracy, gained, streakBefore, streak, exitHash }) {
-  const title = opts.mode === 'lesson' ? 'Lektion geschafft!'
+// Ein neues Abzeichen ist die größere Nachricht (Feier-Stufe 4): Es tritt als
+// Held an die Stelle von Krone bzw. Pokal – eine Feier pro Screen.
+function heroHtml(opts, badges) {
+  const b = badges[0];
+  if (b) {
+    const art = b.glyph ? he(b.glyph, 'glyph-lg') : icon(b.icon);
+    return `<div class="ab-medal celebrate-medal is-unlocking${b.tone ? ` ab-medal--${b.tone}` : ''}">`
+      + `<div class="ab-medal__art"><div class="ab-medal__disc">${art}</div></div></div>`;
+  }
+  // Die Krone gehört zur geschafften Lektion (wie auf dem Lernpfad).
+  return `<div class="ab-celebrate__trophy">${icon(opts.mode === 'lesson' ? 'crown' : 'trophy')}</div>`;
+}
+
+function renderCelebration(host, { opts, accuracy, gained, streakBefore, streak, exitHash, badges = [] }) {
+  const done = opts.mode === 'lesson' ? 'Lektion geschafft!'
     : opts.mode === 'practice' ? 'Runde geschafft!'
     : 'Wiederholung geschafft!';
-  // Die Krone gehört zur geschafften Lektion (wie auf dem Lernpfad).
-  const art = opts.mode === 'lesson' ? 'crown' : 'trophy';
+  const title = !badges.length ? done
+    : badges.length === 1 ? 'Neues Abzeichen!' : `${badges.length} neue Abzeichen!`;
+  const sub = !badges.length ? celebrationText(opts.mode, accuracy)
+    : badges.length === 1 ? `<b>${badges[0].name}</b> – ${badges[0].desc}. ${done}`
+    : `${badges.map((b) => `<b>${b.name}</b>`).join(' und ')}. ${done}`;
 
   host.innerHTML = `
     <section class="ab-celebrate" aria-labelledby="end-title">
       <div class="ab-celebrate__hero">
         <svg class="ab-celebrate__rays" viewBox="0 0 264 264" aria-hidden="true">${RAYS}</svg>
-        <div class="ab-celebrate__trophy">${icon(art)}</div>
+        ${heroHtml(opts, badges)}
       </div>
       <h1 class="ab-celebrate__title text-display" id="end-title">${title}</h1>
-      <p class="ab-celebrate__sub text-body">${celebrationText(opts.mode, accuracy)}</p>
+      <p class="ab-celebrate__sub text-body">${sub}</p>
       <div class="ab-results">
         <div class="ab-result">
           <div class="ab-result__head text-overline">XP</div>
@@ -564,16 +585,19 @@ function renderCelebration(host, { opts, accuracy, gained, streakBefore, streak,
   cont.focus({ preventScroll: true });
   window.scrollTo(0, 0);
 
-  // Feier-Stufe 3: Konfetti aus der Krone, die Zahlen zählen nacheinander hoch.
-  // Die Endwerte stehen schon im Markup – für Screenreader und reduzierte Bewegung.
+  // Feier-Stufe 3 (mit Abzeichen 4): Konfetti aus Krone bzw. Medaille, die
+  // Zahlen zählen nacheinander hoch. Die Endwerte stehen schon im Markup – für
+  // Screenreader und reduzierte Bewegung.
   if (reducedMotion()) return;
   const numbers = [...host.querySelectorAll('[data-n]')];
   numbers.forEach((n) => {
     n.textContent = `${n.dataset.prefix || ''}${n.dataset.from || 0}${n.dataset.suffix || ''}`;
   });
   setTimeout(() => {
-    confetti({ origin: host.querySelector('.ab-celebrate__trophy'), count: 110, spread: 150 });
-  }, 380);
+    const origin = host.querySelector('.ab-celebrate__trophy, .ab-medal__disc');
+    if (badges.length) confetti({ origin, count: 140, spread: 360, power: 0.9 });
+    else confetti({ origin, count: 110, spread: 150 });
+  }, badges.length ? 420 : 380);
   numbers.forEach((n, i) => {
     setTimeout(() => countUp(n, Number(n.dataset.n), {
       from: Number(n.dataset.from || 0),

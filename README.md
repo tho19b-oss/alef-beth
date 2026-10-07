@@ -31,6 +31,13 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
   kleinen Feiern (Konfetti nur bei Meilensteinen). Wer weniger Bewegung mag,
   schaltet unter *Mehr → Bewegung reduzieren* alle Animationen ab; die
   Systemeinstellung wird ohnehin beachtet
+- **Tagesziel:** ein Ring auf der Startseite füllt sich mit den XP des Tages
+  (50, 100 oder 200 XP, einstellbar unter *Mehr*). Ist er voll, gibt es
+  +20 XP zum Abholen – wer das vergisst, bekommt den Bonus am nächsten Tag
+  automatisch
+- **Erfolge:** eigener Tab mit der Serien-Woche, sieben Abzeichen (vom ersten
+  Buchstaben bis zur ersten Bracha, gesperrte zeigen den Weg dorthin) und den
+  Gesamtzahlen. Ein neues Abzeichen erscheint direkt im Abschluss der Lektion
 - **Nachschlagen:** Alphabet- und Nikud-Tabelle mit Sprachausgabe
 - **Am Rechner:** Tasten 1–4 wählen eine Antwort, Enter geht weiter
 - **Version sichtbar:** Unter *Mehr → Version* steht die installierte Fassung,
@@ -83,6 +90,7 @@ Vanilla HTML/CSS/JS ohne Build-Schritt und ohne Abhängigkeiten.
 | `js/lesson.js` | Lektions-Player & Übungs-Warteschlangen |
 | `js/exercises.js` | Übungstypen |
 | `js/srs.js` | Spaced-Repetition-Logik |
+| `js/badges.js` | Abzeichen: Bedingungen und Fortschritt |
 | `js/theme.js` | Hell/Dunkel inkl. Farbe der Statusleiste |
 | `js/version.js` | fragt die laufende Version beim Service Worker ab |
 | `sw.js` | Offline-Cache – **nach Änderungen `VERSION` hochzählen!** |

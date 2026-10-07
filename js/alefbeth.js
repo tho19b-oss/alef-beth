@@ -145,8 +145,11 @@
   }
 
   // Setzt einen Tagesziel-Ring (.ab-goal) auf value/goal.
-  function ring(node, value, goal) {
+  // opts.confetti: false lässt das Konfetti beim Erreichen weg – etwa wenn auf
+  // demselben Screen schon eine größere Feier läuft.
+  function ring(node, value, goal, opts) {
     node = resolve(node);
+    opts = opts || {};
     if (!node) return;
     goal = goal || 1;
     var ratio = Math.max(0, Math.min(1, value / goal));
@@ -159,7 +162,7 @@
     if (label) countUp(label, Math.min(value, goal), { duration: ms('dur-slow', 420) });
     var wasComplete = node.classList.contains('is-complete');
     node.classList.toggle('is-complete', ratio >= 1);
-    if (ratio >= 1 && !wasComplete) confetti({ origin: node, count: 36, spread: 360, power: 0.55 });
+    if (ratio >= 1 && !wasComplete && opts.confetti !== false) confetti({ origin: node, count: 36, spread: 360, power: 0.55 });
   }
 
   // ---------- Konfetti ----------

@@ -1,22 +1,24 @@
 // Einstieg: Hash-Router, Theme, Bottom-Navigation, Service-Worker-Registrierung.
 
 import { state } from './state.js';
-import { renderHome, renderReview, renderAlphabet, renderSettings } from './screens.js';
+import { renderHome, renderReview, renderAlphabet, renderAchievements, renderSettings } from './screens.js';
 import { runLesson, runReview, runFreePractice } from './lesson.js';
 import { scheduleReminder } from './notify.js';
 import { dueIds } from './srs.js';
 import { applyTheme, applyMotion } from './theme.js';
 import { replay } from './ui.js';
+import { syncBadges } from './badges.js';
 
 const app = document.getElementById('app');
 // Hebräische Textstellen tragen lang="he" direkt im Markup (he() in ui.js):
 // Screenreader und Browser wählen dadurch Aussprache und Schrift richtig.
 
-const NAV_ROUTES = ['home', 'review', 'alphabet', 'settings'];
+const NAV_ROUTES = ['home', 'review', 'alphabet', 'erfolge', 'settings'];
 
 function navRoute(hash) {
   if (hash.startsWith('#/review')) return 'review';
   if (hash === '#/alphabet') return 'alphabet';
+  if (hash === '#/erfolge') return 'erfolge';
   if (hash === '#/settings') return 'settings';
   return 'home'; // auch Lektionen gehören zum Lernpfad
 }
@@ -60,6 +62,8 @@ function route() {
     renderReview(app);
   } else if (hash === '#/alphabet') {
     renderAlphabet(app);
+  } else if (hash === '#/erfolge') {
+    renderAchievements(app);
   } else if (hash === '#/settings') {
     renderSettings(app);
   } else {
@@ -106,6 +110,9 @@ window.addEventListener('hebrewvoiceready', () => {
 
 applyTheme();
 applyMotion();
+// Abzeichen abgleichen: beim ersten Start nach ihrer Einführung wird das
+// bisher Erreichte still übernommen (gefeiert wird erst, was danach dazukommt).
+syncBadges();
 route();
 scheduleReminder();
 

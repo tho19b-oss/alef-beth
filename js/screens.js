@@ -1,9 +1,12 @@
-// Screens: Lernpfad (Home), Wiederholen, Alphabet-Tabelle, Einstellungen.
+// Screens: Lernpfad (Home), Wiederholen, Alphabet-Tabelle, Erfolge, Einstellungen.
 
 import { UNITS, isUnlocked, getItem, orderedLessons } from '../data/curriculum.js';
 import { LETTERS } from '../data/letters.js';
 import { NIKUD } from '../data/nikud.js';
-import { state, save, currentStreak, resetAll } from './state.js';
+import {
+  state, save, currentStreak, resetAll, todayXp, canClaimBonus, claimBonus, learnedOn, GOAL_BONUS,
+} from './state.js';
+import { BADGES } from './badges.js';
 import { scheduleReminder, parseTime, DEFAULT_TIME } from './notify.js';
 import { applyTheme, applyMotion } from './theme.js';
 import { dueIds, nextDue } from './srs.js';
@@ -11,7 +14,7 @@ import { speak, ttsSupported, hasHebrewVoice, hebrewVoiceName, audioActive } fro
 import { activeVersion, checkForUpdate } from './version.js';
 import { todayStr } from './util.js';
 import {
-  icon, he, countUp, replay, setProgress, confetti, toast, reducedMotion, confirmDialog,
+  icon, he, countUp, replay, setProgress, ring, confetti, toast, xp as xpBurst, reducedMotion, confirmDialog,
 } from './ui.js';
 
 const num = (n) => n.toLocaleString('de-DE');
@@ -19,8 +22,9 @@ const num = (n) => n.toLocaleString('de-DE');
 // ---------- Kopfleiste: Marke, Serie, XP ----------
 
 // Zuletzt angezeigte Zählerstände. Kommt man aus einer Lektion zurück, zählen
-// die Chips von dort aus hoch, statt einfach umzuspringen.
-const shown = { streak: null, xp: null };
+// Chips und Tagesziel von dort aus hoch, statt einfach umzuspringen.
+// weekToday: an welchem Tag der heutige Punkt der Serien-Woche schon gefeiert wurde.
+const shown = { streak: null, xp: null, daily: null, weekToday: null };
 
 function topbarHtml(streak) {
   // Heute schon gelernt: die Flamme flackert. Serie 0: graue Flamme.
@@ -51,6 +55,83 @@ function bumpCounters(host, streak) {
       countUp(chip.querySelector('[data-count]'), value, { from: before });
     }, 350);
   }
+}
+
+// ---------- Tagesziel ----------
+
+function todayNote(value, goal) {
+  if (value >= goal) {
+    return state.daily.claimed
+      ? `Ziel von ${goal} XP geschafft, Bonus abgeholt. Bis morgen!`
+      : `Geschafft! Dein Ziel von ${goal} XP ist erreicht.`;
+  }
+  if (value === 0) return 'Eine Lektion bringt dich ungefähr ans Ziel.';
+  return `Noch ${goal - value} XP bis zum Ziel.`;
+}
+
+// Karte „Heute“: Ring mit den XP des Tages. Gezeichnet wird der zuletzt
+// gezeigte Stand; fillToday() lässt ihn danach auf den aktuellen wachsen.
+function todayHtml(from, value, goal) {
+  const ratio = Math.min(1, from / goal);
+  // is-settled: schon vorher erreicht – Krone und Ring nicht bei jedem Besuch
+  // erneut hüpfen lassen.
+  const done = from >= goal ? ' is-complete is-settled' : '';
+  // Über dem Ziel zählt die echte Summe, nicht die gedeckelte des Rings.
+  const heading = value >= goal ? `${num(value)} XP heute` : `${value} von ${goal} XP`;
+  return `
+    <section class="ab-card today" aria-labelledby="today-title">
+      <div class="ab-goal today__ring${done}" role="img" aria-label="Tagesziel: ${Math.min(value, goal)} von ${goal} XP">
+        <svg class="ab-goal__ring" viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ab-goal__track" cx="60" cy="60" r="50"/>
+          <circle class="ab-goal__bar" cx="60" cy="60" r="50" pathLength="100"
+                  style="stroke-dashoffset:${100 - ratio * 100};opacity:${ratio > 0 ? 1 : 0}"/>
+        </svg>
+        <div class="ab-goal__center" aria-hidden="true">
+          <span class="ab-goal__value text-heading">${Math.min(from, goal)}</span>
+          <span class="ab-goal__unit text-caption">XP</span>
+          <span class="ab-goal__done">${icon('crown')}</span>
+        </div>
+      </div>
+      <div class="today__text">
+        <p class="today__kicker text-overline">Tagesziel</p>
+        <h2 class="text-heading" id="today-title">${heading}</h2>
+        <p class="today__note text-caption">${todayNote(value, goal)}</p>
+      </div>
+    </section>`;
+}
+
+function bonusHtml(hidden) {
+  return `
+    <div class="ab-banner ab-banner--reward" role="region" aria-label="Tagesziel erreicht" id="goal-bonus"${hidden ? ' hidden' : ''}>
+      <span class="ab-banner__icon">${icon('target')}</span>
+      <p class="ab-banner__text text-body">Tagesziel erreicht – <b>+${GOAL_BONUS} XP</b> Bonus</p>
+      <button class="ab-btn ab-btn--gold ab-btn--sm ab-btn--shine text-label" type="button" id="claim-bonus">Abholen</button>
+    </div>`;
+}
+
+// Der Ring wächst auf den neuen Stand. Wird das Ziel dabei erreicht, ploppt
+// die Krone – Konfetti nur, wenn auf diesem Screen nicht schon eine größere
+// Feier läuft – und danach fällt der Bonus-Banner herein.
+function fillToday(home, value, goal, { celebrate }) {
+  const el = home.querySelector('.today__ring');
+  const banner = home.querySelector('#goal-bonus');
+  setTimeout(() => {
+    if (!el.isConnected) return;
+    ring(el, value, goal, { confetti: celebrate });
+    if (banner) setTimeout(() => { banner.hidden = false; }, reducedMotion() ? 0 : 700);
+  }, reducedMotion() ? 0 : 400);
+}
+
+// Bonus abholen: Funken fliegen vom Knopf zum XP-Chip, der hochzählt.
+function collectBonus(home, btn) {
+  if (!claimBonus()) return;
+  btn.disabled = true;
+  shown.xp = state.xp;
+  xpBurst(btn, GOAL_BONUS, { to: home.querySelector('#chip-xp'), total: state.xp });
+  home.querySelector('.today__note').textContent = todayNote(todayXp(), state.settings.dailyGoal);
+  const banner = home.querySelector('#goal-bonus');
+  banner.classList.add('is-leaving');
+  setTimeout(() => banner.remove(), reducedMotion() ? 0 : 320);
 }
 
 // ---------- Home / Lernpfad ----------
@@ -84,9 +165,19 @@ export function renderHome(host) {
     u.lessons.some((l) => fresh.includes(l.id)) && u.lessons.every((l) => state.lessons[l.id]));
   const pct = (n) => Math.round((n / total) * 100);
 
+  // Tagesziel: seit dem letzten Besuch dazugewonnene XP wachsen sichtbar nach.
+  const goal = state.settings.dailyGoal;
+  const daily = todayXp();
+  const dailyFrom = shown.daily !== null && shown.daily < daily ? shown.daily : daily;
+  shown.daily = daily;
+  const crossing = dailyFrom < goal && daily >= goal;
+
   host.innerHTML = `
     <div class="home">
       ${topbarHtml(streak)}
+
+      ${todayHtml(dailyFrom, daily, goal)}
+      ${canClaimBonus() ? bonusHtml(crossing) : ''}
 
       <section class="home-meter ab-meter" aria-label="Gesamtfortschritt">
         <div class="ab-meter__head">
@@ -114,6 +205,11 @@ export function renderHome(host) {
       location.hash = '#/review/run';
       return;
     }
+    const claim = e.target.closest('#claim-bonus');
+    if (claim) {
+      collectBonus(home, claim);
+      return;
+    }
     const step = e.target.closest('.ab-step');
     if (!step) return;
     const node = step.querySelector('.ab-node');
@@ -127,6 +223,9 @@ export function renderHome(host) {
   });
 
   if (fresh.length) celebrateProgress(home, { done, total, unlocked, freshUnit });
+  // Höchstens eine große Feier pro Screen: eine geschaffte Einheit hat Vorrang
+  // vor dem Konfetti des Tagesziels.
+  if (dailyFrom < daily) fillToday(home, daily, goal, { celebrate: !freshUnit });
 }
 
 // Rückkehr aus einer geschafften Lektion: Balken und Zähler wachsen, die
@@ -320,6 +419,95 @@ export function renderAlphabet(host) {
     b.addEventListener('click', () => speak(b.dataset.tts, { from: b })));
 }
 
+// ---------- Erfolge: Serie, Abzeichen, Gesamtzahlen ----------
+
+// Die sieben Tage der laufenden Woche, Montag zuerst.
+function thisWeek() {
+  const today = new Date();
+  const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - ((today.getDay() + 6) % 7));
+  return Array.from({ length: 7 }, (_, i) => new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i));
+}
+
+function streakNote(streak, learnedToday) {
+  if (learnedToday) return 'Heute geschafft – bis morgen!';
+  if (streak > 0) return 'Noch eine Lektion heute, dann hält deine Serie.';
+  return 'Lerne heute eine Lektion – dann beginnt eine neue Serie.';
+}
+
+function medalHtml(b) {
+  const earned = !!state.badges?.[b.id];
+  const [value, needed] = b.progress();
+  const art = b.glyph ? he(b.glyph, 'glyph-md') : icon(b.icon);
+  const way = !earned && needed > 1; // Weg dorthin zeigen, wo es mehr als einen Schritt gibt
+  return `
+    <li class="ab-medal${b.tone ? ` ab-medal--${b.tone}` : ''}${earned ? '' : ' is-locked'}">
+      <div class="ab-medal__art">
+        <div class="ab-medal__disc">${art}</div>
+        ${earned ? '' : `<span class="ab-medal__lock">${icon('lock')}</span>`}
+      </div>
+      <span class="ab-medal__name text-strong">${b.name}${earned ? '' : '<span class="ab-sr"> (noch nicht erreicht)</span>'}</span>
+      <span class="ab-medal__desc text-caption">${b.desc}${way ? ` · ${num(value)} / ${num(needed)}` : ''}</span>
+      ${way ? `<span class="ab-medal__bar" aria-hidden="true"><i style="--value: ${Math.round((value / needed) * 100)}%"></i></span>` : ''}
+    </li>`;
+}
+
+export function renderAchievements(host) {
+  const streak = currentStreak();
+  const today = todayStr();
+  const learnedToday = state.streak.lastDay === today;
+  // Der heutige Punkt ploppt einmal pro Tag, sobald heute gelernt wurde.
+  const popToday = learnedToday && shown.weekToday !== today;
+  if (learnedToday) shown.weekToday = today;
+
+  const now = new Date();
+  const days = thisWeek().map((d) => {
+    const key = todayStr(d);
+    const isToday = key === today;
+    const done = learnedOn(key);
+    const name = d.toLocaleDateString('de-DE', { weekday: 'short' }).replace('.', '');
+    const long = d.toLocaleDateString('de-DE', { weekday: 'long' });
+    const status = done ? 'gelernt' : isToday ? 'heute, noch offen' : d > now ? 'kommt noch' : 'nicht gelernt';
+    const cls = `ab-day${done ? ' is-done' : ''}${isToday ? ' is-today' : ''}${isToday && popToday ? ' is-new' : ''}`;
+    return `<li class="${cls}" aria-label="${long}: ${status}"><span class="ab-day__dot">${done ? icon('check') : ''}</span>`
+      + `<span class="ab-day__name text-caption" aria-hidden="true">${name}</span></li>`;
+  }).join('');
+
+  const earned = BADGES.filter((b) => state.badges?.[b.id]).length;
+  const best = state.stats.bestStreak;
+  const lessonsDone = Object.keys(state.lessons).length;
+  const cards = Object.keys(state.srs).length;
+
+  host.innerHTML = `
+    <div class="screen">
+      <h1 class="screen__title text-title">Erfolge</h1>
+
+      <article class="ab-card ab-streak${streak ? '' : ' is-cold'}" aria-labelledby="streak-title">
+        <div class="ab-streak__hero">
+          <span class="ab-streak__flame">${icon('flame')}</span>
+          <div>
+            <span class="text-numeral" aria-hidden="true">${streak}</span>
+            <p class="ab-streak__label text-strong" id="streak-title"><span class="ab-sr">${streak} </span>${streak === 1 ? 'Tag' : 'Tage'} in Folge</p>
+          </div>
+        </div>
+        <ol class="ab-week" aria-label="Diese Woche">${days}</ol>
+        <p class="ab-streak__note text-body">${streakNote(streak, learnedToday)}</p>
+      </article>
+
+      <h2 class="screen__section text-heading">Abzeichen <span class="screen__count text-caption">${earned} von ${BADGES.length}</span></h2>
+      <ul class="ab-medals">${BADGES.map(medalHtml).join('')}</ul>
+
+      <h2 class="screen__section text-heading">Insgesamt</h2>
+      <div class="stats" role="list">
+        <span class="ab-chip ab-chip--xp text-label" role="listitem">${icon('bolt')}${num(state.xp)} XP</span>
+        <span class="ab-chip ab-chip--streak${best ? '' : ' is-cold'} text-label" role="listitem">${icon('flame')}Beste Serie: ${best} ${best === 1 ? 'Tag' : 'Tage'}</span>
+        <span class="ab-chip stats__lessons text-label" role="listitem">${icon('crown')}${lessonsDone} von ${orderedLessons().length} Lektionen</span>
+        <span class="ab-chip ab-chip--due text-label" role="listitem">${icon('repeat')}${cards} ${cards === 1 ? 'Karte' : 'Karten'} im Training</span>
+      </div>
+    </div>`;
+
+  if (popToday) replay(host.querySelector('.ab-streak'), 'is-extended');
+}
+
 // ---------- Einstellungen ----------
 
 const switchHtml = (id, on, disabled = false) => `
@@ -374,14 +562,20 @@ export function renderSettings(host) {
     return 'Aktiviere die Erinnerung, um täglich zur eingestellten Uhrzeit benachrichtigt zu werden.';
   }
 
-  const lessonsDone = Object.keys(state.lessons).length;
-  const cards = Object.keys(state.srs).length;
+  // Tagesziele in XP: eine Lektion oder Übungsrunde bringt etwa 100.
+  const GOALS = [[50, 'Locker'], [100, 'Normal'], [200, 'Ehrgeizig']];
 
   host.innerHTML = `
     <div class="screen">
       <h1 class="screen__title text-title">Einstellungen</h1>
 
       <div class="ab-settings">
+        <div class="ab-setting">
+          ${settingText('set-goal', 'Tagesziel', 'Lektion ≈ 100 XP')}
+          <span class="ab-select"><select class="ab-input text-strong" id="set-goal">${GOALS.map(([xp, name]) =>
+            `<option value="${xp}" ${state.settings.dailyGoal === xp ? 'selected' : ''}>${name} · ${xp} XP</option>`).join('')}
+          </select></span>
+        </div>
         <div class="ab-setting">
           ${settingText('set-audio', 'Sprachausgabe', 'Hebräisch vorlesen')}
           ${switchHtml('set-audio', state.settings.audio, !voiceOk)}
@@ -415,13 +609,9 @@ export function renderSettings(host) {
       </div>
       <div class="ab-hint">${icon('bell')}<p class="text-body" id="notif-hint">${notifHintText()}</p></div>
 
-      <h2 class="screen__section text-heading">Fortschritt</h2>
-      <div class="stats" role="list">
-        <span class="ab-chip ab-chip--xp text-label" role="listitem">${icon('bolt')}${num(state.xp)} XP</span>
-        <span class="ab-chip ab-chip--streak${currentStreak() ? '' : ' is-cold'} text-label" role="listitem">${icon('flame')}${currentStreak()} ${currentStreak() === 1 ? 'Tag' : 'Tage'} Serie</span>
-        <span class="ab-chip stats__lessons text-label" role="listitem">${icon('crown')}${lessonsDone} von ${orderedLessons().length} Lektionen</span>
-        <span class="ab-chip ab-chip--due text-label" role="listitem">${icon('repeat')}${cards} ${cards === 1 ? 'Karte' : 'Karten'} im Training</span>
-      </div>
+      <h2 class="screen__section text-heading">Daten</h2>
+      <div class="ab-hint">${icon('book')}<p class="text-body">XP, Serie und Abzeichen stehen unter
+        „Erfolge“. Alles bleibt auf diesem Gerät.</p></div>
       <button class="ab-btn ab-btn--ghost ab-btn--danger text-button" type="button" id="set-reset">Allen Fortschritt löschen</button>
 
       <h2 class="screen__section text-heading">Version</h2>
@@ -448,6 +638,11 @@ export function renderSettings(host) {
 
   renderVersion(host);
 
+  host.querySelector('#set-goal').addEventListener('change', (e) => {
+    state.settings.dailyGoal = Number(e.target.value);
+    save();
+    shown.daily = null; // neues Ziel: Ring auf der Startseite ohne Nachwachsen zeichnen
+  });
   host.querySelector('#set-audio').addEventListener('change', (e) => {
     state.settings.audio = e.target.checked;
     save();

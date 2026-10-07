@@ -49,12 +49,23 @@ export function audioActive() {
 
 // Ohne hebräische Stimme wird bewusst geschwiegen: eine deutsche Stimme würde
 // hebräische Buchstaben als Kauderwelsch vorlesen und mehr verwirren als helfen.
-export function speak(text, { rate = 0.8 } = {}) {
+// from: Element, das während des Sprechens „sendet“ (Klasse is-playing).
+export function speak(text, { rate = 0.8, from = null } = {}) {
   if (!text || !audioActive()) return;
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'he-IL';
   u.voice = heVoice;
   u.rate = rate;
+  if (from) {
+    // Ein abgebrochener Vorgänger meldet sein Ende erst später – die Marke
+    // sorgt dafür, dass er die Anzeige des neuen Durchgangs nicht löscht.
+    const mark = (from.speakMark = (from.speakMark || 0) + 1);
+    const stop = () => { if (from.speakMark === mark) from.classList.remove('is-playing'); };
+    from.classList.add('is-playing');
+    u.addEventListener('end', stop);
+    u.addEventListener('error', stop);
+    setTimeout(stop, 8000); // falls ein Browser 'end' verschluckt
+  }
   speechSynthesis.speak(u);
 }

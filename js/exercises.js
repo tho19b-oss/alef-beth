@@ -1,11 +1,14 @@
-// Übungstypen: Intro-/Info-Karten, Multiple Choice (beide Richtungen),
-// Hören & Wählen, Paare zuordnen.
+// Übungstypen: Lernkarte (neues Zeichen oder Wort), Wissenskarte, Multiple
+// Choice (beide Richtungen), Hören & Wählen, Paare finden – gebaut aus den
+// Komponenten des Design Systems (LetterCard, InfoCard, AnswerTile, PairMatch).
 // renderExercise(ex, host, onAnswered) rendert eine Übung; onAnswered(correct, detailHtml)
 // wird genau einmal gerufen, sobald der Nutzer geantwortet hat.
 
 import { getItem, display, mainLabel, subLabel, ttsText, pickDistractors } from '../data/curriculum.js';
+import { LETTERS } from '../data/letters.js';
 import { speak, audioActive } from './audio.js';
 import { shuffle } from './util.js';
+import { icon, he } from './ui.js';
 
 // Karten ohne Abfrage (der Player zeigt sofort „Weiter“)
 export function isPassive(ex) {
@@ -26,14 +29,28 @@ export function renderExercise(ex, host, onAnswered) {
 
 // ---------- Hilfen ----------
 
-function ttsButton(text, big = false) {
-  if (!text || !audioActive()) return '';
-  return `<button class="tts-btn${big ? ' big' : ''}" data-tts="${text}" aria-label="Anhören">🔊</button>`;
+// Schriftgröße für Hebräisch: groß als Frage, kleiner auf Kacheln.
+// Ganze Wörter brauchen eine Stufe weniger als einzelne Zeichen.
+function promptSize(item) {
+  return item.type === 'word' ? 'glyph-lg' : 'glyph-xl';
+}
+function tileSize(item) {
+  return item.type === 'word' ? 'hebrew-line' : 'glyph-md';
 }
 
-function wireTts(host) {
+function audioButton(text, { big = false, label = 'Anhören' } = {}) {
+  if (!text || !audioActive()) return '';
+  return `<button class="ab-audio${big ? ' ab-audio--lg' : ''}" type="button" data-tts="${text}" aria-label="${label}">${icon('speaker')}</button>`;
+}
+
+function wireAudio(host) {
   host.querySelectorAll('[data-tts]').forEach((b) =>
-    b.addEventListener('click', () => speak(b.dataset.tts)));
+    b.addEventListener('click', () => speak(b.dataset.tts, { from: b })));
+}
+
+// Beim Aufdecken gleich vorlesen – der Lautsprecher-Knopf sendet mit.
+function autoplay(host, text) {
+  if (text) speak(text, { from: host.querySelector('.ab-audio') });
 }
 
 function optLabel(item, field) {
@@ -49,91 +66,112 @@ function optionItemsFor(ex, item, field) {
   return [item, ...pickDistractors(item, ex.poolIds || [], 3, field === 'meaning' ? 'meaning' : 'main')];
 }
 
-// Ziffer für die Tastaturbedienung (per CSS nur auf Geräten mit Maus sichtbar)
-function optKey(i) {
-  return `<span class="opt-key" aria-hidden="true">${i + 1}</span>`;
+// Antwortkachel; die Ziffer für die Tastatur zeigt components.css nur auf
+// Geräten mit Maus.
+function tile(i, mainHtml, sub = '') {
+  return `<button class="ab-tile" type="button" data-i="${i}">`
+    + `<span class="ab-tile__key text-caption" aria-hidden="true">${i + 1}</span>`
+    + mainHtml
+    + (sub ? `<span class="ab-tile__sub text-caption">${sub}</span>` : '')
+    + '</button>';
 }
 
-// ---------- Intro-Karte (neues Lernitem) ----------
-
-function introRow(label, valueHtml) {
-  return `<div class="intro-row"><span class="ir-label">${label}</span><span class="ir-val">${valueHtml}</span></div>`;
+// Antwort auswerten: gewählte Kachel richtig/falsch markieren, die richtige
+// immer zeigen, den Rest zurücknehmen.
+function wireTiles(host, options, onAnswered, detail) {
+  const tiles = [...host.querySelectorAll('.ab-tile')];
+  tiles.forEach((t) => t.addEventListener('click', () => {
+    const o = options[+t.dataset.i];
+    tiles.forEach((x) => { x.disabled = true; });
+    t.classList.add(o.correct ? 'is-correct' : 'is-wrong');
+    if (!o.correct) tiles[options.findIndex((x) => x.correct)].classList.add('is-correct');
+    tiles.forEach((x) => { if (!x.matches('.is-correct, .is-wrong')) x.classList.add('is-dimmed'); });
+    onAnswered(o.correct, o.correct ? detail : `Richtig wäre: ${detail}`);
+  }));
 }
 
-function variantTile(glyph, sound, sub) {
-  return `<div class="vtile"><div class="he vtile-glyph">${glyph}</div>`
-    + `<div class="vtile-snd">${sound}</div><div class="vtile-sub">${sub}</div></div>`;
+// ---------- Lernkarte (neues Lernitem) ----------
+
+const fact = (label, valueHtml) => `<div class="ab-fact"><dt>${label}</dt><dd>${valueHtml}</dd></div>`;
+
+function variant(glyph, sound, sub) {
+  return `<div class="ab-variant"><div class="glyph-md" lang="he" dir="rtl">${glyph}</div>`
+    + `<div class="ab-variant__sound text-strong">${sound}</div><div class="ab-variant__sub text-caption">${sub}</div></div>`;
 }
 
 function renderIntro(ex, host) {
   const item = getItem(ex.itemId);
   const tts = ttsText(item);
+  const word = item.type === 'word';
 
-  const heading = item.type === 'letter' ? 'Neuer Buchstabe'
+  const kicker = item.type === 'letter' ? 'Neuer Buchstabe'
     : item.type === 'vowel' ? 'Neues Vokalzeichen' : 'Neues Wort';
+  // Wörter tragen ihre Umschrift als Namen, Zeichen ihren Namen plus Laut-Pille.
+  const name = word ? item.translit : item.name;
+  const pill = item.type === 'letter' ? item.translit : item.type === 'vowel' ? item.soundLabel : '';
+  // Platz im Alphabet (Endformen haben keinen eigenen)
+  const pos = LETTERS.findIndex((l) => l.id === item.id);
+  const index = pos >= 0 ? `${pos + 1} / ${LETTERS.length}` : item.baseId ? 'Endform' : '';
 
-  // Kopf: Name + Umschrift-Pille (Wörter tragen ihren Text in den Zeilen)
-  const nameHtml = item.type === 'word' ? '' : `<div class="intro-name">${mainLabel(item)}</div>`;
-  const pill = item.type === 'letter' ? item.translit
-    : item.type === 'vowel' ? item.soundLabel : '';
-  const pillHtml = pill ? `<div class="intro-pill">${pill}</div>` : '';
-
-  // Kachel-Vergleich: nur Buchstaben mit Lautvarianten (Dagesch oder Sin/Schin)
-  let tiles = '';
+  // Lautvarianten nebeneinander: Dagesch oder Schin/Sin
+  let variants = '';
   if (item.type === 'letter' && (item.dagesh || item.variant)) {
     const baseSound = item.translit.split('/')[0].trim();
     const cells = item.dagesh
-      ? [variantTile(item.glyph, baseSound, 'ohne Punkt'),
-         variantTile(item.dagesh.glyph, item.dagesh.translit, 'mit Punkt')]
-      : [variantTile(item.glyph, baseSound, 'Punkt rechts'),
-         variantTile(item.variant.glyph, item.variant.translit, 'Punkt links')];
-    tiles = `<div class="vtiles">${cells.join('')}</div>`;
+      ? [variant(item.glyph, baseSound, 'ohne Punkt'), variant(item.dagesh.glyph, item.dagesh.translit, 'mit Punkt')]
+      : [variant(item.glyph, baseSound, 'Punkt rechts'), variant(item.variant.glyph, item.variant.translit, 'Punkt links')];
+    variants = `<div class="ab-variants">${cells.join('')}</div>`;
   }
 
-  // Strukturierte, beschriftete Zeilen
-  const rows = [];
+  const facts = [];
   if (item.type === 'letter') {
-    rows.push(introRow('Laut', item.sound));
+    facts.push(fact('Laut', item.sound));
     if (item.final) {
       const f = getItem(item.final);
-      rows.push(introRow('Am Wortende', `<span class="he">${f.glyph}</span> (${f.name})`));
+      facts.push(fact('Am Wortende', `${he(f.glyph, 'glyph-sm')} (${f.name})`));
     }
     if (item.baseId) {
       const b = getItem(item.baseId);
-      rows.push(introRow('Grundform', `<span class="he">${b.glyph}</span> (${b.name})`));
+      facts.push(fact('Grundform', `${he(b.glyph, 'glyph-sm')} (${b.name})`));
     }
-    if (item.mnemonic) rows.push(introRow('Merkhilfe', item.mnemonic));
+    if (item.mnemonic) facts.push(fact('Merkhilfe', item.mnemonic));
   } else if (item.type === 'vowel') {
     const [laut, ...rest] = item.sound.split(' – ');
-    rows.push(introRow('Laut', laut));
-    if (rest.length) rows.push(introRow('Zeichen', rest.join(' – ')));
-    rows.push(introRow('Beispiel', `<span class="he">${item.example}</span> → „${item.exampleTranslit}“`));
+    facts.push(fact('Laut', laut));
+    if (rest.length) facts.push(fact('Zeichen', rest.join(' – ')));
+    facts.push(fact('Beispiel', `${he(item.example, 'glyph-sm')} → „${item.exampleTranslit}“`));
   } else {
-    rows.push(introRow('Aussprache', item.translit));
-    rows.push(introRow('Bedeutung', item.meaning));
+    facts.push(fact('Bedeutung', item.meaning));
   }
 
+  const audio = audioButton(tts, { label: `${name} anhören` });
   host.innerHTML = `
-    <p class="ex-q">${heading}</p>
-    <div class="introcard">
-      <div class="he ${item.type === 'word' ? 'glyph-lg' : 'glyph-xl'}">${display(item)}</div>
-      ${nameHtml}
-      ${pillHtml}
-      ${tiles}
-      <div class="intro-rows">${rows.join('')}</div>
-      ${ttsButton(tts)}
-    </div>`;
-  wireTts(host);
-  if (tts) speak(tts);
+    <article class="ab-card ab-lettercard ab-enter" aria-label="${kicker}: ${name}">
+      <p class="ab-lettercard__kicker text-overline">${kicker}</p>
+      <div class="ab-lettercard__stage${word ? ' ab-lettercard__stage--word' : ''}">
+        ${index ? `<span class="ab-lettercard__index text-caption">${index}</span>` : ''}
+        <span class="ab-lettercard__glyph ${promptSize(item)}" lang="he" dir="rtl">${display(item)}</span>
+      </div>
+      <h2 class="ab-lettercard__name text-letter-name">${name}</h2>
+      ${pill ? `<div class="ab-lettercard__sound"><span class="ab-pill text-label">${pill}</span></div>` : ''}
+      ${variants}
+      <dl class="ab-facts text-body">${facts.join('')}</dl>
+      ${audio ? `<div class="ab-lettercard__audio">${audio}</div>` : ''}
+    </article>`;
+  wireAudio(host);
+  autoplay(host, tts);
 }
 
-// ---------- Info-Karte ----------
+// ---------- Wissenskarte ----------
 
 function renderInfo(ex, host) {
   host.innerHTML = `
-    <p class="ex-q">${ex.title}</p>
-    <div class="infocard">${ex.html}</div>`;
-  wireTts(host);
+    <article class="ab-card ab-info ab-enter">
+      <span class="ab-info__tag text-overline">${icon(ex.icon || 'bulb')}${ex.tag || 'Gut zu wissen'}</span>
+      <h2 class="ab-info__title text-heading">${ex.title}</h2>
+      ${ex.html}
+    </article>`;
+  wireAudio(host);
 }
 
 // ---------- Multiple Choice ----------
@@ -158,58 +196,40 @@ function renderMc(ex, host, onAnswered) {
   const field = ex.field || 'main';
 
   let options;
-  let optionsHtml;
+  let tiles;
   if (ex.options) {
     options = shuffle(ex.options.map((o) => ({ correct: !!o.correct, label: o.label })));
-    optionsHtml = options.map((o, i) =>
-      `<button class="option" data-i="${i}">${optKey(i)}<span class="opt-main">${o.label}</span></button>`);
+    tiles = options.map((o, i) => tile(i, `<span class="text-strong">${o.label}</span>`));
   } else if (ex.dir === 'de2he') {
     options = shuffle(optionItemsFor(ex, item, field).map((it) => ({ it, correct: it.id === item.id })));
-    optionsHtml = options.map((o, i) =>
-      `<button class="option" data-i="${i}">${optKey(i)}<span class="opt-main he glyph-md">${display(o.it)}</span></button>`);
+    tiles = options.map((o, i) => tile(i, he(display(o.it), tileSize(o.it))));
   } else {
     options = shuffle(optionItemsFor(ex, item, field).map((it) => ({ it, correct: it.id === item.id })));
-    optionsHtml = options.map((o, i) => `
-      <button class="option" data-i="${i}">
-        ${optKey(i)}
-        <span class="opt-main">${optLabel(o.it, field)}</span>
-        ${optSub(o.it, field) ? `<span class="opt-sub">${optSub(o.it, field)}</span>` : ''}
-      </button>`);
+    tiles = options.map((o, i) =>
+      tile(i, `<span class="text-strong">${optLabel(o.it, field)}</span>`, optSub(o.it, field)));
   }
 
-  let promptHtml = '';
+  let prompt;
   if (ex.custom) {
-    promptHtml = `<div class="he glyph-md">${ex.custom.hebrew}</div>`;
+    prompt = he(ex.custom.hebrew, 'hebrew-line');
   } else if (ex.dir === 'he2de') {
-    const tts = ttsText(item);
-    promptHtml = `
-      <div class="he ${item.type === 'word' ? 'glyph-lg' : 'glyph-xl'}">${display(item)}</div>
-      ${ttsButton(tts)}`;
+    prompt = he(display(item), promptSize(item)) + audioButton(ttsText(item));
   } else {
-    promptHtml = `<div class="prompt-label">${field === 'meaning' ? item.meaning : mainLabel(item)}</div>`;
+    // Kurze Namen groß; lange Bedeutungen („der Name“ – Kürzel für …) eine Stufe kleiner.
+    const label = field === 'meaning' ? item.meaning : mainLabel(item);
+    prompt = `<span class="${label.length > 20 ? 'text-title' : 'text-display'}">${label}</span>`;
   }
 
   host.innerHTML = `
-    <p class="ex-q">${mcQuestion(ex, item, field)}</p>
-    <div class="ex-prompt">${promptHtml}</div>
-    <div class="options${ex.options ? ' single-col' : ''}">${optionsHtml.join('')}</div>`;
-  wireTts(host);
+    <p class="ab-question text-question">${mcQuestion(ex, item, field)}</p>
+    <div class="ab-prompt">${prompt}</div>
+    <div class="ab-tiles${ex.options ? ' ab-tiles--stack' : ''}">${tiles.join('')}</div>`;
+  wireAudio(host);
 
   const detail = ex.custom
     ? ex.custom.answerText
-    : `<span class="he">${display(item)}</span> = ${optLabel(item, field)}${optSub(item, field) ? ` (${optSub(item, field)})` : ''}`;
-
-  host.querySelectorAll('.option').forEach((btn) =>
-    btn.addEventListener('click', () => {
-      const o = options[+btn.dataset.i];
-      host.querySelectorAll('.option').forEach((b) => { b.disabled = true; });
-      btn.classList.add(o.correct ? 'correct' : 'wrong');
-      if (!o.correct) {
-        const ci = options.findIndex((x) => x.correct);
-        host.querySelector(`[data-i="${ci}"]`).classList.add('correct');
-      }
-      onAnswered(o.correct, detail);
-    }));
+    : `${he(display(item), 'glyph-sm')} = ${optLabel(item, field)}${optSub(item, field) ? ` (${optSub(item, field)})` : ''}`;
+  wireTiles(host, options, onAnswered, detail);
 }
 
 // ---------- Hören & Wählen ----------
@@ -220,89 +240,79 @@ function renderListen(ex, host, onAnswered) {
   const options = shuffle(optionItemsFor(ex, item, 'main').map((it) => ({ it, correct: it.id === item.id })));
 
   host.innerHTML = `
-    <p class="ex-q">Was hörst du?</p>
-    <div class="ex-prompt">${ttsButton(tts, true)}</div>
-    <div class="options">${options.map((o, i) =>
-      `<button class="option" data-i="${i}">${optKey(i)}<span class="opt-main he glyph-md">${display(o.it)}</span></button>`).join('')}
-    </div>`;
-  wireTts(host);
-  speak(tts);
+    <p class="ab-question text-question">Was hörst du?</p>
+    <div class="ab-prompt">${audioButton(tts, { big: true, label: 'Nochmal anhören' })}</div>
+    <div class="ab-tiles">${options.map((o, i) => tile(i, he(display(o.it), tileSize(o.it)))).join('')}</div>`;
+  wireAudio(host);
+  autoplay(host, tts);
 
-  const detail = `<span class="he">${display(item)}</span> – ${mainLabel(item)}`;
-  host.querySelectorAll('.option').forEach((btn) =>
-    btn.addEventListener('click', () => {
-      const o = options[+btn.dataset.i];
-      host.querySelectorAll('.option').forEach((b) => { b.disabled = true; });
-      btn.classList.add(o.correct ? 'correct' : 'wrong');
-      if (!o.correct) {
-        const ci = options.findIndex((x) => x.correct);
-        host.querySelector(`[data-i="${ci}"]`).classList.add('correct');
-      }
-      onAnswered(o.correct, detail);
-    }));
+  wireTiles(host, options, onAnswered, `${he(display(item), 'glyph-sm')} – ${mainLabel(item)}`);
 }
 
-// ---------- Paare zuordnen ----------
+// ---------- Paare finden ----------
 
 function renderMatch(ex, host, onAnswered) {
   const items = ex.itemIds.map(getItem);
-  const left = shuffle(items);   // hebräische Seite
-  const right = shuffle(items);  // Umschrift/Name
-
   host.innerHTML = `
-    <p class="ex-q">Finde die Paare!</p>
-    <div class="matchgrid">
-      <div class="matchcol">${left.map((it) =>
-        `<button class="matchbtn he glyph-md" data-side="l" data-id="${it.id}">${display(it)}</button>`).join('')}
-      </div>
-      <div class="matchcol">${right.map((it) =>
-        `<button class="matchbtn" data-side="r" data-id="${it.id}">${mainLabel(it)}</button>`).join('')}
-      </div>
+    <p class="ab-question text-question">Finde die Paare!</p>
+    <div class="ab-pairs">
+      <div class="ab-pairs__col">${shuffle(items).map((it) =>
+        `<button class="ab-pair ${tileSize(it)}" type="button" lang="he" dir="rtl" data-side="l" data-id="${it.id}">${display(it)}</button>`).join('')}</div>
+      <div class="ab-pairs__col">${shuffle(items).map((it) =>
+        `<button class="ab-pair text-strong" type="button" data-side="r" data-id="${it.id}">${mainLabel(it)}</button>`).join('')}</div>
     </div>`;
 
-  let selL = null;
-  let selR = null;
+  let sel = { l: null, r: null };
   let mistakes = 0;
-  let matchedCount = 0;
+  let matched = 0;
   let locked = false;
 
-  host.querySelectorAll('.matchbtn').forEach((btn) =>
+  host.querySelectorAll('.ab-pair').forEach((btn) =>
     btn.addEventListener('click', () => {
-      if (locked || btn.classList.contains('matched')) return;
+      if (locked || btn.disabled) return;
       const side = btn.dataset.side;
-      const prev = side === 'l' ? selL : selR;
-      if (prev) prev.classList.remove('sel');
-      if (prev === btn) {
-        if (side === 'l') selL = null; else selR = null;
+      if (sel[side] === btn) {
+        btn.classList.remove('is-selected');
+        sel[side] = null;
         return;
       }
-      btn.classList.add('sel');
-      if (side === 'l') selL = btn; else selR = btn;
+      sel[side]?.classList.remove('is-selected');
+      sel[side] = btn;
+      btn.classList.add('is-selected');
+      if (!(sel.l && sel.r)) return;
 
-      if (selL && selR) {
-        const a = selL;
-        const b = selR;
-        selL = null;
-        selR = null;
-        if (a.dataset.id === b.dataset.id) {
-          a.classList.remove('sel'); b.classList.remove('sel');
-          a.classList.add('matched'); b.classList.add('matched');
-          matchedCount += 1;
-          if (matchedCount === items.length) {
+      const a = sel.l;
+      const b = sel.r;
+      sel = { l: null, r: null };
+      a.classList.remove('is-selected');
+      b.classList.remove('is-selected');
+      if (a.dataset.id === b.dataset.id) {
+        // Paar gefunden: kurz grün aufleuchten, dann zurücktreten.
+        a.disabled = true;
+        b.disabled = true;
+        a.classList.add('is-match');
+        b.classList.add('is-match');
+        matched += 1;
+        const last = matched === items.length;
+        setTimeout(() => {
+          a.classList.replace('is-match', 'is-done');
+          b.classList.replace('is-match', 'is-done');
+          if (last) {
             onAnswered(mistakes === 0, mistakes === 0
               ? 'Alle Paare auf Anhieb gefunden!'
               : `Alle Paare gefunden – mit ${mistakes} ${mistakes === 1 ? 'Fehlversuch' : 'Fehlversuchen'}.`);
           }
-        } else {
-          mistakes += 1;
-          locked = true;
-          a.classList.remove('sel'); b.classList.remove('sel');
-          a.classList.add('bad'); b.classList.add('bad');
-          setTimeout(() => {
-            a.classList.remove('bad'); b.classList.remove('bad');
-            locked = false;
-          }, 400);
-        }
+        }, 450);
+      } else {
+        mistakes += 1;
+        locked = true;
+        a.classList.add('is-miss');
+        b.classList.add('is-miss');
+        setTimeout(() => {
+          a.classList.remove('is-miss');
+          b.classList.remove('is-miss');
+          locked = false;
+        }, 450);
       }
     }));
 }

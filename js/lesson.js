@@ -8,6 +8,9 @@ import { state, save, addXp, touchStreak, completeLesson, currentStreak } from '
 import { applyResult, dueIds } from './srs.js';
 import { audioActive } from './audio.js';
 import { shuffle, sample } from './util.js';
+import {
+  icon, he, replay, countUp, setProgress, confetti, feedback, swap, reducedMotion, confirmDialog,
+} from './ui.js';
 
 // ---------- Warteschlangen pro Lektionstyp ----------
 
@@ -60,43 +63,59 @@ function bonusCard(lesson) {
   const names = lesson.newItems.map((id) => getItem(id).name).join(', ');
   return {
     kind: 'info',
-    title: 'Dein erstes Wort! 🎉',
+    tag: 'Bonus',
+    icon: 'star',
+    title: 'Dein erstes Wort!',
     html: `
-      <div class="bigword he glyph-lg">${w.hebrew}</div>
-      <p>Du kennst jetzt <b>${names}</b> – zusammen ergeben sie
-      <b>${w.hebrew}</b> („${w.translit}“ – ${w.meaning}).</p>
-      <p>Die kleinen Punkte und Striche sind die Vokalzeichen (Nikud) –
+      <div class="ab-showcase">${he(w.hebrew, 'glyph-lg')}</div>
+      <p class="text-body">Du kennst jetzt <b>${names}</b> – zusammen ergeben sie
+      <b>${he(w.hebrew)}</b> („${w.translit}“ – ${w.meaning}).</p>
+      <p class="text-body">Die kleinen Punkte und Striche sind die Vokalzeichen (Nikud) –
       die lernst du in Einheit&nbsp;2!</p>`,
   };
 }
+
+// Eine Zeile „Zeichen · Laut → Zeichen · Laut“ für die Wissenskarten.
+function eq(...parts) {
+  return `<div class="ab-eq text-strong">${parts.join('')}</div>`;
+}
+const op = (t) => `<span class="ab-eq__op">${t}</span>`;
+const out = (t) => `<span class="ab-eq__out">${t}</span>`;
 
 function buildLookalike(lesson) {
   const q = [
     {
       kind: 'info',
-      title: 'Genau hinschauen! 👀',
+      icon: 'target',
+      title: 'Genau hinschauen!',
       html: `
-        <p>Manche Buchstaben sehen sich zum Verwechseln ähnlich –
-        zum Beispiel <span class="he glyph-md">ב</span> und <span class="he glyph-md">כ</span>
-        oder <span class="he glyph-md">ד</span> und <span class="he glyph-md">ר</span>.</p>
-        <p>In dieser Lektion trainierst du den Blick für die kleinen Unterschiede.</p>`,
+        <p class="text-body">Manche Buchstaben sehen sich zum Verwechseln ähnlich, zum Beispiel:</p>
+        <div class="ab-showcase">
+          ${eq(he('ב', 'glyph-md'), op('und'), he('כ', 'glyph-md'))}
+          ${eq(he('ד', 'glyph-md'), op('und'), he('ר', 'glyph-md'))}
+        </div>
+        <p class="text-body">In dieser Lektion trainierst du den Blick für die kleinen Unterschiede.</p>`,
     },
     {
       kind: 'info',
       title: 'Der Punkt macht den Laut',
       html: `
-        <p>Ein Punkt im Buchstaben (<b>Dagesch</b>) macht den Laut hart:</p>
-        <p class="bigword"><span class="he glyph-md">ב</span> = w → <span class="he glyph-md">בּ</span> = b<br>
-        <span class="he glyph-md">כ</span> = ch → <span class="he glyph-md">כּ</span> = k<br>
-        <span class="he glyph-md">פ</span> = f → <span class="he glyph-md">פּ</span> = p</p>`,
+        <p class="text-body">Ein Punkt im Buchstaben (<b>Dagesch</b>) macht den Laut hart:</p>
+        <div class="ab-showcase">
+          ${eq(he('ב', 'glyph-md'), '<span>w</span>', op('→'), he('בּ', 'glyph-md'), out('b'))}
+          ${eq(he('כ', 'glyph-md'), '<span>ch</span>', op('→'), he('כּ', 'glyph-md'), out('k'))}
+          ${eq(he('פ', 'glyph-md'), '<span>f</span>', op('→'), he('פּ', 'glyph-md'), out('p'))}
+        </div>`,
     },
     {
       kind: 'info',
       title: 'Schin oder Sin?',
       html: `
-        <p>Beim <b>Schin</b> entscheidet die Seite des Punktes:</p>
-        <p class="bigword"><span class="he glyph-md">שׁ</span> Punkt rechts = <b>sch</b> &nbsp;·&nbsp;
-        <span class="he glyph-md">שׂ</span> Punkt links = <b>s</b></p>`,
+        <p class="text-body">Beim <b>Schin</b> entscheidet die Seite des Punktes:</p>
+        <div class="ab-showcase">
+          ${eq(he('שׁ', 'glyph-md'), '<span>Punkt rechts</span>', op('→'), out('sch'))}
+          ${eq(he('שׂ', 'glyph-md'), '<span>Punkt links</span>', op('→'), out('s'))}
+        </div>`,
     },
   ];
   const drills = [];
@@ -117,10 +136,12 @@ function buildNikud(lesson) {
       kind: 'info',
       title: 'So funktioniert Nikud',
       html: `
-        <p>Hebräisch schreibt man (fast) ohne Vokale. Damit man trotzdem richtig liest,
+        <p class="text-body">Hebräisch schreibt man (fast) ohne Vokale. Damit man trotzdem richtig liest,
         zeigen kleine Zeichen <b>unter</b> oder <b>über</b> dem Buchstaben den Vokal an.</p>
-        <p class="bigword"><span class="he glyph-md">מ</span> + <b>ָ</b> (a) = <span class="he glyph-md">מָ</span> → „ma“</p>
-        <p>Gelesen wird immer: <b>erst der Buchstabe, dann sein Vokal</b> – von rechts nach links.</p>`,
+        <div class="ab-showcase">
+          ${eq(he('מ', 'glyph-md'), op('+'), he('◌ָ', 'glyph-md'), '<span>a</span>', op('='), he('מָ', 'glyph-md'), out('ma'))}
+        </div>
+        <p class="text-body">Gelesen wird immer: <b>erst der Buchstabe, dann sein Vokal</b> – von rechts nach links.</p>`,
     });
   }
   for (const id of lesson.newItems) {
@@ -171,11 +192,11 @@ function buildBracha(lesson) {
       kind: 'info',
       title: 'Der Gottesname',
       html: `
-        <p>Aus Ehrfurcht wird der Gottesname nie beiläufig ausgesprochen oder
-        ausgeschrieben. Im Siddur steht er als <span class="he glyph-md">ה׳</span> –
+        <p class="text-body">Aus Ehrfurcht wird der Gottesname nie beiläufig ausgesprochen oder
+        ausgeschrieben. Im Siddur steht er als ${he('ה׳', 'glyph-sm')} –
         beim Beten liest man „<b>Adonai</b>“, im Alltag sagt man „<b>Haschem</b>“ (der Name).</p>
-        <p>Auch „unser G’tt“ schreiben wir hier respektvoll mit ק:
-        <span class="he glyph-md">אֱלֹקֵינוּ</span>. Diese App spricht den Gottesnamen nicht aus.</p>`,
+        <p class="text-body">Auch „unser G’tt“ schreiben wir hier respektvoll mit ${he('ק')}:
+        ${he('אֱלֹקֵינוּ', 'glyph-sm')}. Diese App spricht den Gottesnamen nicht aus.</p>`,
     },
   ];
   for (const id of lesson.newItems) {
@@ -189,9 +210,9 @@ function buildBracha(lesson) {
     kind: 'info',
     title: 'Die Bracha-Formel',
     html: `
-      <p>So beginnt fast jeder Segensspruch (jede <b>Bracha</b>):</p>
-      <div class="bigword he glyph-md">${phrase}</div>
-      <p><b>Baruch ata Haschem, Elokejnu melech ha-olam …</b><br>
+      <p class="text-body">So beginnt fast jeder Segensspruch (jede <b>Bracha</b>):</p>
+      <div class="ab-showcase">${he(phrase, 'hebrew-line')}</div>
+      <p class="text-body"><b>Baruch ata Haschem, Elokejnu melech ha-olam …</b><br>
       „Gesegnet bist Du, Ewiger, unser G’tt, König der Welt …“</p>`,
   });
   q.push({
@@ -277,85 +298,124 @@ export function runFreePractice(host) {
 
 // ---------- Der Player ----------
 
+// Kombo: ab so vielen richtigen Antworten in Folge erscheint die Flamme.
+// Reine Anerkennung, es gibt keine Extrapunkte (siehe Gamification-Regeln).
+const COMBO_FROM = 3;
+
 function runSession(host, queue, opts) {
   let idx = 0;
   let xp = 0;
+  let combo = 0;
   const failed = new Set();
   let firstTry = 0;
   let firstTryCorrect = 0;
+  let sheetOpen = false;
+  let sheetCtl = null;
   const exitHash = opts.mode === 'lesson' ? '#/' : '#/review';
+  const what = opts.mode === 'lesson' ? 'Lektion' : 'Runde';
 
   host.innerHTML = `
-    <div class="lesson-top">
-      <button class="quit-x" aria-label="Lektion beenden" title="Beenden">✕</button>
-      <div class="pbar" role="progressbar" aria-label="Fortschritt" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-        <div class="pbar-fill"></div>
-      </div>
+    <div class="lesson">
+      <header class="ab-lessonbar">
+        <button class="ab-iconbtn" type="button" id="quit" aria-label="${what} beenden" title="Beenden">${icon('close')}</button>
+        <div class="ab-progress" role="progressbar" aria-label="Fortschritt" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="ab-progress__fill"></div>
+        </div>
+        <span class="ab-combo text-label" title="Richtig in Folge" aria-hidden="true" hidden>${icon('flame')}<span data-count></span></span>
+      </header>
+      <div class="lesson-stage" id="ex-area"></div>
     </div>
-    <div id="ex-area"></div>
-    <div class="feedback" role="status" aria-live="polite" hidden>
-      <div class="feedback-inner">
-        <div class="fb-title"></div>
-        <div class="fb-detail"></div>
-        <button class="btn fb-continue">Weiter</button>
+    <section class="ab-sheet" role="status" aria-live="polite">
+      <div class="ab-sheet__inner">
+        <div class="ab-sheet__head">
+          <span class="ab-sheet__icon" data-sheet-icon></span>
+          <h2 class="ab-sheet__title text-heading" data-sheet-title></h2>
+          <span class="ab-sheet__xp text-label" data-sheet-xp hidden></span>
+        </div>
+        <p class="ab-sheet__detail text-body" data-sheet-detail></p>
+        <div class="ab-sheet__action"><button class="ab-btn text-button" type="button" data-sheet-action>Weiter</button></div>
       </div>
-    </div>`;
+    </section>`;
 
   const area = host.querySelector('#ex-area');
-  const fb = host.querySelector('.feedback');
-  const fbTitle = fb.querySelector('.fb-title');
-  const fbDetail = fb.querySelector('.fb-detail');
-  const fbBtn = fb.querySelector('.fb-continue');
-  const pbar = host.querySelector('.pbar');
-  const pbarFill = host.querySelector('.pbar-fill');
+  const sheet = host.querySelector('.ab-sheet');
+  const action = sheet.querySelector('[data-sheet-action]');
+  const bar = host.querySelector('.ab-progress');
+  const comboChip = host.querySelector('.ab-combo');
 
-  host.querySelector('.quit-x').addEventListener('click', () => {
-    if (confirm('Lektion wirklich beenden? Der Fortschritt dieser Runde geht verloren.')) {
+  host.querySelector('#quit').addEventListener('click', async () => {
+    const quit = await confirmDialog({
+      title: `${what} wirklich beenden?`,
+      text: 'Der Fortschritt dieser Runde geht verloren.',
+      confirm: 'Beenden',
+      cancel: 'Weiter lernen',
+    });
+    if (quit && area.isConnected) {
       if ('speechSynthesis' in window) speechSynthesis.cancel();
       location.hash = exitHash;
     }
   });
 
-  fbBtn.addEventListener('click', nextStep);
+  action.addEventListener('click', nextStep);
 
   function nextStep() {
-    hideFeedback();
+    if (!sheetOpen) return; // schon unterwegs (Doppeltipp)
+    closeSheet();
     idx += 1;
     step();
   }
 
-  function hideFeedback() {
-    fb.hidden = true;
+  function openSheet(opts, { reveal = false } = {}) {
+    sheetCtl = feedback(sheet, opts);
+    sheetOpen = true;
+
+    // Die Leiste liegt fix über dem Inhalt. Unten Platz schaffen und – falls
+    // die markierte Antwort darunter verschwindet – so weit scrollen, dass man
+    // sie sieht. (Lernkarten bleiben oben stehen: dort zählt der Anfang.)
+    const height = sheet.offsetHeight - 24; // 24px stecken unter dem Rand (Feder-Puffer)
+    document.body.classList.add('fb-open');
+    document.body.style.setProperty('--fb-space', `${height + 24}px`);
+    if (reveal && area.getBoundingClientRect().bottom > window.innerHeight - height) {
+      // scrollHeight erzwingt ein Layout, der zusätzliche Platz unten ist also
+      // schon berücksichtigt: ans Seitenende scrollen holt die Antwort hervor.
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: reducedMotion() ? 'auto' : 'smooth',
+      });
+    }
+  }
+
+  function closeSheet() {
+    sheetOpen = false;
+    sheetCtl?.close();
     document.body.classList.remove('fb-open');
   }
 
-  function showFeedback(correct, detail) {
-    fb.classList.remove('good', 'bad');
-    if (correct === null) {
-      fbTitle.textContent = '';
-      fbDetail.innerHTML = '';
-    } else if (correct) {
-      fb.classList.add('good');
-      fbTitle.textContent = 'Richtig! ✓';
-      fbDetail.innerHTML = detail || '';
-    } else {
-      fb.classList.add('bad');
-      fbTitle.textContent = 'Nicht ganz.';
-      fbDetail.innerHTML = detail ? `Richtig wäre: ${detail}` : '';
+  function updateCombo(correct) {
+    combo = correct ? combo + 1 : 0;
+    if (combo < COMBO_FROM) {
+      comboChip.hidden = true;
+      return;
     }
-    fb.hidden = false;
+    const isNew = comboChip.hidden;
+    comboChip.hidden = false;
+    comboChip.querySelector('[data-count]').textContent = String(combo);
+    replay(comboChip, isNew ? 'is-new' : 'is-bump');
+  }
 
-    // Die Leiste liegt fix über dem Inhalt. Unten Platz schaffen und – falls die
-    // markierte Antwort darunter verschwindet – so weit scrollen, dass man sie sieht.
-    document.body.classList.add('fb-open');
-    document.body.style.setProperty('--fb-space', `${fb.offsetHeight + 24}px`);
-    if (area.getBoundingClientRect().bottom > fb.getBoundingClientRect().top) {
-      // scrollHeight erzwingt ein Layout, der zusätzliche Platz unten ist also
-      // schon berücksichtigt: ans Seitenende scrollen holt die markierte
-      // Antwort über die Leiste.
-      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+  function answered(ex, correct, detail) {
+    if (!ex.retry) {
+      firstTry += 1;
+      if (correct) firstTryCorrect += 1;
     }
-    fbBtn.focus();
+    const gain = correct ? (ex.retry ? 5 : 10) : 0;
+    xp += gain;
+    if (!correct) {
+      if (ex.itemId) failed.add(ex.itemId);
+      if (ex.kind !== 'match') queue.push({ ...ex, retry: true });
+    }
+    updateCombo(correct);
+    openSheet({ tone: correct ? 'correct' : 'wrong', detail, xp: gain }, { reveal: true });
   }
 
   // Am Rechner: 1–4 wählt eine Antwort, Enter/Leertaste geht weiter.
@@ -367,10 +427,11 @@ function runSession(host, queue, opts) {
       return;
     }
     if (e.metaKey || e.ctrlKey || e.altKey) return;
-    if (!fb.hidden) {
+    if (document.querySelector('dialog[open]')) return; // Beenden-Dialog hat Vorrang
+    if (sheetOpen) {
       // Liegt der Fokus auf „Weiter“, erledigt der Button das selbst –
       // sonst würde die Übung zwei Schritte auf einmal springen.
-      if ((e.key === 'Enter' || e.key === ' ') && document.activeElement !== fbBtn) {
+      if ((e.key === 'Enter' || e.key === ' ') && document.activeElement !== action) {
         e.preventDefault();
         nextStep();
       }
@@ -378,8 +439,11 @@ function runSession(host, queue, opts) {
     }
     const n = Number(e.key);
     if (!Number.isInteger(n) || n < 1) return;
-    const buttons = area.querySelectorAll('.option:not(:disabled)');
-    if (buttons[n - 1]) { e.preventDefault(); buttons[n - 1].click(); }
+    const tiles = area.querySelectorAll('.ab-tile:not(:disabled)');
+    if (tiles[n - 1]) {
+      e.preventDefault();
+      tiles[n - 1].click();
+    }
   }
   document.addEventListener('keydown', onKey);
 
@@ -388,33 +452,24 @@ function runSession(host, queue, opts) {
       finish();
       return;
     }
-    const pct = Math.round((idx / queue.length) * 100);
-    pbarFill.style.width = `${pct}%`;
-    pbar.setAttribute('aria-valuenow', String(pct));
-    window.scrollTo(0, 0);
+    setProgress(bar, (idx / queue.length) * 100);
     const ex = queue[idx];
-    renderExercise(ex, area, (correct, detail) => {
-      if (!ex.retry) {
-        firstTry += 1;
-        if (correct) firstTryCorrect += 1;
-      }
-      if (correct) {
-        xp += ex.retry ? 5 : 10;
-      } else {
-        if (ex.itemId) failed.add(ex.itemId);
-        if (ex.kind !== 'match') queue.push({ ...ex, retry: true });
-      }
-      showFeedback(correct, detail);
-    });
-    if (isPassive(ex)) showFeedback(null, '');
+    const render = (h) => {
+      window.scrollTo(0, 0);
+      renderExercise(ex, h, (correct, detail) => answered(ex, correct, detail));
+      if (isPassive(ex)) openSheet({ tone: 'neutral' });
+    };
+    // Die alte Übung gleitet hinaus, während die Leiste abtaucht, dann
+    // gleitet die neue herein. Lern- und Wissenskarten werden ausgeteilt
+    // (ab-enter), dafür reicht ein Überblenden.
+    if (idx === 0) render(area);
+    else swap(area, render, { direction: isPassive(ex) ? 'fade' : 'forward', viewTransition: false });
   }
 
   function finish() {
-    hideFeedback();
+    closeSheet();
     document.removeEventListener('keydown', onKey);
-    pbarFill.style.width = '100%';
-    pbar.setAttribute('aria-valuenow', '100');
-    window.scrollTo(0, 0);
+    setProgress(bar, 100);
 
     // SRS aktualisieren: jedes beteiligte Item gilt als richtig,
     // wenn es in dieser Runde nie falsch beantwortet wurde.
@@ -429,30 +484,102 @@ function runSession(host, queue, opts) {
 
     const accuracy = firstTry ? Math.round((firstTryCorrect / firstTry) * 100) : 100;
     const bonus = opts.mode === 'lesson' ? 20 : 10;
+    const streakBefore = currentStreak();
     if (opts.mode === 'lesson') completeLesson(opts.lesson.id, accuracy);
     addXp(xp + bonus);
     touchStreak();
     save();
 
-    const title = opts.mode === 'lesson' ? 'Lektion geschafft!'
-      : opts.mode === 'practice' ? 'Runde geschafft!'
-      : 'Wiederholung geschafft!';
-
-    host.innerHTML = `
-      <div class="endscreen">
-        <div class="end-emoji" aria-hidden="true">${accuracy >= 90 ? '🎉' : accuracy >= 60 ? '👏' : '💪'}</div>
-        <h1>${title}</h1>
-        <div class="end-stats">
-          <div class="end-stat"><div class="v">+${xp + bonus}</div><div class="k">XP</div></div>
-          <div class="end-stat"><div class="v">${accuracy} %</div><div class="k">richtig</div></div>
-          <div class="end-stat"><div class="v">🔥 ${currentStreak()}</div><div class="k">Tage-Serie</div></div>
-        </div>
-        <button class="btn" id="end-continue">Weiter</button>
-      </div>`;
-    const cont = host.querySelector('#end-continue');
-    cont.addEventListener('click', () => { location.hash = exitHash; });
-    cont.focus();
+    // Kurz den vollen, goldenen Balken zeigen, dann die Feier.
+    setTimeout(() => {
+      if (!area.isConnected) return;
+      swap(host, (h) => renderCelebration(h, {
+        opts, accuracy, gained: xp + bonus, streakBefore, streak: currentStreak(), exitHash,
+      }), { direction: 'fade', viewTransition: false });
+    }, reducedMotion() ? 0 : 450);
   }
 
   step();
+}
+
+// ---------- Feier am Ende einer Runde ----------
+
+// Zwölf Strahlen um die Mitte – Sonnenkranz hinter Krone bzw. Pokal.
+const RAYS = Array.from({ length: 12 }, (_, i) => {
+  const a = (i * 30 * Math.PI) / 180;
+  const b = ((i * 30 + 12) * Math.PI) / 180;
+  const p = (r) => `${(132 + 132 * Math.cos(r)).toFixed(1)} ${(132 + 132 * Math.sin(r)).toFixed(1)}`;
+  return `<path d="M132 132 L${p(a)} L${p(b)}Z"/>`;
+}).join('');
+
+function celebrationText(mode, accuracy) {
+  if (mode === 'review') {
+    return accuracy >= 90 ? 'Alles wieder frisch im Gedächtnis.' : 'Was noch wackelt, kommt bald noch einmal.';
+  }
+  if (mode === 'practice') return 'Freies Üben verschiebt keine Termine – es hilft nur.';
+  if (accuracy === 100) return 'Fehlerfrei – alles auf Anhieb richtig!';
+  if (accuracy >= 90) return 'Stark – fast alles auf Anhieb richtig.';
+  if (accuracy >= 60) return 'Gut gemacht! Was noch wackelt, kommt bald zur Wiederholung.';
+  return 'Dranbleiben lohnt sich – die schwierigen Karten kommen bald wieder.';
+}
+
+function renderCelebration(host, { opts, accuracy, gained, streakBefore, streak, exitHash }) {
+  const title = opts.mode === 'lesson' ? 'Lektion geschafft!'
+    : opts.mode === 'practice' ? 'Runde geschafft!'
+    : 'Wiederholung geschafft!';
+  // Die Krone gehört zur geschafften Lektion (wie auf dem Lernpfad).
+  const art = opts.mode === 'lesson' ? 'crown' : 'trophy';
+
+  host.innerHTML = `
+    <section class="ab-celebrate" aria-labelledby="end-title">
+      <div class="ab-celebrate__hero">
+        <svg class="ab-celebrate__rays" viewBox="0 0 264 264" aria-hidden="true">${RAYS}</svg>
+        <div class="ab-celebrate__trophy">${icon(art)}</div>
+      </div>
+      <h1 class="ab-celebrate__title text-display" id="end-title">${title}</h1>
+      <p class="ab-celebrate__sub text-body">${celebrationText(opts.mode, accuracy)}</p>
+      <div class="ab-results">
+        <div class="ab-result">
+          <div class="ab-result__head text-overline">XP</div>
+          <div class="ab-result__body text-heading">${icon('bolt')}<span data-n="${gained}" data-prefix="+">+${gained}</span></div>
+        </div>
+        <div class="ab-result ab-result--minze">
+          <div class="ab-result__head text-overline">Richtig</div>
+          <div class="ab-result__body text-heading">${icon('target')}<span data-n="${accuracy}" data-suffix=" %">${accuracy} %</span></div>
+        </div>
+        <div class="ab-result ab-result--granat">
+          <div class="ab-result__head text-overline">Serie</div>
+          <div class="ab-result__body text-heading">${icon('flame')}<span data-n="${streak}" data-from="${Math.min(streakBefore, streak)}">${streak}</span></div>
+        </div>
+      </div>
+      <div class="ab-celebrate__actions">
+        <button class="ab-btn text-button" type="button" id="end-continue">Weiter</button>
+        ${opts.mode === 'lesson' ? '<button class="ab-btn ab-btn--secondary text-button" type="button" id="end-again">Nochmal üben</button>' : ''}
+      </div>
+    </section>`;
+
+  const cont = host.querySelector('#end-continue');
+  cont.addEventListener('click', () => { location.hash = exitHash; });
+  host.querySelector('#end-again')?.addEventListener('click', () => runLesson(opts.lesson.id, host));
+  cont.focus({ preventScroll: true });
+  window.scrollTo(0, 0);
+
+  // Feier-Stufe 3: Konfetti aus der Krone, die Zahlen zählen nacheinander hoch.
+  // Die Endwerte stehen schon im Markup – für Screenreader und reduzierte Bewegung.
+  if (reducedMotion()) return;
+  const numbers = [...host.querySelectorAll('[data-n]')];
+  numbers.forEach((n) => {
+    n.textContent = `${n.dataset.prefix || ''}${n.dataset.from || 0}${n.dataset.suffix || ''}`;
+  });
+  setTimeout(() => {
+    confetti({ origin: host.querySelector('.ab-celebrate__trophy'), count: 110, spread: 150 });
+  }, 380);
+  numbers.forEach((n, i) => {
+    setTimeout(() => countUp(n, Number(n.dataset.n), {
+      from: Number(n.dataset.from || 0),
+      prefix: n.dataset.prefix || '',
+      suffix: n.dataset.suffix || '',
+      duration: 900,
+    }), 520 + i * 100);
+  });
 }

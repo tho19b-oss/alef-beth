@@ -5,7 +5,7 @@
 
 export const {
   icon, hydrate, replay, countUp, setProgress, ring,
-  confetti, sparks, xp, feedback, toast, swap, reducedMotion,
+  confetti, sparks, xp, feedback, toast, swap, splash, reducedMotion,
 } = window.AlefBeth;
 
 // Hebräischer Text als eigener Abschnitt: richtige Schrift, Leserichtung und

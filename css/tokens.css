@@ -183,6 +183,7 @@
   --layer-toast: 60;
   --layer-dialog: 70;
   --layer-fx: 80;
+  --layer-splash: 90;
   /* Dauern */
   --dur-press: 90ms;
   --dur-quick: 160ms;

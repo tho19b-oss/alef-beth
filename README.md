@@ -31,6 +31,9 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
   kleinen Feiern (Konfetti nur bei Meilensteinen). Wer weniger Bewegung mag,
   schaltet unter *Mehr → Bewegung reduzieren* alle Animationen ab; die
   Systemeinstellung wird ohnehin beachtet
+- **Startbildschirm:** Beim Öffnen sinkt das App-Icon ein, federt zurück und
+  dockt als Marke in der Kopfleiste an, während die Startseite hereingleitet –
+  einmal pro Sitzung, Antippen überspringt, bei reduzierter Bewegung entfällt er
 - **Tagesziel:** ein Ring auf der Startseite füllt sich mit den XP des Tages
   (50, 100 oder 200 XP, einstellbar unter *Mehr*). Ist er voll, gibt es
   +20 XP zum Abholen – wer das vergisst, bekommt den Bonus am nächsten Tag

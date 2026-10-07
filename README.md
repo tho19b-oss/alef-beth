@@ -26,8 +26,11 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
   (1 → 3 → 7 → 14 → 30 → 90 Tage). Ist gerade nichts fällig, gibt es „freies
   Üben“: Das holt Wackelkandidaten zurück nach vorn, schiebt aber keine
   Termine nach hinten.
-- **Motivation:** XP, Tages-Serie (Streak), Gesamtfortschritt und Fortschritt
-  pro Lektion
+- **Motivation:** XP, Tages-Serie (Streak), Kombo ab drei richtigen Antworten
+  in Folge, Kronen auf dem Lernpfad, Gesamtfortschritt – mit Übergängen und
+  kleinen Feiern (Konfetti nur bei Meilensteinen). Wer weniger Bewegung mag,
+  schaltet unter *Mehr → Bewegung reduzieren* alle Animationen ab; die
+  Systemeinstellung wird ohnehin beachtet
 - **Nachschlagen:** Alphabet- und Nikud-Tabelle mit Sprachausgabe
 - **Am Rechner:** Tasten 1–4 wählen eine Antwort, Enter geht weiter
 - **Version sichtbar:** Unter *Mehr → Version* steht die installierte Fassung,
@@ -67,6 +70,12 @@ Vanilla HTML/CSS/JS ohne Build-Schritt und ohne Abhängigkeiten.
 
 | Pfad | Inhalt |
 | --- | --- |
+| `css/tokens.css` | Design-Tokens: Farben (hell/dunkel), Abstände, Radien, Bewegung, Schrift-Stile |
+| `css/components.css` | Komponenten des Design Systems (Klassen mit Präfix `ab-`) |
+| `css/style.css` | Anordnung der Komponenten auf den Bildschirmen |
+| `js/alefbeth.js` | Bewegungs- und Icon-Helfer des Design Systems (`window.AlefBeth`) |
+| `js/ui.js` | reicht die Helfer an die Module weiter, dazu Dialog und Hebräisch-Markup |
+| `fonts/` | Rubik (Oberfläche) und Frank Ruhl Libre (Hebräisch), selbst gehostet |
 | `data/letters.js` | Buchstaben & Endformen (Name, Laut, Eselsbrücke …) |
 | `data/nikud.js` | Vokalzeichen & Lesesilben |
 | `data/words.js` | Wortschatz (Hebräisch, Umschrift, Bedeutung) |
@@ -84,6 +93,12 @@ Konstante, die beim Hochzählen vergessen werden könnte.
 
 Neue Wörter hinzufügen: Eintrag in `data/words.js` ergänzen und die ID in
 einer Lektion in `data/curriculum.js` eintragen – fertig.
+
+Gestaltung: Farben, Größen und Bewegung kommen aus dem Alef Beth Design
+System. `tokens.css`, `components.css` und `alefbeth.js` sind Kopien daraus –
+neue Farben oder Abstände gehören in die Tokens, nicht als feste Werte in
+`style.css`. Schriftgrößen setzt das Markup über die Typo-Klassen (`text-*`,
+`glyph-*`), hebräischer Text bekommt `lang="he"` (Helfer `he()` in `js/ui.js`).
 
 Beim Ändern von Dateien: Der Service Worker liefert aus dem Cache, ein Reload
 allein zeigt die Änderung also nicht. Entweder `VERSION` in `sw.js` hochzählen

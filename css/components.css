@@ -73,6 +73,7 @@ body {
   gap: var(--space-4);
   min-height: 132px;
   margin: 0 0 var(--space-5);
+  text-align: center;
 }
 
 /* ---------- Icons ---------- */
@@ -348,7 +349,7 @@ svg.ab-icon { fill: none; }
   --_bg: var(--card);
   --_bd: var(--line);
   --_lc: var(--line);
-  min-height: 64px;
+  min-height: 68px; /* = Höhe einer glyph-md-Kachel: beide Spalten bleiben auf einer Linie */
   padding: var(--space-2) var(--space-3);
   display: flex;
   align-items: center;
@@ -413,6 +414,8 @@ svg.ab-icon { fill: none; }
   border-radius: var(--radius-xl);
   background: var(--well);
 }
+/* Wörter brauchen eine breitere Bühne als einzelne Zeichen */
+.ab-lettercard__stage--word { width: 100%; height: 148px; }
 .ab-lettercard__glyph { display: block; animation: ab-ink var(--dur-epic) var(--ease-out) 150ms both; }
 .ab-lettercard__index {
   position: absolute;
@@ -624,6 +627,7 @@ svg.ab-icon { fill: none; }
   animation: ab-flicker var(--dur-loop) var(--ease-in-out) infinite;
 }
 .ab-combo.is-new { animation: ab-pop var(--dur-slow) var(--ease-bounce); }
+.ab-combo.is-bump { animation: ab-bump var(--dur-base) var(--ease-spring); }
 
 /* ---------- Lernpfad ---------- */
 
@@ -818,6 +822,8 @@ svg.ab-icon { fill: none; }
   animation: ab-flicker var(--dur-loop) var(--ease-in-out) infinite;
 }
 .ab-streak.is-extended .ab-streak__flame { animation: ab-bump var(--dur-slow) var(--ease-bounce); }
+.ab-streak.is-cold .ab-streak__flame { background: var(--well); }
+.ab-streak.is-cold .ab-streak__flame .ab-icon { color: var(--control); --icon-accent: var(--well); animation: none; }
 .ab-streak__label { color: var(--ink-soft); }
 .ab-streak__note { color: var(--ink-soft); }
 
@@ -869,6 +875,12 @@ svg.ab-icon { fill: none; }
 .ab-goal.is-complete .ab-goal__value, .ab-goal.is-complete .ab-goal__unit { display: none; }
 .ab-goal.is-complete .ab-goal__done { display: grid; animation: ab-pop var(--dur-slow) var(--ease-bounce); }
 .ab-goal.is-complete { animation: ab-bump var(--dur-slow) var(--ease-bounce); }
+/* Schon vorher erreicht (Screen neu gezeichnet): Krone ohne erneuten Sprung */
+.ab-goal.is-settled, .ab-goal.is-settled .ab-goal__done { animation: none; }
+/* Klein für eine Karte neben Text, z. B. „Heute“ auf der Startseite */
+.ab-goal--sm { width: 96px; height: 96px; }
+.ab-goal--sm .ab-goal__done { width: 52px; height: 52px; }
+.ab-goal--sm .ab-goal__done .ab-icon { width: 28px; height: 28px; }
 
 /* ---------- Abzeichen ---------- */
 
@@ -909,6 +921,7 @@ svg.ab-icon { fill: none; }
 .ab-medal--granat .ab-medal__disc { --_bg: var(--granat); --_fg: var(--on-granat); --_lc: var(--granat-ledge); }
 .ab-medal--tekhelet .ab-medal__disc { --_bg: var(--tekhelet); --_fg: var(--on-tekhelet); --_lc: var(--tekhelet-ledge); }
 .ab-medal--minze .ab-medal__disc { --_bg: var(--minze); --_fg: var(--on-minze); --_lc: var(--minze-ledge); }
+.ab-medal--granat:not(.is-locked) .ab-icon { --icon-accent: var(--gold); }
 .ab-medal.is-locked .ab-medal__disc { --_bg: var(--well); --_fg: var(--ink-soft); --_lc: var(--line); }
 .ab-medal__lock {
   position: absolute;
@@ -967,6 +980,11 @@ svg.ab-icon { fill: none; }
   animation: ab-drop var(--dur-epic) var(--ease-bounce) both;
 }
 .ab-celebrate__trophy .ab-icon { width: 64px; height: 64px; }
+/* Neues Abzeichen: die Medaille tritt an die Stelle des Pokals */
+.ab-celebrate__hero .ab-medal__art { margin: 0; }
+.ab-celebrate__hero .ab-medal__disc { width: 120px; height: 120px; box-shadow: 0 8px 0 var(--_lc); }
+.ab-celebrate__hero .ab-medal__disc::before { inset: 10px; }
+.ab-celebrate__hero .ab-medal__disc .ab-icon { width: 60px; height: 60px; }
 .ab-celebrate__title { animation: ab-fade-up var(--dur-slow) var(--ease-out) 250ms both; }
 .ab-celebrate__sub { margin-top: var(--space-2); color: var(--ink-soft); animation: ab-fade-up var(--dur-slow) var(--ease-out) 330ms both; }
 
@@ -1097,6 +1115,7 @@ svg.ab-icon { fill: none; }
 .ab-banner--reward { background: var(--gold-soft); }
 .ab-banner--reward .ab-banner__icon { background: var(--gold); color: var(--on-gold); }
 .ab-banner--reward .ab-banner__text b { color: var(--gold-ink); }
+.ab-banner.is-leaving { animation: ab-fade-out var(--dur-base) var(--ease-in) forwards; }
 
 /* ---------- Toast ---------- */
 
@@ -1307,7 +1326,7 @@ svg.ab-icon { fill: none; }
 }
 .ab-alpha__glyph {
   flex: none;
-  width: 60px;
+  width: 76px; /* Platz für Paare wie שׁ שׂ */
   height: 60px;
   display: grid;
   place-items: center;

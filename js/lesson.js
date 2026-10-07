@@ -534,7 +534,7 @@ function heroHtml(opts, badges) {
   const b = badges[0];
   if (b) {
     const art = b.glyph ? he(b.glyph, 'glyph-lg') : icon(b.icon);
-    return `<div class="ab-medal celebrate-medal is-unlocking${b.tone ? ` ab-medal--${b.tone}` : ''}">`
+    return `<div class="ab-medal is-unlocking${b.tone ? ` ab-medal--${b.tone}` : ''}">`
       + `<div class="ab-medal__art"><div class="ab-medal__disc">${art}</div></div></div>`;
   }
   // Die Krone gehört zur geschafften Lektion (wie auf dem Lernpfad).
@@ -593,10 +593,12 @@ function renderCelebration(host, { opts, accuracy, gained, streakBefore, streak,
   numbers.forEach((n) => {
     n.textContent = `${n.dataset.prefix || ''}${n.dataset.from || 0}${n.dataset.suffix || ''}`;
   });
+  // Unter 60 % Treffern bleibt es beim ermutigenden Untertitel – ohne Konfetti
+  // (Design System, Celebration „Abstufung“); ein neues Abzeichen feiert immer.
   setTimeout(() => {
     const origin = host.querySelector('.ab-celebrate__trophy, .ab-medal__disc');
     if (badges.length) confetti({ origin, count: 140, spread: 360, power: 0.9 });
-    else confetti({ origin, count: 110, spread: 150 });
+    else if (accuracy >= 60) confetti({ origin, count: 110, spread: 150 });
   }, badges.length ? 420 : 380);
   numbers.forEach((n, i) => {
     setTimeout(() => countUp(n, Number(n.dataset.n), {

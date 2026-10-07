@@ -80,7 +80,7 @@ function todayHtml(from, value, goal) {
   const heading = value >= goal ? `${num(value)} XP heute` : `${value} von ${goal} XP`;
   return `
     <section class="ab-card today" aria-labelledby="today-title">
-      <div class="ab-goal today__ring${done}" role="img" aria-label="Tagesziel: ${Math.min(value, goal)} von ${goal} XP">
+      <div class="ab-goal ab-goal--sm today__ring${done}" role="img" aria-label="Tagesziel: ${Math.min(value, goal)} von ${goal} XP">
         <svg class="ab-goal__ring" viewBox="0 0 120 120" aria-hidden="true">
           <circle class="ab-goal__track" cx="60" cy="60" r="50"/>
           <circle class="ab-goal__bar" cx="60" cy="60" r="50" pathLength="100"

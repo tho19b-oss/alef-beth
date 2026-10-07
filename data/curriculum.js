@@ -1,4 +1,6 @@
 // Curriculum: Einheiten → Lektionen → Lernitems.
+// Einheiten tragen eine Zierglyphe fürs Banner, Lektionen ihr Zeichen für den
+// Lernpfad (hebräischer Text, keine Emoji).
 // Außerdem: Item-Registry und Hilfsfunktionen für Anzeige & Distraktoren.
 
 import { LETTERS, FINALS } from './letters.js';
@@ -70,7 +72,8 @@ function distinctKey(item, field) {
 export const UNITS = [
   {
     id: 'u1',
-    title: 'Einheit 1 · Das Alef-Bet',
+    title: 'Das Alef-Bet',
+    glyph: 'א',
     desc: 'Alle 22 Buchstaben, die 5 Endformen und die Verwechsler-Paare.',
     lessons: [
       { id: 'u1l1', kind: 'letters', title: 'Schin, Bet, Taw', icon: 'שׁ', newItems: ['shin', 'bet', 'tav'], bonusWord: 'w-shabbat' },
@@ -82,7 +85,7 @@ export const UNITS = [
       { id: 'u1l7', kind: 'letters', title: 'Sajin, Tet, Chet, Tzadi', icon: 'ז', newItems: ['zayin', 'tet', 'chet', 'tsadi'] },
       { id: 'u1l8', kind: 'letters', title: 'Die Endformen', icon: 'ם', newItems: ['kaf-sofit', 'mem-sofit', 'nun-sofit', 'pe-sofit', 'tsadi-sofit'] },
       {
-        id: 'u1l9', kind: 'lookalike', title: 'Verwechsler-Training', icon: '👀',
+        id: 'u1l9', kind: 'lookalike', title: 'Verwechsler-Training', icon: 'ד ר',
         pairs: [
           ['bet', 'kaf'], ['dalet', 'resh'], ['he', 'chet'], ['he', 'tav'],
           ['vav', 'zayin'], ['gimel', 'nun'], ['mem-sofit', 'samech'], ['ayin', 'tsadi'],
@@ -92,7 +95,8 @@ export const UNITS = [
   },
   {
     id: 'u2',
-    title: 'Einheit 2 · Nikud – die Vokale',
+    title: 'Nikud – die Vokale',
+    glyph: 'בָּ',
     desc: 'Die Vokalzeichen unter und über den Buchstaben – damit wird aus Zeichen Sprache.',
     lessons: [
       { id: 'u2l1', kind: 'nikud', title: 'Patach & Kamatz (a)', icon: 'אַ', newItems: ['patach', 'kamatz'], syllables: ['syl-ba', 'syl-scha', 'syl-ta', 'syl-ma', 'syl-la', 'syl-ra'] },
@@ -104,14 +108,15 @@ export const UNITS = [
   },
   {
     id: 'u3',
-    title: 'Einheit 3 · Wörter lesen',
+    title: 'Wörter lesen',
+    glyph: 'שׁ',
     desc: 'Echte Wörter aus Siddur und Alltag – jetzt liest du Hebräisch!',
     lessons: [
-      { id: 'u3l1', kind: 'words', title: 'Erste Wörter', icon: '🌱', newItems: ['w-shabbat', 'w-shalom', 'w-abba', 'w-imma', 'w-torah'] },
-      { id: 'u3l2', kind: 'words', title: 'Wörter aus dem Siddur', icon: '📖', newItems: ['w-baruch', 'w-ata', 'w-melech', 'w-haolam', 'w-amen'] },
-      { id: 'u3l3', kind: 'words', title: 'Schma Israel', icon: '✡️', newItems: ['w-shema', 'w-yisrael', 'w-echad'] },
-      { id: 'u3l4', kind: 'words', title: 'Alltag & Feste', icon: '🕎', newItems: ['w-mazaltov', 'w-chagsameach', 'w-kasher', 'w-tefilla', 'w-mitzvah'] },
-      { id: 'u3l5', kind: 'bracha', title: 'Die Bracha lesen', icon: '🕯️', newItems: ['w-hashem', 'w-elokeinu'], reviewWords: ['w-baruch', 'w-ata', 'w-melech', 'w-haolam'] },
+      { id: 'u3l1', kind: 'words', title: 'Erste Wörter', icon: 'שָׁלוֹם', newItems: ['w-shabbat', 'w-shalom', 'w-abba', 'w-imma', 'w-torah'] },
+      { id: 'u3l2', kind: 'words', title: 'Wörter aus dem Siddur', icon: 'אָמֵן', newItems: ['w-baruch', 'w-ata', 'w-melech', 'w-haolam', 'w-amen'] },
+      { id: 'u3l3', kind: 'words', title: 'Schma Israel', icon: 'שְׁמַע', newItems: ['w-shema', 'w-yisrael', 'w-echad'] },
+      { id: 'u3l4', kind: 'words', title: 'Alltag & Feste', icon: 'חַג', newItems: ['w-mazaltov', 'w-chagsameach', 'w-kasher', 'w-tefilla', 'w-mitzvah'] },
+      { id: 'u3l5', kind: 'bracha', title: 'Die Bracha lesen', icon: 'בָּרוּךְ', newItems: ['w-hashem', 'w-elokeinu'], reviewWords: ['w-baruch', 'w-ata', 'w-melech', 'w-haolam'] },
     ],
   },
 ];

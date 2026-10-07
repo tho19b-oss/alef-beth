@@ -10,7 +10,7 @@ import { dueIds, nextDue } from './srs.js';
 import { speak, ttsSupported, hasHebrewVoice, hebrewVoiceName, audioActive } from './audio.js';
 import { activeVersion, checkForUpdate } from './version.js';
 import { todayStr } from './util.js';
-import { icon, countUp, replay } from './ui.js';
+import { icon, countUp, replay, setProgress, confetti, toast, reducedMotion } from './ui.js';
 
 const num = (n) => n.toLocaleString('de-DE');
 
@@ -53,66 +53,154 @@ function bumpCounters(host, streak) {
 
 // ---------- Home / Lernpfad ----------
 
-export function renderHome(host) {
-  const due = dueIds(state.srs).length;
-  const total = orderedLessons().length;
-  const done = orderedLessons().filter((l) => state.lessons[l.id]).length;
-  const pct = Math.round((done / total) * 100);
-  const streak = currentStreak();
+// Welche Lektionen beim letzten Zeichnen schon geschafft waren. Ist seitdem
+// eine dazugekommen, kommt man gerade aus ihr zurück: Der Balken wächst
+// sichtbar, und das Schloss der nächsten Lektion springt auf.
+let shownLessons = null;
+let nopeToast = null;
 
-  host.innerHTML = `
-    ${topbarHtml(streak)}
-
-    <div class="progress-card">
-      <div class="pc-head">
-        <span class="pc-label">${done === total ? 'Alle Lektionen geschafft! 🎉' : 'Dein Weg durchs Alef-Bet'}</span>
-        <span class="pc-count">${done} / ${total}</span>
-      </div>
-      <div class="pc-bar" role="progressbar" aria-label="Abgeschlossene Lektionen"
-           aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></div>
-    </div>
-
-    ${due > 0 ? `
-      <div class="banner">
-        <span><b>${due}</b> ${due === 1 ? 'Karte ist' : 'Karten sind'} zur Wiederholung fällig</span>
-        <button id="review-now">Üben</button>
-      </div>` : ''}
-    ${UNITS.map(unitHtml).join('')}`;
-
-  bumpCounters(host, streak);
-  host.querySelector('#review-now')?.addEventListener('click', () => {
-    location.hash = '#/review/run';
-  });
-  host.querySelectorAll('[data-lesson]').forEach((btn) =>
-    btn.addEventListener('click', () => {
-      location.hash = `#/lesson/${btn.dataset.lesson}`;
-    }));
+function stepState(l) {
+  if (state.lessons[l.id]) return 'done';
+  return isUnlocked(l.id, state.lessons) ? 'current' : 'locked';
 }
 
-function unitHtml(u) {
+export function renderHome(host) {
+  const lessons = orderedLessons();
+  const total = lessons.length;
+  const doneIds = lessons.filter((l) => state.lessons[l.id]).map((l) => l.id);
+  const done = doneIds.length;
+  const due = dueIds(state.srs).length;
+  const streak = currentStreak();
+
+  const fresh = shownLessons ? doneIds.filter((id) => !shownLessons.has(id)) : [];
+  shownLessons = new Set(doneIds);
+  const shownDone = done - fresh.length;
+  // Die gerade frei gewordene Lektion wird erst gesperrt gezeichnet und dann
+  // vor den Augen geöffnet.
+  const unlocked = fresh.length ? lessons.find((l) => stepState(l) === 'current') : null;
+  const freshUnit = UNITS.find((u) =>
+    u.lessons.some((l) => fresh.includes(l.id)) && u.lessons.every((l) => state.lessons[l.id]));
+  const pct = (n) => Math.round((n / total) * 100);
+
+  host.innerHTML = `
+    <div class="home">
+      ${topbarHtml(streak)}
+
+      <section class="home-meter ab-meter" aria-label="Gesamtfortschritt">
+        <div class="ab-meter__head">
+          <span class="text-strong">${done === total ? 'Alle Lektionen geschafft!' : 'Dein Weg durchs Alef-Bet'}</span>
+          <span class="ab-meter__count text-caption"><span data-count>${shownDone}</span> / ${total}</span>
+        </div>
+        <div class="ab-progress ab-progress--gold ab-progress--slim" role="progressbar" aria-label="Abgeschlossene Lektionen"
+             aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct(shownDone)}"><div class="ab-progress__fill" style="width:${pct(shownDone)}%"></div></div>
+      </section>
+
+      ${due > 0 ? `
+        <div class="ab-banner" role="region" aria-label="Wiederholung fällig">
+          <span class="ab-banner__icon">${icon('repeat')}</span>
+          <p class="ab-banner__text text-body"><b>${due} ${due === 1 ? 'Karte' : 'Karten'}</b> ${due === 1 ? 'ist' : 'sind'} zur Wiederholung fällig</p>
+          <button class="ab-btn ab-btn--info ab-btn--sm text-label" type="button" id="review-now">Üben</button>
+        </div>` : ''}
+
+      ${UNITS.map((u, i) => unitHtml(u, i, unlocked)).join('')}
+    </div>`;
+
+  const home = host.querySelector('.home');
+  bumpCounters(home, streak);
+  home.addEventListener('click', (e) => {
+    if (e.target.closest('#review-now')) {
+      location.hash = '#/review/run';
+      return;
+    }
+    const step = e.target.closest('.ab-step');
+    if (!step) return;
+    const node = step.querySelector('.ab-node');
+    if (node.getAttribute('aria-disabled') === 'true') {
+      replay(node, 'is-nope');
+      nopeToast?.close();
+      nopeToast = toast('Erst die vorherige Lektion abschließen', { icon: 'lock', duration: 2200 });
+      return;
+    }
+    location.hash = `#/lesson/${node.dataset.lesson}`;
+  });
+
+  if (fresh.length) celebrateProgress(home, { done, total, unlocked, freshUnit });
+}
+
+// Rückkehr aus einer geschafften Lektion: Balken und Zähler wachsen, die
+// Kamera fährt zur nächsten Lektion, deren Schloss aufspringt. Eine ganz
+// geschaffte Einheit bekommt Konfetti und einen Toast (Feier-Stufe 4).
+function celebrateProgress(home, { done, total, unlocked, freshUnit }) {
+  const bar = home.querySelector('.home-meter .ab-progress');
+  const calm = reducedMotion();
+  setTimeout(() => {
+    setProgress(bar, (done / total) * 100);
+    countUp(home.querySelector('.ab-meter__count [data-count]'), done, { duration: 500 });
+  }, 300);
+
+  const step = unlocked && home.querySelector(`[data-step="${unlocked.id}"]`);
+  const target = step || home.querySelector(`#unit-${freshUnit?.id}`);
+  target?.scrollIntoView({ block: 'center', behavior: calm ? 'auto' : 'smooth' });
+
+  setTimeout(() => {
+    if (!home.isConnected) return;
+    if (step) {
+      step.querySelector('.ab-node').classList.add('is-unlocking');
+      setTimeout(() => {
+        if (!step.isConnected) return;
+        step.outerHTML = stepHtml(unlocked);
+        replay(home.querySelector(`[data-step="${unlocked.id}"] .ab-node`), 'is-popping');
+      }, calm ? 0 : 420);
+    }
+    if (freshUnit) {
+      const n = UNITS.indexOf(freshUnit) + 1;
+      confetti({ origin: step?.querySelector('.ab-node') || target, count: 90, spread: 150, power: 0.8 });
+      toast(`Einheit ${n} geschafft: ${freshUnit.title}!`, { tone: 'reward', icon: 'crown' });
+    }
+  }, calm ? 0 : 650);
+}
+
+function unitHtml(u, i, unlocked) {
+  const states = u.lessons.map(stepState);
+  const allDone = states.every((s) => s === 'done');
+  const locked = states[0] === 'locked';
+  const mod = allDone ? ' ab-unit--done' : locked ? ' ab-unit--locked' : '';
   return `
-    <section class="unit">
-      <div class="unit-head"><h2>${u.title}</h2><p>${u.desc}</p></div>
-      <div class="path">${u.lessons.map(nodeHtml).join('')}</div>
+    <section class="ab-unit${mod}">
+      <header class="ab-unit__banner">
+        <span class="ab-unit__glyph" lang="he" aria-hidden="true">${u.glyph}</span>
+        <p class="ab-unit__kicker text-overline">Einheit ${i + 1}${allDone ? ' · geschafft' : ''}</p>
+        <h2 class="ab-unit__title text-heading" id="unit-${u.id}">${u.title}</h2>
+        <p class="ab-unit__desc text-body">${locked ? `Wird frei, sobald Einheit ${i} geschafft ist.` : u.desc}</p>
+      </header>
+      ${locked ? '' : `<ol class="ab-path" aria-labelledby="unit-${u.id}">${
+        u.lessons.map((l) => stepHtml(l, l.id === unlocked?.id ? 'locked' : undefined)).join('')}</ol>`}
     </section>`;
 }
 
-function nodeHtml(l) {
-  const done = !!state.lessons[l.id];
-  const unlocked = isUnlocked(l.id, state.lessons);
-  const cls = done ? 'done' : unlocked ? 'open' : 'locked';
-  const circle = done ? '✓' : unlocked ? `<span class="he">${l.icon}</span>` : '🔒';
-  const sub = done
-    ? `👑 ${state.lessons[l.id].score} % – nochmal üben?`
-    : unlocked ? 'Jetzt lernen' : 'Erst die vorherige Lektion abschließen';
+// Zeichen im Knoten: einzelne Buchstaben groß, ganze Wörter kleiner.
+function nodeGlyph(text) {
+  const letters = (text.match(/[א-ת]/g) || []).length;
+  return `<span class="${letters > 2 ? 'glyph-sm' : 'glyph-md'}" lang="he" dir="rtl">${text}</span>`;
+}
+
+function stepHtml(l, s = stepState(l)) {
+  const score = state.lessons[l.id]?.score;
+  const inner = s === 'done' ? icon('crown') : s === 'current' ? nodeGlyph(l.icon) : icon('lock');
+  const sub = s === 'done' ? `${icon('crown')}${score} % · nochmal üben?`
+    : s === 'current' ? 'Jetzt lernen' : 'Erst die vorherige Lektion abschließen';
+  const label = s === 'done' ? `${l.title} – geschafft mit ${score} %, nochmal üben`
+    : s === 'current' ? `${l.title} – jetzt lernen` : `${l.title} – noch gesperrt`;
+  // Der Text daneben ist nur fürs Auge (und vergrößert die Tippfläche); der
+  // Knopf trägt die vollständige Beschriftung.
   return `
-    <button class="node ${cls}" data-lesson="${l.id}" ${unlocked ? '' : 'disabled'}>
-      <span class="node-circle">${circle}</span>
-      <span class="node-info">
-        <span class="node-title">${l.title}</span><br>
-        <span class="node-sub">${sub}</span>
+    <li class="ab-step ab-step--${s}" data-step="${l.id}">
+      <button class="ab-node ab-node--${s}" type="button" data-lesson="${l.id}" aria-label="${label}"${s === 'locked' ? ' aria-disabled="true"' : ''}>${inner}</button>
+      <span class="ab-step__text" aria-hidden="true">
+        <span class="ab-step__title text-strong">${l.title}</span>
+        <span class="ab-step__sub text-caption">${sub}</span>
       </span>
-    </button>`;
+    </li>`;
 }
 
 // ---------- Wiederholen ----------

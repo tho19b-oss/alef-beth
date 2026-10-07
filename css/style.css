@@ -83,132 +83,19 @@ a { color: var(--tekhelet-ink); text-decoration: none; }
 #app:focus, #app:focus-visible { outline: none; }
 
 /* ===== Rahmen: Kopfleiste und Tab-Leiste ===== */
-.ab-topbar { margin-bottom: var(--space-4); }
 body.in-lesson #bottomnav { display: none; }
 
-/* ===== Banner (fällige Wiederholungen) ===== */
-.banner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  background: var(--gold-soft);
-  border: 1px solid var(--gold);
-  border-radius: var(--radius);
-  padding: 10px 14px;
-  margin-bottom: 14px;
-}
-.banner button {
-  background: var(--primary);
-  color: var(--on-granat);
-  border: 0;
-  border-radius: 12px;
-  padding: 8px 14px;
-  font-weight: 700;
-  box-shadow: 0 2px 0 var(--primary-dark);
-}
-
-/* ===== Gesamtfortschritt ===== */
-.progress-card {
+/* ===== Startseite ===== */
+.home { display: grid; gap: var(--space-4); }
+.home-meter {
+  padding: var(--space-4) var(--space-5);
+  border: 2px solid var(--line);
+  border-radius: var(--radius-lg);
   background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 12px 16px;
-  margin-bottom: 14px;
 }
-.progress-card .pc-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 10px;
-  font-size: 0.9rem;
-  margin-bottom: 8px;
-}
-.progress-card .pc-label { font-weight: 700; }
-.progress-card .pc-count { color: var(--muted); }
-.pc-bar { height: 10px; background: var(--border); border-radius: 999px; overflow: hidden; }
-.pc-bar > i {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--gold), var(--primary));
-  transition: width 0.4s ease;
-}
-
-/* ===== Lernpfad ===== */
-.unit { margin-bottom: 22px; }
-.unit-head {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px 16px;
-  box-shadow: var(--shadow);
-}
-.unit-head h2 { margin: 0; }
-.unit-head p { margin: 4px 0 0; color: var(--muted); font-size: 0.9rem; }
-
-.path { display: flex; flex-direction: column; padding: 8px 0 0 8px; }
-.node {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: none;
-  border: 0;
-  padding: 8px;
-  text-align: left;
-  color: var(--text);
-  border-radius: 12px;
-}
-/* Verbindungslinie zwischen den Stationen – macht aus der Liste einen Pfad */
-.node:not(:last-child)::before {
-  content: "";
-  position: absolute;
-  left: 35px;    /* Mitte des 58px-Kreises (8px Padding + 29px) minus halbe Linienbreite */
-  top: 66px;     /* Unterkante des Kreises */
-  bottom: -8px;  /* bis zur Oberkante des nächsten Kreises */
-  width: 4px;
-  border-radius: 2px;
-  background: var(--border);
-}
-.node.done:not(:last-child)::before { background: var(--gold); }
-.node-circle {
-  flex: 0 0 58px;
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font-size: 1.5rem;
-  font-weight: 700;
-  border: 3px solid var(--border);
-  background: var(--card);
-  color: var(--muted);
-  box-shadow: 0 2px 0 var(--border);
-}
-.node.done .node-circle {
-  background: var(--gold);
-  border-color: var(--gold);
-  color: var(--on-gold);
-  box-shadow: 0 2px 0 var(--gold-ledge);
-}
-.node.open .node-circle {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: var(--on-granat);
-  box-shadow: 0 2px 0 var(--primary-dark);
-  animation: pulse 2s infinite;
-}
-.node.locked { opacity: 0.55; }
-.node-info .node-title { font-weight: 700; }
-.node-info .node-sub { color: var(--muted); font-size: 0.85rem; }
-.node.open:active .node-circle, .node.done:active .node-circle { transform: translateY(2px); box-shadow: none; }
-
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
+.home .ab-unit { margin-top: var(--space-4); }
+/* Der Text neben einem Knoten gehört mit zur Tippfläche (siehe screens.js). */
+.ab-step__text { cursor: pointer; }
 
 /* ===== Buttons ===== */
 .btn {

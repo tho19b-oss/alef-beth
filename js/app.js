@@ -6,6 +6,7 @@ import { runLesson, runReview, runFreePractice } from './lesson.js';
 import { scheduleReminder } from './notify.js';
 import { dueIds } from './srs.js';
 import { applyTheme } from './theme.js';
+import { replay } from './ui.js';
 
 const app = document.getElementById('app');
 
@@ -24,25 +25,33 @@ new MutationObserver((records) => {
   }
 }).observe(app, { childList: true, subtree: true });
 
+const NAV_ROUTES = ['home', 'review', 'alphabet', 'settings'];
+
+function navRoute(hash) {
+  if (hash.startsWith('#/review')) return 'review';
+  if (hash === '#/alphabet') return 'alphabet';
+  if (hash === '#/settings') return 'settings';
+  return 'home'; // auch Lektionen gehören zum Lernpfad
+}
+
 function updateNav(hash) {
+  const current = navRoute(hash);
   document.querySelectorAll('#bottomnav a').forEach((a) => {
-    const r = a.dataset.route;
-    const active =
-      (r === 'home' && (hash === '#/' || hash === '' || hash.startsWith('#/lesson/'))) ||
-      (r === 'review' && hash.startsWith('#/review')) ||
-      (r === 'alphabet' && hash === '#/alphabet') ||
-      (r === 'settings' && hash === '#/settings');
-    a.classList.toggle('active', active);
-    if (active) a.setAttribute('aria-current', 'page');
+    if (a.dataset.route === current) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
   });
+  // Die Pille gleitet per CSS-Übergang zum aktiven Tab.
+  document.querySelector('.ab-nav__list').style.setProperty('--active', NAV_ROUTES.indexOf(current));
+
+  // Zahl der fälligen Karten am Üben-Tab; ändert sie sich, hüpft sie kurz.
   const due = dueIds(state.srs).length;
   const badge = document.getElementById('nav-badge');
-  if (badge) {
-    badge.textContent = due > 0 ? String(due) : '';
-    badge.setAttribute('aria-label', `${due} Karten fällig`);
-    badge.hidden = due === 0;
-  }
+  const text = due > 0 ? String(due) : '';
+  const changed = badge.textContent !== text;
+  badge.textContent = text;
+  badge.hidden = due === 0;
+  document.getElementById('nav-due').textContent = due > 0 ? `, ${due} ${due === 1 ? 'Karte' : 'Karten'} fällig` : '';
+  if (changed && due > 0) replay(badge, 'is-bump');
 }
 
 function route() {

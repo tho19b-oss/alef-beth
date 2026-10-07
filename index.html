@@ -22,11 +22,16 @@
        Screenreader am Anfang des neuen Bildschirms landen. -->
   <main id="app" tabindex="-1"></main>
 
-  <nav id="bottomnav" aria-label="Hauptnavigation">
-    <a href="#/" data-route="home"><span class="nav-ico" aria-hidden="true">🏠</span><span>Lernen</span></a>
-    <a href="#/review" data-route="review"><span class="nav-ico-wrap"><span class="nav-ico" aria-hidden="true">🔁</span><span class="badge" id="nav-badge" hidden></span></span><span>Üben</span></a>
-    <a href="#/alphabet" data-route="alphabet"><span class="nav-ico nav-he" aria-hidden="true">א</span><span>Alef-Bet</span></a>
-    <a href="#/settings" data-route="settings"><span class="nav-ico" aria-hidden="true">⚙️</span><span>Mehr</span></a>
+  <!-- Tab-Leiste: die Pille gleitet zum aktiven Tab (--active setzt app.js).
+       Die <i data-icon> ersetzt js/alefbeth.js beim Start durch Inline-SVGs. -->
+  <nav class="ab-nav" id="bottomnav" aria-label="Hauptnavigation">
+    <ul class="ab-nav__list" style="--count: 4; --active: 0">
+      <li class="ab-nav__pill" aria-hidden="true"></li>
+      <li><a class="ab-nav__link text-caption" href="#/" data-route="home"><span class="ab-nav__icon"><i data-icon="book"></i></span><span class="ab-nav__label">Lernen</span></a></li>
+      <li><a class="ab-nav__link text-caption" href="#/review" data-route="review"><span class="ab-nav__icon"><i data-icon="repeat"></i><span class="ab-count text-label" id="nav-badge" aria-hidden="true" hidden></span></span><span class="ab-nav__label">Üben</span><span class="ab-sr" id="nav-due"></span></a></li>
+      <li><a class="ab-nav__link text-caption" href="#/alphabet" data-route="alphabet"><span class="ab-nav__icon"><span class="ab-nav__he" lang="he" aria-hidden="true">א</span></span><span class="ab-nav__label">Alef-Bet</span></a></li>
+      <li><a class="ab-nav__link text-caption" href="#/settings" data-route="settings"><span class="ab-nav__icon"><i data-icon="sliders"></i></span><span class="ab-nav__label">Mehr</span></a></li>
+    </ul>
   </nav>
 
   <noscript>

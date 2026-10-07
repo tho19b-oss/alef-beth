@@ -82,26 +82,9 @@ a { color: var(--tekhelet-ink); text-decoration: none; }
    Screenwechsel programmatisch den Fokus – dort wäre ein Ring nur irritierend. */
 #app:focus, #app:focus-visible { outline: none; }
 
-/* ===== Topbar (Streak/XP) ===== */
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-.topbar .brand { font-family: var(--serif); font-weight: 700; font-size: 1.25rem; display: flex; align-items: center; gap: 8px; }
-.brand .logo { font-size: 1.5rem; }
-.stats { display: flex; gap: 8px; }
-.statchip {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 4px 12px;
-  font-weight: 700;
-  font-size: 0.9rem;
-  box-shadow: var(--shadow);
-}
+/* ===== Rahmen: Kopfleiste und Tab-Leiste ===== */
+.ab-topbar { margin-bottom: var(--space-4); }
+body.in-lesson #bottomnav { display: none; }
 
 /* ===== Banner (fällige Wiederholungen) ===== */
 .banner {
@@ -544,59 +527,6 @@ a { color: var(--tekhelet-ink); text-decoration: none; }
   padding: 10px 14px;
   margin: 10px 0;
 }
-
-/* ===== Bottom-Navigation ===== */
-.nav-ico-wrap {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.badge {
-  position: absolute;
-  top: -4px;
-  right: -10px;
-  background: var(--granat);
-  color: var(--on-granat);
-  font-size: 0.6rem;
-  font-weight: 700;
-  min-width: 1rem;
-  height: 1rem;
-  border-radius: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 3px;
-  line-height: 1;
-}
-.badge[hidden] { display: none; }
-#bottomnav {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  justify-content: space-around;
-  background: var(--card);
-  border-top: 1px solid var(--border);
-  padding: 6px 0 calc(6px + env(safe-area-inset-bottom));
-  z-index: 40;
-}
-#bottomnav a {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  font-size: 0.72rem;
-  color: var(--muted);
-  font-weight: 600;
-  padding: 4px 14px;
-  border-radius: 10px;
-}
-#bottomnav a.active { color: var(--primary-ink); }
-.nav-ico { font-size: 1.3rem; }
-.nav-he { font-weight: 800; }
-body.in-lesson #bottomnav { display: none; }
 
 @media (max-width: 380px) {
   .options { gap: 8px; }

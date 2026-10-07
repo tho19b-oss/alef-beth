@@ -9,6 +9,47 @@ import { applyTheme } from './theme.js';
 import { dueIds, nextDue } from './srs.js';
 import { speak, ttsSupported, hasHebrewVoice, hebrewVoiceName, audioActive } from './audio.js';
 import { activeVersion, checkForUpdate } from './version.js';
+import { todayStr } from './util.js';
+import { icon, countUp, replay } from './ui.js';
+
+const num = (n) => n.toLocaleString('de-DE');
+
+// ---------- Kopfleiste: Marke, Serie, XP ----------
+
+// Zuletzt angezeigte Zählerstände. Kommt man aus einer Lektion zurück, zählen
+// die Chips von dort aus hoch, statt einfach umzuspringen.
+const shown = { streak: null, xp: null };
+
+function topbarHtml(streak) {
+  // Heute schon gelernt: die Flamme flackert. Serie 0: graue Flamme.
+  const flame = streak === 0 ? ' is-cold' : state.streak.lastDay === todayStr() ? ' is-lit' : '';
+  const start = (key, value) => (shown[key] !== null && shown[key] < value ? shown[key] : value);
+  return `
+    <header class="ab-topbar">
+      <div class="ab-brand text-heading"><span class="ab-brand__mark" lang="he" aria-hidden="true">א</span>Alef Beth</div>
+      <div class="ab-stats">
+        <span class="ab-chip ab-chip--streak${flame} text-label" id="chip-streak" title="Tage-Serie">${icon('flame')}<span class="ab-sr">Tage-Serie:</span><span data-count>${num(start('streak', streak))}</span></span>
+        <span class="ab-chip ab-chip--xp text-label" id="chip-xp" title="Erfahrungspunkte">${icon('bolt')}<span class="ab-sr">Erfahrungspunkte:</span><span data-count>${num(start('xp', state.xp))}</span></span>
+      </div>
+    </header>`;
+}
+
+// Nur Zuwachs wird gefeiert – eine gerissene Serie springt kommentarlos zurück.
+function bumpCounters(host, streak) {
+  const values = { streak, xp: state.xp };
+  for (const key of Object.keys(values)) {
+    const before = shown[key];
+    const value = values[key];
+    shown[key] = value;
+    if (before === null || before >= value) continue;
+    const chip = host.querySelector(`#chip-${key}`);
+    setTimeout(() => {
+      if (!chip.isConnected) return;
+      replay(chip, 'is-bump');
+      countUp(chip.querySelector('[data-count]'), value, { from: before });
+    }, 350);
+  }
+}
 
 // ---------- Home / Lernpfad ----------
 
@@ -17,17 +58,10 @@ export function renderHome(host) {
   const total = orderedLessons().length;
   const done = orderedLessons().filter((l) => state.lessons[l.id]).length;
   const pct = Math.round((done / total) * 100);
+  const streak = currentStreak();
 
   host.innerHTML = `
-    <header class="topbar">
-      <div class="brand"><span class="logo he" aria-hidden="true">א</span> Alef Beth</div>
-      <div class="stats">
-        <span class="statchip" title="Tage-Serie"><span aria-hidden="true">🔥</span>
-          <span class="sr-only">Tage-Serie:</span> ${currentStreak()}</span>
-        <span class="statchip" title="Erfahrungspunkte"><span aria-hidden="true">⚡</span>
-          <span class="sr-only">Erfahrungspunkte:</span> ${state.xp}</span>
-      </div>
-    </header>
+    ${topbarHtml(streak)}
 
     <div class="progress-card">
       <div class="pc-head">
@@ -45,6 +79,7 @@ export function renderHome(host) {
       </div>` : ''}
     ${UNITS.map(unitHtml).join('')}`;
 
+  bumpCounters(host, streak);
   host.querySelector('#review-now')?.addEventListener('click', () => {
     location.hash = '#/review/run';
   });

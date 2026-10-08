@@ -295,8 +295,12 @@ function renderMatch(ex, host, onAnswered) {
         b.disabled = true;
         a.classList.add('is-match');
         b.classList.add('is-match');
-        // Jedes Paar einen Ton höher, das letzte schließt den Akkord.
+        // Jedes Paar einen Ton höher, das letzte schließt den Akkord. Danach
+        // spricht die Stimme das Gefundene – erst jetzt: beim Antippen würde
+        // sie die Lösung verraten.
         sound('paar', { k: matched, n: items.length });
+        const tts = ttsText(getItem(a.dataset.id));
+        setTimeout(() => { if (a.isConnected) speak(tts); }, 300);
         matched += 1;
         const last = matched === items.length;
         setTimeout(() => {

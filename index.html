@@ -7,6 +7,24 @@
   <meta name="description" content="Lerne das hebräische Alphabet und Hebräisch lesen – Schritt für Schritt vom Alef-Bet über Nikud bis zu echten Wörtern aus dem Siddur.">
   <meta name="theme-color" content="#fcf7ef" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#15110d" media="(prefers-color-scheme: dark)">
+  <!-- Vor dem ersten Bild: das gewählte Erscheinungsbild setzen (sonst blitzt
+       kurz das falsche Papier auf) und entscheiden, ob der Startbildschirm
+       läuft – nur beim ersten Öffnen pro Sitzung (also nicht nach dem
+       Neuladen für ein Update) und nie bei reduzierter Bewegung. -->
+  <script>
+    (function () {
+      var root = document.documentElement;
+      try {
+        var settings = (JSON.parse(localStorage.getItem('alefbeth-state-v1')) || {}).settings || {};
+        if (settings.theme) root.setAttribute('data-theme', settings.theme);
+        var calm = settings.reduceMotion || matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!calm && !sessionStorage.getItem('alefbeth-splash')) root.classList.add('is-splash');
+        sessionStorage.setItem('alefbeth-splash', '1');
+      } catch (e) {
+        // Ohne Speicher kein Startbildschirm – die App startet trotzdem.
+      }
+    })();
+  </script>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -18,6 +36,19 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <!-- Startbildschirm: Das App-Icon steht still, bis die App geladen ist, sinkt
+       dann um seine Kante ein und dockt als Marke in der Kopfleiste an
+       (app.js → AlefBeth.splash). Ohne html.is-splash bleibt er verborgen. -->
+  <div class="ab-splash" aria-hidden="true">
+    <div class="ab-splash__burst"><i class="ab-spark"></i><i class="ab-spark"></i><i class="ab-spark"></i><i class="ab-spark"></i><i class="ab-spark"></i><i class="ab-spark"></i></div>
+    <div class="ab-splash__icon">
+      <div class="ab-splash__face">
+        <svg class="ab-splash__glyph" viewBox="0 0 512 512" focusable="false"><path fill="currentColor" transform="translate(256 361.5) scale(0.225)" d="M-292.3 -954.5L-261.5 -954.5L-260.8 -932.5L-257.8 -920.5L-253.5 -910.7L-238.7 -890.5L-213.7 -860.5L118.5 -484.6L124.3 -500.5L131.2 -514.5L153.4 -549.5L167.5 -568.3L209.2 -617.5L160.5 -625.2L133.5 -634.4L121.5 -641.4L108.3 -652.5L97.3 -667.5L88.2 -688.5L81.1 -713.5L78.5 -733.5L77.5 -752.5L79.2 -787.5L83.1 -818.5L93.3 -859.5L130.1 -954.5L160.5 -955.0L161.1 -924.5L163.1 -911.5L170.2 -896.5L174.8 -891.5L181.5 -887.1L188.5 -884.1L200.5 -881.3L293.5 -868.8L307.5 -865.9L319.5 -861.7L335.5 -852.6L345.8 -843.5L352.8 -834.5L358.7 -824.5L363.7 -812.5L370.7 -790.5L375.8 -757.5L376.8 -734.5L373.7 -688.5L367.9 -655.5L355.8 -610.5L344.8 -579.5L328.8 -579.5L320.9 -592.5L308.5 -601.1L283.5 -607.7L264.5 -610.8L263.5 -610.0L235.4 -568.5L208.5 -518.5L196.3 -487.5L192.2 -472.5L188.1 -445.5L188.4 -404.5L298.7 -278.5L319.7 -247.5L330.8 -227.5L337.6 -211.5L343.8 -191.5L348.8 -160.5L349.5 -140.5L348.8 -121.5L342.9 -86.5L330.5 -53.5L317.7 -28.5L290.5 17.5L265.5 17.5L264.6 16.5L258.9 -5.5L251.8 -22.5L239.8 -41.5L230.2 -53.5L-173.5 -511.1L-202.5 -465.5L-216.8 -437.5L-225.8 -408.5L-227.9 -392.5L-227.8 -375.5L-225.9 -363.5L-218.5 -342.5L-144.2 -195.5L-127.2 -156.5L-116.3 -123.5L-109.4 -88.5L-109.1 -54.5L-112.2 -34.5L-122.2 -0.5L-376.8 -0.5L-376.8 -52.5L-343.5 -52.8L-330.5 -55.2L-322.2 -62.5L-319.9 -67.5L-318.3 -76.5L-318.3 -92.5L-321.2 -118.5L-327.3 -152.5L-344.9 -235.5L-350.6 -279.5L-351.8 -320.5L-348.7 -343.5L-344.9 -358.5L-332.9 -388.5L-309.8 -431.5L-288.8 -465.5L-222.3 -566.5L-312.5 -668.5L-330.1 -690.5L-342.6 -714.5L-350.9 -746.5L-353.8 -769.5L-353.8 -799.5L-350.9 -823.5L-346.6 -841.5L-339.9 -861.5L-331.9 -879.5Z"/></svg>
+      </div>
+    </div>
+    <p class="ab-splash__word"><span class="text-title">Alef Beth</span><span class="ab-splash__tagline text-caption">Hebräisch lesen lernen</span></p>
+  </div>
+
   <!-- tabindex="-1": nach jedem Screenwechsel wird hierher fokussiert, damit
        Screenreader am Anfang des neuen Bildschirms landen. -->
   <main id="app" tabindex="-1"></main>

@@ -391,6 +391,110 @@
     });
   }
 
+  // ---------- Startbildschirm ----------
+
+  // splash(node, { to, reveal }) spielt den Startbildschirm (.ab-splash) ab:
+  // Das Icon sinkt um seine Kante ein, federt zurück und dockt dann an opts.to
+  // an – in der App die Marke der Kopfleiste. Sobald es losfliegt, ruft es
+  // opts.reveal(), damit der Screen darunter hereingleitet; ohne Ziel blendet
+  // es aus. Antippen oder eine Taste überspringt. Löst auf, sobald er weg ist.
+  function splash(node, opts) {
+    node = resolve(node);
+    opts = opts || {};
+    if (!node) return Promise.resolve();
+    var target = resolve(opts.to);
+    var timers = [];
+    var revealed = false;
+    var over = false;
+    var settle;
+    var gone = new Promise(function (res) { settle = res; });
+    var later = function (fn, t) { timers.push(setTimeout(fn, t)); };
+    // Hat er sich mangels Skript schon selbst ausgeblendet (ab-vanish)?
+    var vanished = function () { return getComputedStyle(node).visibility === 'hidden'; };
+    var reveal = function () {
+      if (revealed) return;
+      revealed = true;
+      if (opts.reveal) opts.reveal();
+    };
+    var done = function () {
+      if (over) return;
+      over = true;
+      timers.forEach(clearTimeout);
+      node.removeEventListener('pointerdown', skip);
+      doc.removeEventListener('keydown', skip);
+      if (target) target.style.opacity = '';
+      node.remove();
+      settle();
+    };
+    var skip = function () {
+      if (over) return;
+      timers.forEach(clearTimeout);
+      reveal();
+      node.classList.add('is-skipped');
+      later(done, ms('dur-quick', 160));
+    };
+    var dock = function () {
+      var icon = node.querySelector('.ab-splash__icon');
+      var face = node.querySelector('.ab-splash__face');
+      var a = face && face.getBoundingClientRect();
+      var b = target && target.getBoundingClientRect();
+      if (!a || !a.width || !b || !b.width || !icon.animate) {
+        reveal();
+        node.classList.add('is-leaving');
+        later(done, ms('dur-base', 260));
+        return;
+      }
+      var scale = b.width / a.width;
+      var dx = b.left + b.width / 2 - (a.left + a.width / 2);
+      var dy = b.top + b.height / 2 - (a.top + a.height / 2);
+      var radius = parseFloat(getComputedStyle(target).borderTopLeftRadius) || 0;
+      var timing = { duration: ms('dur-slow', 420), easing: easing('ease-in-out'), fill: 'forwards' };
+      icon.animate([
+        { transform: 'none' },
+        { transform: 'translate(' + dx + 'px, ' + dy + 'px) scale(' + scale + ')' }
+      ], timing);
+      face.animate([
+        { borderRadius: getComputedStyle(face).borderTopLeftRadius },
+        { borderRadius: radius / scale + 'px' }
+      ], timing);
+      target.style.opacity = '0';
+      node.classList.add('is-docking');
+      reveal();
+      later(function () {
+        target.style.opacity = '';
+        replay(target, 'is-bump');
+        done();
+      }, timing.duration);
+    };
+    var play = function () {
+      if (over || node.classList.contains('is-skipped')) return;
+      if (vanished()) { reveal(); done(); return; }
+      node.classList.add('is-playing');
+      // Die Zeit zählt ab dem echten Start der Bewegung, nicht ab der Klasse:
+      // Einsinken (dur-press), Hüpfer und Funken (dur-slow), kurz stehen
+      // lassen (dur-base) – dann andocken.
+      var face = node.querySelector('.ab-splash__face');
+      var press = face && face.getAnimations ? face.getAnimations()[0] : null;
+      var started = press && press.ready ? press.ready.catch(function () {}) : Promise.resolve();
+      started.then(function () {
+        if (over || node.classList.contains('is-skipped')) return;
+        later(dock, ms('dur-press', 90) + ms('dur-slow', 420) + ms('dur-base', 260));
+      });
+    };
+    // Weniger Bewegung gewünscht, oder schon von selbst ausgeblendet: nur aufräumen.
+    if (reducedMotion() || vanished()) {
+      reveal();
+      done();
+      return gone;
+    }
+    node.addEventListener('pointerdown', skip);
+    doc.addEventListener('keydown', skip);
+    // Erst den Screen darunter einmal zeichnen lassen, dann spielen – sonst
+    // fällt der Anfang der Bewegung in das lange erste Bild der App.
+    requestAnimationFrame(function () { requestAnimationFrame(play); });
+    return gone;
+  }
+
   var api = {
     version: '1.0.0',
     reducedMotion: reducedMotion,
@@ -408,6 +512,7 @@
     feedback: feedback,
     toast: toast,
     swap: swap,
+    splash: splash,
   };
   window.AlefBeth = Object.assign(window.AlefBeth || {}, api);
 

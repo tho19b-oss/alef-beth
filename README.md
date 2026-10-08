@@ -42,6 +42,9 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
   Serie wächst. Wie beim Konfetti gibt es pro Bildschirm nur eine große Feier.
   Abschaltbar unter *Mehr → Soundeffekte*, unabhängig von der Sprachausgabe;
   am iPhone gilt der Stummschalter
+- **Startbildschirm:** Beim Öffnen sinkt das App-Icon ein, federt zurück und
+  dockt als Marke in der Kopfleiste an, während die Startseite hereingleitet –
+  einmal pro Sitzung, Antippen überspringt, bei reduzierter Bewegung entfällt er
 - **Tagesziel:** ein Ring auf der Startseite füllt sich mit den XP des Tages
   (50, 100 oder 200 XP, einstellbar unter *Mehr*). Ist er voll, gibt es
   +20 XP zum Abholen – wer das vergisst, bekommt den Bonus am nächsten Tag

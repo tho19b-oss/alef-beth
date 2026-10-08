@@ -6,10 +6,11 @@ import { runLesson, runReview, runFreePractice } from './lesson.js';
 import { scheduleReminder } from './notify.js';
 import { dueIds } from './srs.js';
 import { applyTheme, applyMotion } from './theme.js';
-import { replay } from './ui.js';
+import { replay, splash } from './ui.js';
 import { syncBadges } from './badges.js';
 
 const app = document.getElementById('app');
+const nav = document.getElementById('bottomnav');
 // Hebräische Textstellen tragen lang="he" direkt im Markup (he() in ui.js):
 // Screenreader und Browser wählen dadurch Aussprache und Schrift richtig.
 
@@ -48,6 +49,9 @@ function route() {
   const inLesson = hash.startsWith('#/lesson/') || hash === '#/review/run' || hash === '#/review/practice';
   document.body.classList.toggle('in-lesson', inLesson);
   document.body.classList.remove('fb-open');
+  // Das Hereingleiten nach dem Startbildschirm gilt nur dem ersten Screen.
+  app.classList.remove('is-revealing');
+  nav.classList.remove('is-revealing');
   if ('speechSynthesis' in window) speechSynthesis.cancel();
   window.scrollTo(0, 0);
   updateNav(hash);
@@ -108,6 +112,28 @@ window.addEventListener('hebrewvoiceready', () => {
   if (!isInLesson()) route();
 });
 
+// ---- Startbildschirm ---------------------------------------------------
+// Das Icon aus index.html steht still, bis die App bis hierher geladen ist;
+// dann sinkt es ein und dockt als Marke in der Kopfleiste an, während der
+// erste Screen hereingleitet. Ob er läuft, hat schon der Kopf von index.html
+// entschieden (html.is-splash: einmal pro Sitzung, nie bei weniger Bewegung).
+function startSplash() {
+  const el = document.querySelector('.ab-splash');
+  if (!el) return;
+  const root = document.documentElement;
+  if (!root.classList.contains('is-splash')) {
+    el.remove();
+    return;
+  }
+  splash(el, {
+    to: app.querySelector('.ab-topbar .ab-brand__mark'),
+    reveal() {
+      app.classList.add('is-revealing');
+      nav.classList.add('is-revealing');
+    },
+  }).then(() => root.classList.remove('is-splash'));
+}
+
 applyTheme();
 applyMotion();
 // Abzeichen abgleichen: beim ersten Start nach ihrer Einführung wird das
@@ -115,6 +141,7 @@ applyMotion();
 syncBadges();
 route();
 scheduleReminder();
+startSplash();
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   navigator.serviceWorker.addEventListener('controllerchange', () => {

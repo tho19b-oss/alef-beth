@@ -748,6 +748,8 @@ svg.ab-icon { fill: none; }
   font-weight: 700;
   line-height: 1;
 }
+/* Hier dockt das Icon des Startbildschirms an */
+.ab-brand__mark.is-bump { animation: ab-bump var(--dur-base) var(--ease-spring); }
 .ab-stats { display: flex; gap: var(--space-2); }
 
 .ab-chip {
@@ -1361,6 +1363,82 @@ svg.ab-icon { fill: none; }
 .ab-hint--reward { background: var(--gold-soft); color: var(--ink); }
 .ab-hint--reward > .ab-icon { color: var(--gold-ink); }
 
+/* ---------- Startbildschirm ----------
+   Das App-Icon wie auf dem Startbildschirm des Systems. Ohne is-playing steht
+   es still, bis die App geladen ist; AlefBeth.splash() lässt es dann um seine
+   Kante einsinken, federn und als Marke in der Kopfleiste andocken. */
+
+.ab-splash {
+  position: fixed;
+  inset: 0;
+  z-index: var(--layer-splash);
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+  /* Kommt das Skript nicht, gibt der Startbildschirm die App nach 4 s frei –
+     ab-vanish schaltet schon bei 90 % auf unsichtbar: Er fängt danach sicher
+     keine Klicks mehr, auch wenn die Animation knapp vor 100 % stehen bleibt. */
+  animation: ab-vanish var(--dur-base) var(--ease-in) 4s forwards;
+}
+.ab-splash::before { content: ""; position: absolute; inset: 0; background: var(--paper); }
+.ab-splash__icon {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 112px;
+  height: 112px;
+  margin: -60px 0 0 -56px; /* Fläche und Kante zusammen in der Mitte */
+}
+.ab-splash__face {
+  --_d: calc(var(--ledge) * 2);
+  --_lc: var(--granat-ledge);
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  border-radius: 24px;
+  background: var(--granat);
+  color: var(--on-granat);
+  box-shadow: 0 var(--_d) 0 var(--_lc);
+}
+.ab-splash__glyph { display: block; width: 100%; height: 100%; }
+.ab-splash__burst { position: absolute; left: 50%; top: calc(50% - 4px); }
+.ab-splash__burst .ab-spark { opacity: 0; }
+.ab-splash__burst .ab-spark:nth-child(1) { --a: 30deg; }
+.ab-splash__burst .ab-spark:nth-child(2) { --a: 90deg; }
+.ab-splash__burst .ab-spark:nth-child(3) { --a: 150deg; }
+.ab-splash__burst .ab-spark:nth-child(4) { --a: 210deg; }
+.ab-splash__burst .ab-spark:nth-child(5) { --a: 270deg; }
+.ab-splash__burst .ab-spark:nth-child(6) { --a: 330deg; }
+.ab-splash__word {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% + 84px);
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-4);
+  text-align: center;
+}
+.ab-splash__word > * { opacity: 0; }
+.ab-splash__tagline { color: var(--ink-soft); }
+
+/* Abspielen: einsinken und federn, das Alef hüpft, Funken, der Name gleitet ein */
+.ab-splash.is-playing { animation: none; }
+.ab-splash.is-playing .ab-splash__face { animation: ab-press calc(var(--dur-press) + var(--dur-base)) linear both; }
+.ab-splash.is-playing .ab-splash__glyph { animation: ab-bump var(--dur-slow) var(--ease-bounce) var(--dur-press) both; }
+.ab-splash.is-playing .ab-spark { animation: ab-burst var(--dur-slow) var(--ease-out) var(--dur-press) both; }
+.ab-splash.is-playing .ab-splash__word > * { animation: ab-fade-up var(--dur-slow) var(--ease-out) var(--dur-press) both; }
+.ab-splash.is-playing .ab-splash__word > :nth-child(2) { animation-delay: calc(var(--dur-press) + 60ms); }
+
+/* Andocken – den Flug rechnet splash() aus: Papier und Name blenden aus */
+.ab-splash.is-docking::before { animation: ab-fade-out var(--dur-base) var(--ease-in) forwards; }
+.ab-splash.is-docking .ab-splash__word { animation: ab-fade-out var(--dur-quick) var(--ease-in) forwards; }
+/* Ohne Ziel oder übersprungen: alles blendet aus */
+.ab-splash.is-leaving { animation: ab-fade-out var(--dur-base) var(--ease-in) forwards; }
+.ab-splash.is-skipped { animation: ab-fade-out var(--dur-quick) var(--ease-in) forwards; }
+
 /* ---------- Screenwechsel (View Transitions + Rückfall) ---------- */
 
 ::view-transition-old(ab-screen) { animation: ab-vt-out var(--dur-base) var(--ease-in) both; }
@@ -1439,6 +1517,17 @@ html[data-ab-vt="fade"]::view-transition-new(ab-screen) { animation-name: ab-fad
   50% { transform: rotate(12deg); }
   100% { transform: translateY(-28px) rotate(30deg) scale(0.3); opacity: 0; }
 }
+@keyframes ab-press {
+  0% { transform: none; box-shadow: 0 var(--_d) 0 var(--_lc); animation-timing-function: var(--ease-out); }
+  26% { transform: translateY(var(--_d)); box-shadow: 0 0 0 var(--_lc); animation-timing-function: var(--ease-spring); }
+  100% { transform: none; box-shadow: 0 var(--_d) 0 var(--_lc); }
+}
+@keyframes ab-burst {
+  0% { transform: rotate(var(--a, 0deg)) translateY(-44px) rotate(0deg) scale(0.4); opacity: 0; }
+  20%, 60% { opacity: 1; }
+  100% { transform: rotate(var(--a, 0deg)) translateY(-96px) rotate(150deg) scale(1); opacity: 0; }
+}
+@keyframes ab-vanish { 90%, to { opacity: 0; visibility: hidden; } }
 @keyframes ab-vt-out { to { transform: translateX(-28px); opacity: 0; } }
 @keyframes ab-vt-in { from { transform: translateX(36px); opacity: 0; } }
 @keyframes ab-vt-out-back { to { transform: translateX(28px); opacity: 0; } }

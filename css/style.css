@@ -35,6 +35,17 @@ a { color: var(--tekhelet-ink); text-decoration: none; }
 /* ===== Rahmen ===== */
 body.in-lesson #bottomnav { display: none; }
 
+/* Startbildschirm (Komponente ab-splash): nur, wenn der Kopf von index.html
+   ihn für diese Sitzung freigegeben hat. Dockt das Icon an, gleitet der
+   Screen herein – Kopfleiste, dann Karte für Karte, dazu die Tab-Leiste. */
+html:not(.is-splash) .ab-splash { display: none; }
+#app.is-revealing > * > * { animation: ab-fade-up var(--dur-slow) var(--ease-out) 120ms both; }
+#app.is-revealing > * > :nth-child(2) { animation-delay: 180ms; }
+#app.is-revealing > * > :nth-child(3) { animation-delay: 240ms; }
+#app.is-revealing > * > :nth-child(4) { animation-delay: 300ms; }
+#app.is-revealing > * > :nth-child(n+5) { animation-delay: 360ms; }
+#bottomnav.is-revealing { animation: ab-fade-up var(--dur-slow) var(--ease-out) 120ms both; }
+
 /* ===== Startseite ===== */
 .home { display: grid; gap: var(--space-4); }
 .home-meter {

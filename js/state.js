@@ -20,7 +20,8 @@ const DEFAULTS = {
   stats: { listenCorrect: 0, bestStreak: 0 },
   badges: null,  // Abzeichen-ID -> Zeitpunkt; null = Stand von vor den Abzeichen
   settings: {
-    audio: true,
+    audio: true,   // hebräische Sprachausgabe
+    sounds: true,  // Soundeffekte bei Antworten und Feiern
     theme: 'auto',
     reduceMotion: false,
     dailyGoal: 100,

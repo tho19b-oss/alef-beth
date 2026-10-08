@@ -30,6 +30,7 @@ const ASSETS = [
   'js/badges.js',
   'js/srs.js',
   'js/audio.js',
+  'js/sound.js',
   'js/exercises.js',
   'js/lesson.js',
   'js/screens.js',

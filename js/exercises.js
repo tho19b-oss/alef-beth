@@ -7,9 +7,8 @@
 import { getItem, display, mainLabel, subLabel, ttsText, pickDistractors } from '../data/curriculum.js';
 import { LETTERS } from '../data/letters.js';
 import { speak, audioActive } from './audio.js';
-import { sound } from './sound.js';
 import { shuffle } from './util.js';
-import { icon, he } from './ui.js';
+import { icon, he, sound } from './ui.js';
 
 // Karten ohne Abfrage (der Player zeigt sofort „Weiter“)
 export function isPassive(ex) {

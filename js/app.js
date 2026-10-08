@@ -5,7 +5,7 @@ import { renderHome, renderReview, renderAlphabet, renderAchievements, renderSet
 import { runLesson, runReview, runFreePractice } from './lesson.js';
 import { scheduleReminder } from './notify.js';
 import { dueIds } from './srs.js';
-import { applyTheme, applyMotion } from './theme.js';
+import { applyTheme, applyMotion, applySound } from './theme.js';
 import { replay, splash } from './ui.js';
 import { syncBadges } from './badges.js';
 
@@ -136,6 +136,7 @@ function startSplash() {
 
 applyTheme();
 applyMotion();
+applySound();
 // Abzeichen abgleichen: beim ersten Start nach ihrer Einführung wird das
 // bisher Erreichte still übernommen (gefeiert wird erst, was danach dazukommt).
 syncBadges();

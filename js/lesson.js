@@ -8,10 +8,9 @@ import { state, save, addXp, touchStreak, completeLesson, currentStreak } from '
 import { syncBadges } from './badges.js';
 import { applyResult, dueIds } from './srs.js';
 import { audioActive } from './audio.js';
-import { sound } from './sound.js';
 import { shuffle, sample } from './util.js';
 import {
-  icon, he, replay, countUp, setProgress, confetti, feedback, swap, reducedMotion, confirmDialog,
+  icon, he, replay, countUp, setProgress, confetti, feedback, swap, reducedMotion, confirmDialog, sound,
 } from './ui.js';
 
 // ---------- Warteschlangen pro Lektionstyp ----------

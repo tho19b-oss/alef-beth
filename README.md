@@ -90,7 +90,7 @@ Vanilla HTML/CSS/JS ohne Build-Schritt und ohne Abhängigkeiten.
 | `css/tokens.css` | Design-Tokens: Farben (hell/dunkel), Abstände, Radien, Bewegung, Schrift-Stile |
 | `css/components.css` | Komponenten des Design Systems (Klassen mit Präfix `ab-`) |
 | `css/style.css` | Anordnung der Komponenten auf den Bildschirmen |
-| `js/alefbeth.js` | Bewegungs- und Icon-Helfer des Design Systems (`window.AlefBeth`) |
+| `js/alefbeth.js` | Bewegungs-, Klang- und Icon-Helfer des Design Systems (`window.AlefBeth`) |
 | `js/ui.js` | reicht die Helfer an die Module weiter, dazu Dialog und Hebräisch-Markup |
 | `fonts/` | Rubik (Oberfläche) und Frank Ruhl Libre (Hebräisch), selbst gehostet |
 | `data/letters.js` | Buchstaben & Endformen (Name, Laut, Eselsbrücke …) |
@@ -99,10 +99,9 @@ Vanilla HTML/CSS/JS ohne Build-Schritt und ohne Abhängigkeiten.
 | `data/curriculum.js` | Einheiten & Lektionen, Item-Registry |
 | `js/lesson.js` | Lektions-Player & Übungs-Warteschlangen |
 | `js/exercises.js` | Übungstypen |
-| `js/sound.js` | Soundeffekte: Glockenspiel per Web Audio erzeugt, ohne Audiodateien |
 | `js/srs.js` | Spaced-Repetition-Logik |
 | `js/badges.js` | Abzeichen: Bedingungen und Fortschritt |
-| `js/theme.js` | Hell/Dunkel inkl. Farbe der Statusleiste |
+| `js/theme.js` | Hell/Dunkel inkl. Farbe der Statusleiste, Schalter für Bewegung und Soundeffekte |
 | `js/version.js` | fragt die laufende Version beim Service Worker ab |
 | `sw.js` | Offline-Cache – **nach Änderungen `VERSION` hochzählen!** |
 
@@ -110,9 +109,12 @@ Die Versionsnummer steht **nur** in `sw.js`. Die Einstellungen fragen sie per
 `postMessage` beim laufenden Service Worker ab – es gibt also keine zweite
 Konstante, die beim Hochzählen vergessen werden könnte.
 
-Neuer Klang: in `js/sound.js` unter `SOUNDS` ergänzen und an der passenden
-Stelle `sound('name')` aufrufen. Alle Töne stehen in D-Dur-Pentatonik (MIDI-
-Nummern), damit sich überlappende Klänge nicht beißen.
+Klänge: Das Glockenspiel erzeugt das Design System per Web Audio, ohne
+Audiodateien (`AlefBeth.sound` in `js/alefbeth.js`). Ein neuer Klang kommt
+dort unter `SOUNDS` dazu – in D-Dur-Pentatonik (MIDI-Nummern), damit sich
+überlappende Klänge nicht beißen – und wird an der passenden Stelle mit
+`sound('name')` aus `js/ui.js` aufgerufen. Der Schalter „Soundeffekte“ setzt
+`html[data-sound="off"]` (`applySound()` in `js/theme.js`).
 
 Neue Wörter hinzufügen: Eintrag in `data/words.js` ergänzen und die ID in
 einer Lektion in `data/curriculum.js` eintragen – fertig.

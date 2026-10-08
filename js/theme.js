@@ -1,5 +1,6 @@
 // Erscheinungsbild anwenden: data-theme setzen und die Farbe der Browser-
-// bzw. Statusleiste mitziehen; dazu der Schalter für weniger Bewegung.
+// bzw. Statusleiste mitziehen; dazu die Schalter für weniger Bewegung und
+// für die Soundeffekte.
 
 import { state } from './state.js';
 
@@ -32,4 +33,11 @@ export function applyTheme() {
 export function applyMotion() {
   if (state.settings.reduceMotion) document.documentElement.dataset.motion = 'reduced';
   else delete document.documentElement.dataset.motion;
+}
+
+// „Soundeffekte“: html[data-sound="off"] lässt AlefBeth.sound() still bleiben –
+// auch das vorsorgliche Wecken des Klangs bei jeder Berührung entfällt dann.
+export function applySound() {
+  if (state.settings.sounds) delete document.documentElement.dataset.sound;
+  else document.documentElement.dataset.sound = 'off';
 }

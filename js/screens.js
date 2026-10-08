@@ -10,7 +10,7 @@ import { BADGES } from './badges.js';
 import { scheduleReminder, parseTime, DEFAULT_TIME } from './notify.js';
 import { applyTheme, applyMotion } from './theme.js';
 import { dueIds, nextDue } from './srs.js';
-import { speak, ttsSupported, hasHebrewVoice, hebrewVoiceName, audioActive } from './audio.js';
+import { speakTapped, ttsSupported, hasHebrewVoice, hebrewVoiceName, audioActive } from './audio.js';
 import { sound, soundSupported } from './sound.js';
 import { activeVersion, checkForUpdate } from './version.js';
 import { todayStr } from './util.js';
@@ -427,8 +427,7 @@ export function renderAlphabet(host) {
       <div class="ab-alphalist">${nikudRows}</div>
     </div>`;
 
-  host.querySelectorAll('[data-tts]').forEach((b) =>
-    b.addEventListener('click', () => speak(b.dataset.tts, { from: b })));
+  host.querySelectorAll('[data-tts]').forEach((b) => b.addEventListener('click', () => speakTapped(b)));
 }
 
 // ---------- Erfolge: Serie, Abzeichen, Gesamtzahlen ----------

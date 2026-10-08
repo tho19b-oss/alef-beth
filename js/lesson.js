@@ -2,12 +2,12 @@
 // spielt sie ab (falsche Antworten kommen ans Ende zurück), vergibt XP
 // und aktualisiert SRS, Streak und Lektionsfortschritt.
 
-import { getLesson, getItem, learnedPool, isUnlocked } from '../data/curriculum.js';
+import { getLesson, getItem, learnedPool, isUnlocked, ttsText } from '../data/curriculum.js';
 import { renderExercise, isPassive } from './exercises.js';
 import { state, save, addXp, touchStreak, completeLesson, currentStreak } from './state.js';
 import { syncBadges } from './badges.js';
 import { applyResult, dueIds } from './srs.js';
-import { audioActive } from './audio.js';
+import { audioActive, speak } from './audio.js';
 import { sound } from './sound.js';
 import { shuffle, sample } from './util.js';
 import {
@@ -363,6 +363,8 @@ function runSession(host, queue, opts) {
 
   function nextStep() {
     if (!sheetOpen) return; // schon unterwegs (Doppeltipp)
+    // Was die Stimme noch spricht, gehört zur alten Übung.
+    if ('speechSynthesis' in window) speechSynthesis.cancel();
     closeSheet();
     idx += 1;
     step();
@@ -425,6 +427,18 @@ function runSession(host, queue, opts) {
       else sound('falsch');
     }
     openSheet({ tone: correct ? 'correct' : 'wrong', detail, xp: gain }, { reveal: true });
+
+    // Die Lösung zum Mithören: Kurz nach dem Klang spricht die Stimme sie vor –
+    // auch bei „Welcher Buchstabe ist …?“, wo es sonst nichts zu hören gibt.
+    // Wer schon weiter ist, hört sie nicht mehr. (Für den Gottesnamen liefert
+    // ttsText nichts; die Bracha-Zeile hat kein einzelnes Item.)
+    if (ex.itemId) {
+      const at = idx;
+      setTimeout(() => {
+        if (idx !== at || !sheetOpen || !area.isConnected) return;
+        speak(ttsText(getItem(ex.itemId)), { from: area.querySelector('.ab-audio') });
+      }, 400);
+    }
   }
 
   // Am Rechner: 1–4 wählt eine Antwort, Enter/Leertaste geht weiter.

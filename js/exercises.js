@@ -6,7 +6,7 @@
 
 import { getItem, display, mainLabel, subLabel, ttsText, pickDistractors } from '../data/curriculum.js';
 import { LETTERS } from '../data/letters.js';
-import { speak, audioActive } from './audio.js';
+import { speak, speakTapped, audioActive } from './audio.js';
 import { sound } from './sound.js';
 import { shuffle } from './util.js';
 import { icon, he } from './ui.js';
@@ -45,8 +45,7 @@ function audioButton(text, { big = false, label = 'Anhören' } = {}) {
 }
 
 function wireAudio(host) {
-  host.querySelectorAll('[data-tts]').forEach((b) =>
-    b.addEventListener('click', () => speak(b.dataset.tts, { from: b })));
+  host.querySelectorAll('[data-tts]').forEach((b) => b.addEventListener('click', () => speakTapped(b)));
 }
 
 // Beim Aufdecken gleich vorlesen – der Lautsprecher-Knopf sendet mit.

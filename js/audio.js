@@ -47,10 +47,15 @@ export function audioActive() {
   return ttsSupported() && hasHebrewVoice() && state.settings.audio;
 }
 
+const NORMAL_RATE = 0.8;
+const SLOW_RATE = 0.5;
+// So lange nach dem letzten Abspielen gilt ein Tippen als „nochmal“.
+const AGAIN_MS = 4000;
+
 // Ohne hebräische Stimme wird bewusst geschwiegen: eine deutsche Stimme würde
 // hebräische Buchstaben als Kauderwelsch vorlesen und mehr verwirren als helfen.
 // from: Element, das während des Sprechens „sendet“ (Klasse is-playing).
-export function speak(text, { rate = 0.8, from = null } = {}) {
+export function speak(text, { rate = NORMAL_RATE, from = null } = {}) {
   if (!text || !audioActive()) return;
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
@@ -58,6 +63,7 @@ export function speak(text, { rate = 0.8, from = null } = {}) {
   u.voice = heVoice;
   u.rate = rate;
   if (from) {
+    from.spokenAt = Date.now();
     // Ein abgebrochener Vorgänger meldet sein Ende erst später – die Marke
     // sorgt dafür, dass er die Anzeige des neuen Durchgangs nicht löscht.
     const mark = (from.speakMark = (from.speakMark || 0) + 1);
@@ -68,4 +74,11 @@ export function speak(text, { rate = 0.8, from = null } = {}) {
     setTimeout(stop, 8000); // falls ein Browser 'end' verschluckt
   }
   speechSynthesis.speak(u);
+}
+
+// Ein Hören-Knopf wurde angetippt. Kam sein Wort eben erst (auch automatisch
+// beim Aufdecken), hat man es wohl nicht verstanden – dann klingt es langsamer.
+export function speakTapped(btn) {
+  const again = Date.now() - (btn.spokenAt || 0) < AGAIN_MS;
+  speak(btn.dataset.tts, { from: btn, rate: again ? SLOW_RATE : NORMAL_RATE });
 }

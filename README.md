@@ -79,6 +79,11 @@ funktioniert ohne Audio genauso. So bekommst du eine hebräische Stimme:
   installieren
 - **Android/iOS:** Hebräisch ist in der Regel vorhanden
 
+Nach jeder Antwort spricht die Stimme die Lösung vor, kurz nach dem
+Richtig- oder Tock-Klang – auch bei Fragen wie „Welcher Buchstabe ist
+‚Bet‘?“, bei denen es sonst nichts zu hören gibt. Wer einen Hören-Knopf kurz
+nach dem Abspielen nochmal antippt, hört das Wort langsamer.
+
 Hinweis: Der Gottesname wird in der App nach üblicher Praxis nicht
 ausgeschrieben (ה׳) und nie von der Sprachausgabe gesprochen.
 

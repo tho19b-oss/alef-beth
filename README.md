@@ -31,7 +31,7 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
   kleinen Feiern (Konfetti nur bei Meilensteinen). Wer weniger Bewegung mag,
   schaltet unter *Mehr → Bewegung reduzieren* alle Animationen ab; die
   Systemeinstellung wird ohnehin beachtet
-- **Klang:** Glockenspiel-Töne in der Lektion. Eine richtige Antwort klingt
+- **Klang:** Glockenspiel-Töne beim Lernen. Eine richtige Antwort klingt
   hell, in einer Kombo mit jedem Treffer einen Ton höher; ein Fehler gibt nur
   ein leises Tock. Beim Paare-Finden klingt jedes Paar höher, das letzte
   schließt den Akkord. Zum Abschluss gibt es einen kleinen Jingle, für ein
@@ -86,8 +86,10 @@ Nach jeder Antwort spricht die Stimme die Lösung vor, kurz nach dem
 Richtig- oder Tock-Klang – auch bei Fragen wie „Welcher Buchstabe ist
 ‚Bet‘?“, bei denen es sonst nichts zu hören gibt. Bei „Finde die Paare!“
 spricht sie jedes gefundene Paar aus, beim Antippen dagegen nie – sonst wäre
-die Lösung verraten. Wer einen Hören-Knopf kurz nach dem Abspielen nochmal
-antippt, hört das Wort langsamer.
+die Lösung verraten. Auf der Lernkarte von Bet, Kaf, Pe und Schin lassen
+sich die beiden Lautvarianten antippen: Die Stimme spricht sie als Silbe
+(בָ „wa“, בָּ „ba“), damit der Unterschied hörbar wird. Wer einen Hören-Knopf
+kurz nach dem Abspielen nochmal antippt, hört das Wort langsamer.
 
 Hinweis: Der Gottesname wird in der App nach üblicher Praxis nicht
 ausgeschrieben (ה׳) und nie von der Sprachausgabe gesprochen.

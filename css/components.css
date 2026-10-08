@@ -101,7 +101,7 @@ svg.ab-icon { fill: none; }
    Jede drückbare Fläche liegt auf einer Kante (--_lc) von --ledge Höhe.
    Hover hebt sie an, Drücken lässt sie genau um die Kante einsinken. */
 
-.ab-btn, .ab-tile, .ab-pair, .ab-audio, .ab-node, button.ab-alpha {
+.ab-btn, .ab-tile, .ab-pair, .ab-audio, .ab-node, button.ab-alpha, button.ab-variant {
   --_d: var(--ledge);
   box-shadow: 0 var(--_d) 0 var(--_lc);
   transition:
@@ -116,13 +116,13 @@ svg.ab-icon { fill: none; }
 }
 
 @media (hover: hover) and (pointer: fine) {
-  :is(.ab-btn, .ab-tile, .ab-pair, .ab-audio, .ab-node, button.ab-alpha):hover:not(:disabled, [aria-disabled="true"]) {
+  :is(.ab-btn, .ab-tile, .ab-pair, .ab-audio, .ab-node, button.ab-alpha, button.ab-variant):hover:not(:disabled, [aria-disabled="true"]) {
     transform: translateY(-2px);
     box-shadow: 0 calc(var(--_d) + 2px) 0 var(--_lc);
   }
 }
 
-:is(.ab-btn, .ab-tile, .ab-pair, .ab-audio, .ab-node, button.ab-alpha):active:not(:disabled, [aria-disabled="true"]) {
+:is(.ab-btn, .ab-tile, .ab-pair, .ab-audio, .ab-node, button.ab-alpha, button.ab-variant):active:not(:disabled, [aria-disabled="true"]) {
   transform: translateY(var(--_d));
   box-shadow: 0 0 0 var(--_lc);
   transition-duration: 40ms;
@@ -451,6 +451,22 @@ svg.ab-icon { fill: none; }
 }
 .ab-variant__sound { color: var(--granat-ink); }
 .ab-variant__sub { color: var(--ink-soft); }
+/* Mit hebräischer Stimme ist jede Variante ein Knopf auf der Kante:
+   antippen spricht ihren Laut. Der kleine Lautsprecher zeigt das an. */
+button.ab-variant {
+  --_lc: var(--line);
+  --_d: 3px;
+  position: relative;
+  width: 100%;
+  display: grid;
+  justify-items: center;
+}
+.ab-variant__spk { position: absolute; top: var(--space-2); right: var(--space-2); display: flex; color: var(--tekhelet-ink); }
+.ab-variant__spk .ab-icon { width: var(--icon-sm); height: var(--icon-sm); }
+.ab-variant.is-playing { --_lc: var(--tekhelet); border-color: var(--tekhelet); }
+.ab-variant.is-playing .glyph-md { animation: ab-bump var(--dur-slow) var(--ease-bounce); }
+.is-playing > .ab-variant__spk .w1 { animation: ab-wave 900ms var(--ease-in-out) infinite; }
+.is-playing > .ab-variant__spk .w2 { animation: ab-wave 900ms var(--ease-in-out) 150ms infinite; }
 
 .ab-facts { margin: var(--space-5) 0 0; text-align: left; border-top: 2px solid var(--line); }
 .ab-fact { display: flex; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--line); }

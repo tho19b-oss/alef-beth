@@ -452,8 +452,10 @@ function runSession(host, queue, opts) {
     if (document.querySelector('dialog[open]')) return; // Beenden-Dialog hat Vorrang
     if (sheetOpen) {
       // Liegt der Fokus auf „Weiter“, erledigt der Button das selbst –
-      // sonst würde die Übung zwei Schritte auf einmal springen.
-      if ((e.key === 'Enter' || e.key === ' ') && document.activeElement !== action) {
+      // sonst würde die Übung zwei Schritte auf einmal springen. Ein
+      // Hören-Knopf (auch eine Lautvariante) spricht, statt weiterzugehen.
+      const own = document.activeElement === action || document.activeElement?.matches('[data-tts]');
+      if ((e.key === 'Enter' || e.key === ' ') && !own) {
         e.preventDefault();
         nextStep();
       }

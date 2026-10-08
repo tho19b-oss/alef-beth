@@ -93,9 +93,18 @@ function wireTiles(host, options, onAnswered, detail) {
 
 const fact = (label, valueHtml) => `<div class="ab-fact"><dt>${label}</dt><dd>${valueHtml}</dd></div>`;
 
-function variant(glyph, sound, sub) {
-  return `<div class="ab-variant"><div class="glyph-md" lang="he" dir="rtl">${glyph}</div>`
-    + `<div class="ab-variant__sound text-strong">${sound}</div><div class="ab-variant__sub text-caption">${sub}</div></div>`;
+// Lautvariante. Mit hebräischer Stimme ein Knopf, der eine Silbe mit Kamatz
+// spricht (בָ „wa“ / בָּ „ba“) – so wird der Unterschied hörbar; ohne Stimme
+// eine stille Kachel.
+function variant(glyph, translit, sub) {
+  const lines = (tag) => `<${tag} class="glyph-md" lang="he" dir="rtl">${glyph}</${tag}>`
+    + `<${tag} class="ab-variant__sound text-strong">${translit}</${tag}>`
+    + `<${tag} class="ab-variant__sub text-caption">${sub}</${tag}>`;
+  if (!audioActive()) return `<div class="ab-variant">${lines('div')}</div>`;
+  // NFC sortiert das Kamatz vor Dagesch und Schin-Punkt, wie in den Daten.
+  const syllable = `${glyph}\u05B8`.normalize('NFC');
+  return `<button class="ab-variant" type="button" data-tts="${syllable}" aria-label="${translit} (${sub}) anhören">`
+    + `<span class="ab-variant__spk" aria-hidden="true">${icon('speaker')}</span>${lines('span')}</button>`;
 }
 
 function renderIntro(ex, host) {
@@ -112,7 +121,7 @@ function renderIntro(ex, host) {
   const pos = LETTERS.findIndex((l) => l.id === item.id);
   const index = pos >= 0 ? `${pos + 1} / ${LETTERS.length}` : item.baseId ? 'Endform' : '';
 
-  // Lautvarianten nebeneinander: Dagesch oder Schin/Sin
+  // Lautvarianten nebeneinander: Dagesch oder Schin/Sin, zum Antippen
   let variants = '';
   if (item.type === 'letter' && (item.dagesh || item.variant)) {
     const baseSound = item.translit.split('/')[0].trim();

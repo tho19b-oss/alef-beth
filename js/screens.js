@@ -8,14 +8,14 @@ import {
 } from './state.js';
 import { BADGES } from './badges.js';
 import { scheduleReminder, parseTime, DEFAULT_TIME } from './notify.js';
-import { applyTheme, applyMotion } from './theme.js';
+import { applyTheme, applyMotion, applySound } from './theme.js';
 import { dueIds, nextDue } from './srs.js';
 import { speakTapped, ttsSupported, hasHebrewVoice, hebrewVoiceName, audioActive } from './audio.js';
-import { sound, soundSupported } from './sound.js';
 import { activeVersion, checkForUpdate } from './version.js';
 import { todayStr } from './util.js';
 import {
   icon, he, countUp, replay, setProgress, ring, confetti, toast, xp as xpBurst, reducedMotion, confirmDialog,
+  sound, soundSupported,
 } from './ui.js';
 
 const num = (n) => n.toLocaleString('de-DE');
@@ -668,6 +668,7 @@ export function renderSettings(host) {
   host.querySelector('#set-sounds').addEventListener('change', (e) => {
     state.settings.sounds = e.target.checked;
     save();
+    applySound();
     // Hörprobe beim Einschalten: So klingt eine richtige Antwort.
     if (e.target.checked) sound('richtig');
   });

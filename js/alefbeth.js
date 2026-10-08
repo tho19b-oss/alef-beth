@@ -1,4 +1,4 @@
-/* Alef Beth — Bewegungs- und Icon-Helfer aus dem Alef Beth Design System.
+/* Alef Beth — Bewegungs-, Klang- und Icon-Helfer aus dem Alef Beth Design System.
    Ein klassisches Skript ohne Abhängigkeiten; legt window.AlefBeth an.
    Die App-Module greifen über js/ui.js darauf zu. Alles respektiert
    reduzierte Bewegung (System oder html[data-motion="reduced"]). */
@@ -495,6 +495,428 @@
     return gone;
   }
 
+  // ---------- Klang ----------
+
+  // Glockenspiel-Töne für Antworten und Feiern, live per Web Audio erzeugt –
+  // keine Audiodateien, offline von Anfang an dabei. Alle Töne stehen in einer
+  // Tonleiter (D-Dur-Pentatonik), damit nichts schief klingt, wenn sich zwei
+  // Klänge überlappen. Die Lautstärken folgen den Feier-Stufen: „Richtig“
+  // kommt dutzendmal pro Lektion und ist deshalb leiser als die Feiern.
+  // html[data-sound="off"] schaltet alles ab – die App setzt das aus ihrer
+  // Einstellung „Soundeffekte“.
+
+  var AC = window.AudioContext || window.webkitAudioContext;
+
+  function soundSupported() {
+    return !!AC;
+  }
+
+  function soundOn() {
+    return !!AC && root.getAttribute('data-sound') !== 'off';
+  }
+
+  function hz(midi) { return 440 * Math.pow(2, (midi - 69) / 12); }
+  function pickOne(list) { return list[Math.floor(Math.random() * list.length)]; }
+
+  // D-Dur-Pentatonik von D5 bis D7: die Leiter für Richtig und Kombo.
+  var LADDER = [74, 76, 78, 81, 83, 86, 88, 90, 93, 95, 98];
+  // Paare finden: ein D-Dur-Akkord, Ton für Ton (bis zu fünf Paare).
+  var PAIRS = [86, 90, 93, 98, 102];
+
+  // Kleiner, warmer Raum: Rauschen, das abklingt und nach hinten dunkler wird.
+  function roomImpulse(ctx, seconds) {
+    var len = Math.floor(ctx.sampleRate * seconds);
+    var fade = ctx.sampleRate * 0.006;
+    var buf = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (var c = 0; c < 2; c++) {
+      var d = buf.getChannelData(c);
+      var lp = 0;
+      for (var i = 0; i < len; i++) {
+        var x = i / len;
+        lp += (0.6 - 0.45 * x) * (Math.random() * 2 - 1 - lp);
+        d[i] = lp * Math.pow(1 - x, 3.4) * Math.min(1, i / fade);
+      }
+    }
+    return buf;
+  }
+
+  // Sicherheitsnetz, falls viele Töne zugleich klingen: Spitzen über 0,8 werden
+  // weich gerundet statt hart abgeschnitten.
+  function softCurve() {
+    var curve = new Float32Array(2049);
+    for (var i = 0; i < curve.length; i++) {
+      var x = i / 1024 - 1;
+      var a = Math.abs(x);
+      curve[i] = a < 0.8 ? x : Math.sign(x) * (0.8 + 0.2 * Math.tanh((a - 0.8) / 0.2));
+    }
+    return curve;
+  }
+
+  // Baut die Klangkette für einen AudioContext – oder für einen
+  // OfflineAudioContext, um die Klänge ohne Lautsprecher zu prüfen.
+  function soundEngine(ctx, output) {
+    output = output || ctx.destination;
+    var sr = ctx.sampleRate;
+
+    var out = ctx.createGain();
+    out.gain.value = 0.9;
+    var limiter = ctx.createDynamicsCompressor();
+    limiter.threshold.value = -10;
+    limiter.knee.value = 6;
+    limiter.ratio.value = 4;
+    limiter.attack.value = 0.002;
+    limiter.release.value = 0.2;
+    var soft = ctx.createWaveShaper();
+    soft.curve = softCurve();
+    out.connect(limiter);
+    limiter.connect(soft);
+    soft.connect(output);
+
+    var room = ctx.createConvolver();
+    room.buffer = roomImpulse(ctx, 1.5);
+    room.connect(out);
+
+    var noise = ctx.createBuffer(1, sr, sr);
+    var nd = noise.getChannelData(0);
+    for (var i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+
+    // Ein Klang = ein Kanal mit eigener Lautstärke: trocken in den Ausgang,
+    // ein Teil (wet) in den Raum.
+    function channel(wet, level) {
+      var g = ctx.createGain();
+      g.gain.value = level == null ? 1 : level;
+      g.connect(out);
+      var send = ctx.createGain();
+      send.gain.value = wet;
+      g.connect(send);
+      send.connect(room);
+      return g;
+    }
+
+    // Schnell an, dann exponentiell ausklingen (tau = Zeitkonstante).
+    function envelope(g, t, peak, attack, tau) {
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(peak, t + attack);
+      g.gain.setTargetAtTime(0, t + attack, tau);
+      return t + attack + tau * 8 + 0.02;
+    }
+
+    function tone(dest, f, t, o) {
+      var peak = o.peak != null ? o.peak : 0.3;
+      var attack = o.attack != null ? o.attack : 0.002;
+      var tau = o.tau != null ? o.tau : 0.3;
+      var from = o.from || 0;
+      var glide = o.glide != null ? o.glide : 0.03;
+      if (f > sr * 0.45) return;
+      var osc = ctx.createOscillator();
+      osc.type = o.type || 'sine';
+      osc.frequency.setValueAtTime(from ? f * from : f, t);
+      if (from) osc.frequency.exponentialRampToValueAtTime(f, t + glide);
+      var g = ctx.createGain();
+      var end = envelope(g, t, peak, attack, tau);
+      osc.connect(g);
+      g.connect(dest);
+      osc.start(t);
+      osc.stop(end);
+    }
+
+    function hiss(dest, t, o) {
+      var peak = o.peak != null ? o.peak : 0.2;
+      var attack = o.attack != null ? o.attack : 0.002;
+      var tau = o.tau != null ? o.tau : 0.02;
+      var f = o.f != null ? o.f : 2000;
+      var sweep = o.sweep != null ? o.sweep : 0.2;
+      var src = ctx.createBufferSource();
+      src.buffer = noise;
+      src.loop = true;
+      var filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.Q.value = o.q != null ? o.q : 1;
+      filter.frequency.setValueAtTime(f, t);
+      if (o.to) filter.frequency.exponentialRampToValueAtTime(o.to, t + sweep);
+      var g = ctx.createGain();
+      var end = envelope(g, t, peak, attack, tau);
+      src.connect(filter);
+      filter.connect(g);
+      g.connect(dest);
+      src.start(t, Math.random() * 0.5);
+      src.stop(end);
+    }
+
+    // Glockenspiel: die unharmonischen Teiltöne eines frei schwingenden
+    // Metallstabs (1 : 2,76 : 5,4 : 8,93), die hohen klingen schneller ab.
+    // len < 1 klingt kürzer – für Töne, die oft kommen.
+    function bell(dest, midi, t, v, len) {
+      if (v == null) v = 1;
+      if (len == null) len = 1;
+      var f = hz(midi);
+      var k = len * Math.pow(1000 / f, 0.3);
+      tone(dest, f, t, { peak: 0.4 * v, attack: 0.001, tau: 0.85 * k });
+      tone(dest, f * 2.76, t, { peak: 0.14 * v, attack: 0.001, tau: 0.32 * k });
+      tone(dest, f * 5.4, t, { peak: 0.07 * v, attack: 0.001, tau: 0.14 * k });
+      tone(dest, f * 8.93, t, { peak: 0.03 * v, attack: 0.001, tau: 0.07 * k });
+      hiss(dest, t, { peak: 0.05 * v, tau: 0.003, f: 7500, q: 1.5 });
+    }
+
+    // Akkord leicht gezupft statt auf einen Schlag: klingt weicher und
+    // vermeidet Spitzen, wenn alle Töne zugleich einsetzen.
+    function chord(dest, midis, t, v) {
+      midis.forEach(function (m, i) { bell(dest, m, t + i * 0.012, v); });
+    }
+
+    // Glitzer: ein paar hohe Töne zufällig verteilt, wie Konfetti.
+    function sparkle(dest, t, span, count, peak) {
+      for (var i = 0; i < count; i++) {
+        bell(dest, pickOne([93, 95, 98, 100, 102, 105]), t + Math.random() * span, peak * (0.6 + Math.random() * 0.4));
+      }
+    }
+
+    // Holz: kurzer Ton, der minimal zu hoch einsetzt, dazu das Klicken des Schlägels.
+    function wood(dest, f, t, peak, tau) {
+      tone(dest, f, t, { peak: peak, attack: 0.001, tau: tau, from: 1.25, glide: 0.012 });
+      hiss(dest, t, { peak: peak * 0.35, tau: 0.004, f: Math.min(f * 2.2, 8000), q: 2 });
+    }
+
+    // Eine Flamme faucht kurz auf (Kombo, Serie).
+    function flame(dest, t, v) {
+      hiss(dest, t, { peak: 0.24 * v, attack: 0.1, tau: 0.09, f: 450, to: 2200, sweep: 0.25, q: 0.9 });
+    }
+
+    // Plopp: ein Ton, der blitzschnell nach oben gleitet – etwas erscheint.
+    function pop(dest, t, peak) {
+      tone(dest, 1050, t, { peak: peak, attack: 0.002, tau: 0.035, from: 0.45, glide: 0.04 });
+    }
+
+    // Ein metallisches Klacken, wie ein Schloss.
+    function latch(dest, t, f) {
+      hiss(dest, t, { peak: 0.45, tau: 0.005, f: f, q: 4 });
+      tone(dest, f * 0.75, t, { peak: 0.08, attack: 0.001, tau: 0.012 });
+    }
+
+    // Weicher Klangteppich aus leicht verstimmten Dreiecksschwingungen.
+    function pad(dest, midis, t, o) {
+      var lowpass = ctx.createBiquadFilter();
+      lowpass.type = 'lowpass';
+      lowpass.frequency.value = 1800;
+      lowpass.Q.value = 0.5;
+      var g = ctx.createGain();
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(1, t + o.attack);
+      g.gain.setValueAtTime(1, t + o.attack + o.hold);
+      g.gain.setTargetAtTime(0, t + o.attack + o.hold, o.release / 4);
+      lowpass.connect(g);
+      g.connect(dest);
+      var end = t + o.attack + o.hold + o.release * 2;
+      midis.forEach(function (m) {
+        [-7, 7].forEach(function (cents) {
+          var osc = ctx.createOscillator();
+          osc.type = 'triangle';
+          osc.frequency.value = hz(m);
+          osc.detune.value = cents;
+          var og = ctx.createGain();
+          og.gain.value = o.peak;
+          osc.connect(og);
+          og.connect(lowpass);
+          osc.start(t);
+          osc.stop(end);
+        });
+      });
+    }
+
+    // Jeder Klang plant ab Zeitpunkt t und gibt seine Länge in Sekunden zurück.
+    var SOUNDS = {
+      // Zwei Töne aufwärts, mit dem ✓. Bei Treffern in Folge klettert step die
+      // Leiter hoch (ein Fehler setzt zurück); flame: die Kombo-Flamme erscheint.
+      richtig: function (t, o) {
+        var ch = channel(0.16, 0.5);
+        var s = Math.max(0, Math.min(o.step || 0, 5));
+        var v = 1 - s * 0.05; // hohe Töne wirken lauter: leicht ausgleichen
+        bell(ch, LADDER[3 + s], t, 0.75 * v, 0.6);
+        bell(ch, LADDER[5 + s], t + 0.075, v, 0.6);
+        if (o.flame) flame(ch, t + 0.02, 0.8);
+        return 0.55;
+      },
+      // Ein einzelner, gedämpfter Holzton: sagt nur „angekommen“, wertet nicht.
+      falsch: function (t) {
+        wood(channel(0.06, 0.62), 300, t, 0.4, 0.06);
+        return 0.3;
+      },
+      // Paare finden: Antippen klickt leise wie Holz …
+      paarTipp: function (t) {
+        wood(channel(0.04, 1.4), 1500, t, 0.16, 0.025);
+        return 0.15;
+      },
+      // … jedes gefundene Paar (k = 0, 1, …) klingt einen Ton höher, das
+      // letzte von n schließt den Akkord.
+      paar: function (t, o) {
+        var k = o.k || 0;
+        var n = o.n != null ? o.n : 3;
+        var ch = channel(0.2, 0.75);
+        bell(ch, PAIRS[Math.min(k, PAIRS.length - 1)], t, 0.9, 0.7);
+        if (k < n - 1) return 0.6;
+        chord(ch, PAIRS.slice(0, n), t + 0.16, 0.32);
+        sparkle(ch, t + 0.2, 0.5, 4, 0.07);
+        return 1.3;
+      },
+      // Feier-Screen (Stufe 3): ein Lauf aufwärts, der Akkord fällt genau mit
+      // dem Konfetti (380 ms), danach glitzert es nach.
+      lektion: function (t) {
+        var ch = channel(0.22);
+        [74, 78, 81, 86].forEach(function (m, i) { bell(ch, m, t + i * 0.085, 0.75 + i * 0.05); });
+        var hit = t + 0.38;
+        chord(ch, [86, 90, 93], hit, 0.55);
+        bell(ch, 98, hit + 0.01, 0.45);
+        sparkle(ch, hit + 0.08, 0.7, 6, 0.07);
+        return 1.8;
+      },
+      // Unter 60 %: keine Fanfare, nur ein warmer Akkord – wie das fehlende Konfetti.
+      lektionSanft: function (t) {
+        var ch = channel(0.25, 0.78);
+        [74, 81, 86].forEach(function (m, i) { bell(ch, m, t + i * 0.03, 0.5); });
+        return 1.2;
+      },
+      // Neues Abzeichen (Stufe 4): Lauf über einem Klangteppich, Glitzer beim
+      // Lichtstreif über die Medaille (350 ms) und beim großen Konfetti (420 ms).
+      abzeichen: function (t) {
+        var ch = channel(0.3, 1.1);
+        pad(ch, [62, 66, 69, 74], t, { attack: 0.3, hold: 1, release: 1, peak: 0.05 });
+        [86, 90, 93, 98, 102].forEach(function (m, i) { bell(ch, m, t + 0.05 + i * 0.07, 0.42 + i * 0.04); });
+        [105, 102, 100, 98, 95, 93].forEach(function (m, i) { bell(ch, m, t + 0.36 + i * 0.03, 0.12); });
+        chord(ch, [74, 81, 86, 90], t + 0.42, 0.4);
+        sparkle(ch, t + 0.5, 1, 8, 0.06);
+        return 2.6;
+      },
+      // Tagesziel voll (Stufe 3): Der Ring füllt sich, zugleich ploppt die
+      // Krone. Ein schneller Lauf aufwärts, der Akkord trifft den Höhepunkt
+      // des Ploppens, dazu glitzert das kleine Konfetti.
+      tagesziel: function (t) {
+        var ch = channel(0.2);
+        [74, 76, 78, 81, 83].forEach(function (m, i) { bell(ch, m, t + i * 0.03, 0.3 + i * 0.07); });
+        var top = t + 0.15;
+        pop(ch, top, 0.22);
+        chord(ch, [86, 90, 93], top, 0.45);
+        sparkle(ch, top + 0.05, 0.4, 3, 0.06);
+        return 1.1;
+      },
+      // Bonus abholen (Stufe 2): Klimpern beim Tippen, dann schwirren die
+      // Funken zum XP-Chip. Ihre Flugzeit ist zufällig (0,7–1 s), der Klang
+      // landet nach 0,85 s.
+      bonus: function (t) {
+        var ch = channel(0.22, 0.8);
+        bell(ch, 93, t, 0.5);
+        bell(ch, 98, t + 0.075, 0.7);
+        for (var i = 0; i < 7; i++) bell(ch, pickOne([98, 100, 102, 105]), t + 0.15 + i * 0.045, 0.09);
+        hiss(ch, t + 0.15, { peak: 0.035, attack: 0.3, tau: 0.12, f: 2500, to: 6000, sweep: 0.6, q: 2 });
+        var land = t + 0.85;
+        pop(ch, land, 0.12);
+        bell(ch, 98, land, 0.5);
+        bell(ch, 102, land + 0.07, 0.4);
+        return 1.4;
+      },
+      // Station frei (Lernpfad): Das Schloss klackt bei jedem Wackeln, nach
+      // 420 ms ploppt die Station in Granat auf.
+      stationFrei: function (t) {
+        var ch = channel(0.12);
+        latch(ch, t + 0.1, 3400);
+        latch(ch, t + 0.21, 2700);
+        pop(ch, t + 0.42, 0.28);
+        bell(ch, 86, t + 0.43, 0.6);
+        return 1;
+      },
+      // Einheit geschafft (Stufe 4): ein kleines Erkennungsmotiv, kurz, kurz,
+      // lang. Der volle Akkord kommt nach 0,55 s – zusammen mit dem Konfetti.
+      einheit: function (t) {
+        var ch = channel(0.26, 1.1);
+        bell(ch, 86, t, 0.7);
+        bell(ch, 86, t + 0.12, 0.7);
+        bell(ch, 93, t + 0.24, 0.9);
+        bell(ch, 98, t + 0.24, 0.35);
+        var hit = t + 0.55;
+        pad(ch, [62, 69, 74, 78], hit - 0.05, { attack: 0.08, hold: 0.6, release: 0.9, peak: 0.03 });
+        chord(ch, [74, 81, 86, 90, 98], hit, 0.42);
+        sparkle(ch, hit + 0.05, 0.9, 7, 0.06);
+        return 2.4;
+      },
+      // Serie verlängert (Erfolge): Die Flamme faucht auf, der heutige Punkt
+      // der Woche ploppt mit zwei Tönen.
+      serie: function (t) {
+        var ch = channel(0.2);
+        flame(ch, t, 1);
+        var p = t + 0.12;
+        pop(ch, p, 0.2);
+        bell(ch, 81, p, 0.55);
+        bell(ch, 86, p + 0.09, 0.7);
+        return 1;
+      },
+    };
+
+    return {
+      play: function (name, t, opts) {
+        var make = SOUNDS[name];
+        return make ? make(t, opts || {}) : 0;
+      },
+    };
+  }
+
+  var SOUND_NAMES = ['richtig', 'falsch', 'paarTipp', 'paar', 'lektion', 'lektionSanft', 'abzeichen',
+    'tagesziel', 'bonus', 'stationFrei', 'einheit', 'serie'];
+  var audio = null;    // AudioContext – erst beim ersten Klang oder Antippen
+  var engine = null;
+  var touched = false; // gab es schon eine Berührung? Vorher lässt der Browser keinen Ton zu
+  var quietAt = 0;     // Zeit im AudioContext, zu der der letzte Klang verklungen ist
+  var sleepTimer = 0;
+
+  function wakeAudio() {
+    if (!audio) {
+      audio = new AC();
+      engine = soundEngine(audio);
+    }
+    if (audio.state !== 'running') audio.resume().catch(function () {});
+  }
+
+  // Ein laufender AudioContext hält am Handy die Audio-Hardware wach und kostet
+  // Akku – nach dem letzten Ton schläft er deshalb wieder ein.
+  function sleepLater(seconds) {
+    clearTimeout(sleepTimer);
+    sleepTimer = setTimeout(function () {
+      if (audio.state === 'running') audio.suspend().catch(function () {});
+    }, seconds * 1000);
+  }
+
+  // sound('richtig', { step, flame }) · sound('paar', { k, n }) · sound('lektion') …
+  // Ein Fehler beim Abspielen darf nie die Übung aufhalten – dann bleibt es still.
+  // Vor der ersten Berührung (etwa wenn eine Seite direkt mit einer Feier
+  // startet) bleibt es ebenfalls still: Der Browser hielte den Ton sonst
+  // zurück und holte ihn beim nächsten Tippen verspätet nach.
+  function sound(name, opts) {
+    if (!touched || !soundOn()) return;
+    try {
+      wakeAudio();
+      var start = audio.currentTime + 0.02;
+      quietAt = Math.max(quietAt, start + engine.play(name, start, opts));
+      sleepLater(quietAt - audio.currentTime + 3); // + Nachklang
+    } catch (e) {
+      if (window.console) console.warn('Klang konnte nicht abgespielt werden:', e);
+    }
+  }
+
+  // Am iPhone darf Web Audio erst nach einer Berührung starten. Jede Berührung
+  // weckt den Klang deshalb vorsorglich – so klingen auch die Feiern, die
+  // zeitversetzt nach dem letzten Tippen kommen.
+  function wakeOnTouch() {
+    touched = true;
+    if (!soundOn()) return;
+    try {
+      wakeAudio();
+      sleepLater(Math.max(0, quietAt - audio.currentTime) + 3);
+    } catch (e) {
+      // ohne Klang geht es auch
+    }
+  }
+  ['click', 'touchend', 'keydown'].forEach(function (type) {
+    window.addEventListener(type, wakeOnTouch, { capture: true, passive: true });
+  });
+
   var api = {
     version: '1.0.0',
     reducedMotion: reducedMotion,
@@ -513,6 +935,11 @@
     toast: toast,
     swap: swap,
     splash: splash,
+    sound: sound,
+    sounds: SOUND_NAMES,
+    soundOn: soundOn,
+    soundSupported: soundSupported,
+    soundEngine: soundEngine,
   };
   window.AlefBeth = Object.assign(window.AlefBeth || {}, api);
 

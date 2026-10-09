@@ -4,9 +4,9 @@
 // renderExercise(ex, host, onAnswered) rendert eine Übung; onAnswered(correct, detailHtml)
 // wird genau einmal gerufen, sobald der Nutzer geantwortet hat.
 
-import { getItem, display, mainLabel, subLabel, ttsText, pickDistractors } from '../data/curriculum.js';
+import { getItem, display, mainLabel, subLabel, ttsText, pickDistractors, variantSyllable } from '../data/curriculum.js';
 import { LETTERS } from '../data/letters.js';
-import { speak, audioActive } from './audio.js';
+import { speak, speakTapped, audioActive } from './audio.js';
 import { shuffle } from './util.js';
 import { icon, he, sound } from './ui.js';
 
@@ -44,8 +44,7 @@ function audioButton(text, { big = false, label = 'Anhören' } = {}) {
 }
 
 function wireAudio(host) {
-  host.querySelectorAll('[data-tts]').forEach((b) =>
-    b.addEventListener('click', () => speak(b.dataset.tts, { from: b })));
+  host.querySelectorAll('[data-tts]').forEach((b) => b.addEventListener('click', () => speakTapped(b)));
 }
 
 // Beim Aufdecken gleich vorlesen – der Lautsprecher-Knopf sendet mit.
@@ -94,9 +93,16 @@ function wireTiles(host, options, onAnswered, detail) {
 
 const fact = (label, valueHtml) => `<div class="ab-fact"><dt>${label}</dt><dd>${valueHtml}</dd></div>`;
 
-function variant(glyph, sound, sub) {
-  return `<div class="ab-variant"><div class="glyph-md" lang="he" dir="rtl">${glyph}</div>`
-    + `<div class="ab-variant__sound text-strong">${sound}</div><div class="ab-variant__sub text-caption">${sub}</div></div>`;
+// Lautvariante. Mit hebräischer Stimme ein Knopf, der eine Silbe mit Kamatz
+// spricht (בָ „wa“ / בָּ „ba“) – so wird der Unterschied hörbar; ohne Stimme
+// eine stille Kachel.
+function variant(glyph, translit, sub) {
+  const lines = (tag) => `<${tag} class="glyph-md" lang="he" dir="rtl">${glyph}</${tag}>`
+    + `<${tag} class="ab-variant__sound text-strong">${translit}</${tag}>`
+    + `<${tag} class="ab-variant__sub text-caption">${sub}</${tag}>`;
+  if (!audioActive()) return `<div class="ab-variant">${lines('div')}</div>`;
+  return `<button class="ab-variant" type="button" data-tts="${variantSyllable(glyph)}" aria-label="${translit} (${sub}) anhören">`
+    + `<span class="ab-variant__spk" aria-hidden="true">${icon('speaker')}</span>${lines('span')}</button>`;
 }
 
 function renderIntro(ex, host) {
@@ -113,7 +119,7 @@ function renderIntro(ex, host) {
   const pos = LETTERS.findIndex((l) => l.id === item.id);
   const index = pos >= 0 ? `${pos + 1} / ${LETTERS.length}` : item.baseId ? 'Endform' : '';
 
-  // Lautvarianten nebeneinander: Dagesch oder Schin/Sin
+  // Lautvarianten nebeneinander: Dagesch oder Schin/Sin, zum Antippen
   let variants = '';
   if (item.type === 'letter' && (item.dagesh || item.variant)) {
     const baseSound = item.translit.split('/')[0].trim();
@@ -295,8 +301,12 @@ function renderMatch(ex, host, onAnswered) {
         b.disabled = true;
         a.classList.add('is-match');
         b.classList.add('is-match');
-        // Jedes Paar einen Ton höher, das letzte schließt den Akkord.
+        // Jedes Paar einen Ton höher, das letzte schließt den Akkord. Danach
+        // spricht die Stimme das Gefundene – erst jetzt: beim Antippen würde
+        // sie die Lösung verraten.
         sound('paar', { k: matched, n: items.length });
+        const tts = ttsText(getItem(a.dataset.id));
+        setTimeout(() => { if (a.isConnected) speak(tts); }, 300);
         matched += 1;
         const last = matched === items.length;
         setTimeout(() => {

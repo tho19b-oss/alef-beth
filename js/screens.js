@@ -10,7 +10,7 @@ import { BADGES } from './badges.js';
 import { scheduleReminder, parseTime, DEFAULT_TIME } from './notify.js';
 import { applyTheme, applyMotion, applySound } from './theme.js';
 import { dueIds, nextDue } from './srs.js';
-import { speak, ttsSupported, hasHebrewVoice, hebrewVoiceName, audioActive } from './audio.js';
+import { speakTapped, ttsSupported, voiceAvailable, voiceInfo, audioActive } from './audio.js';
 import { activeVersion, checkForUpdate } from './version.js';
 import { todayStr } from './util.js';
 import {
@@ -111,14 +111,16 @@ function bonusHtml(hidden) {
 }
 
 // Der Ring wächst auf den neuen Stand. Wird das Ziel dabei erreicht, ploppt
-// die Krone – Konfetti nur, wenn auf diesem Screen nicht schon eine größere
-// Feier läuft – und danach fällt der Bonus-Banner herein.
+// die Krone – Konfetti und Klang nur, wenn auf diesem Screen nicht schon eine
+// größere Feier läuft – und danach fällt der Bonus-Banner herein.
 function fillToday(home, value, goal, { celebrate }) {
   const el = home.querySelector('.today__ring');
   const banner = home.querySelector('#goal-bonus');
   setTimeout(() => {
     if (!el.isConnected) return;
+    const reached = value >= goal && !el.classList.contains('is-complete');
     ring(el, value, goal, { confetti: celebrate });
+    if (reached && celebrate) sound('tagesziel');
     if (banner) setTimeout(() => { banner.hidden = false; }, reducedMotion() ? 0 : 700);
   }, reducedMotion() ? 0 : 400);
 }
@@ -128,6 +130,7 @@ function collectBonus(home, btn) {
   if (!claimBonus()) return;
   btn.disabled = true;
   shown.xp = state.xp;
+  sound('bonus');
   xpBurst(btn, GOAL_BONUS, { to: home.querySelector('#chip-xp'), total: state.xp });
   home.querySelector('.today__note').textContent = todayNote(todayXp(), state.settings.dailyGoal);
   const banner = home.querySelector('#goal-bonus');
@@ -244,10 +247,18 @@ function celebrateProgress(home, { done, total, unlocked, freshUnit }) {
   const target = step || home.querySelector(`#unit-${freshUnit?.id}`);
   target?.scrollIntoView({ block: 'center', behavior: calm ? 'auto' : 'smooth' });
 
+  // Das Motiv der Einheit braucht 0,55 s bis zu seinem Akkord. Es beginnt
+  // deshalb so, dass der Akkord zusammen mit dem Konfetti kommt.
+  if (freshUnit) {
+    setTimeout(() => { if (home.isConnected) sound('einheit'); }, calm ? 0 : 100);
+  }
+
   setTimeout(() => {
     if (!home.isConnected) return;
     if (step) {
       step.querySelector('.ab-node').classList.add('is-unlocking');
+      // Bei einer geschafften Einheit klingt nur deren Motiv.
+      if (!freshUnit) sound('stationFrei');
       setTimeout(() => {
         if (!step.isConnected) return;
         step.outerHTML = stepHtml(unlocked);
@@ -416,8 +427,7 @@ export function renderAlphabet(host) {
       <div class="ab-alphalist">${nikudRows}</div>
     </div>`;
 
-  host.querySelectorAll('[data-tts]').forEach((b) =>
-    b.addEventListener('click', () => speak(b.dataset.tts, { from: b })));
+  host.querySelectorAll('[data-tts]').forEach((b) => b.addEventListener('click', () => speakTapped(b)));
 }
 
 // ---------- Erfolge: Serie, Abzeichen, Gesamtzahlen ----------
@@ -506,7 +516,10 @@ export function renderAchievements(host) {
       </div>
     </div>`;
 
-  if (popToday) replay(host.querySelector('.ab-streak'), 'is-extended');
+  if (popToday) {
+    replay(host.querySelector('.ab-streak'), 'is-extended');
+    sound('serie');
+  }
 }
 
 // ---------- Einstellungen ----------
@@ -522,12 +535,18 @@ const settingText = (forId, title, desc = '') => `
     desc ? `<span class="ab-setting__desc text-caption">${desc}</span>` : ''}</label>`;
 
 export function renderSettings(host) {
-  const voiceOk = ttsSupported() && hasHebrewVoice();
+  const voiceOk = voiceAvailable();
+  const voice = voiceInfo();
   let voiceLine;
-  if (!ttsSupported()) {
+  if (voice?.clips) {
+    // Die Herkunft nennt ElevenLabs – das verlangt der Gratis-Plan, mit dem die
+    // Clips erzeugt sind.
+    voiceLine = `Hebräische Stimme: <b>${voice.name}</b>${voice.herkunft ? `, ${voice.herkunft}` : ''}.
+      Fehlt ein Clip, spricht die Stimme des Geräts.`;
+  } else if (!ttsSupported()) {
     voiceLine = 'Dieser Browser unterstützt keine Sprachausgabe.';
   } else if (voiceOk) {
-    voiceLine = `Hebräische Stimme aktiv: <b>${hebrewVoiceName()}</b>`;
+    voiceLine = `Hebräische Stimme aktiv: <b>${voice.name}</b>`;
   } else {
     voiceLine = `Keine hebräische Stimme gefunden – die App bleibt deshalb stumm,
       statt Hebräisch mit deutscher Stimme vorzulesen. Tipp: Microsoft Edge bringt

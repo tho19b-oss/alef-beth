@@ -31,16 +31,24 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
   kleinen Feiern (Konfetti nur bei Meilensteinen). Wer weniger Bewegung mag,
   schaltet unter *Mehr → Bewegung reduzieren* alle Animationen ab; die
   Systemeinstellung wird ohnehin beachtet
-- **Klang:** Glockenspiel-Töne in der Lektion. Eine richtige Antwort klingt
+- **Klang:** Glockenspiel-Töne beim Lernen. Eine richtige Antwort klingt
   hell, in einer Kombo mit jedem Treffer einen Ton höher; ein Fehler gibt nur
   ein leises Tock. Beim Paare-Finden klingt jedes Paar höher, das letzte
   schließt den Akkord. Zum Abschluss gibt es einen kleinen Jingle, für ein
   neues Abzeichen einen festlicheren, unter 60 % nur einen ruhigen Akkord.
+  Zurück auf der Startseite klackt das Schloss der nächsten Lektion, das volle
+  Tagesziel und der abgeholte Bonus klingen, eine geschaffte Einheit bekommt
+  ein kleines Erkennungsmotiv; unter *Erfolge* faucht die Flamme, wenn die
+  Serie wächst. Wie beim Konfetti gibt es pro Bildschirm nur eine große Feier.
   Abschaltbar unter *Mehr → Soundeffekte*, unabhängig von der Sprachausgabe;
   am iPhone gilt der Stummschalter
 - **Startbildschirm:** Beim Öffnen sinkt das App-Icon ein, federt zurück und
   dockt als Marke in der Kopfleiste an, während die Startseite hereingleitet –
-  einmal pro Sitzung, Antippen überspringt, bei reduzierter Bewegung entfällt er
+  einmal pro Sitzung, Antippen überspringt, bei reduzierter Bewegung entfällt er.
+  Dazu klingt ein kurzes Glockenspiel-Motiv, und nach dem Andocken sagt die
+  Stimme „Schalom“ – aber nur, wo der Browser schon vor dem ersten Antippen Ton
+  erlaubt (als installierte App auf Android oder am PC). Am iPhone bleibt der
+  Start still
 - **Tagesziel:** ein Ring auf der Startseite füllt sich mit den XP des Tages
   (50, 100 oder 200 XP, einstellbar unter *Mehr*). Ist er voll, gibt es
   +20 XP zum Abholen – wer das vergisst, bekommt den Bonus am nächsten Tag
@@ -68,15 +76,35 @@ verhält sie sich wie eine installierte App und funktioniert offline.
 
 ## Sprachausgabe
 
-Die App nutzt die eingebaute Sprachausgabe des Browsers (`he-IL`).
-Findet sie keine hebräische Stimme, bleibt sie bewusst stumm – eine deutsche
-Stimme würde hebräische Buchstaben als Kauderwelsch vorlesen. Alles andere
-funktioniert ohne Audio genauso. So bekommst du eine hebräische Stimme:
+Die hebräische Stimme kommt aus Aufnahmen: ein kurzer Clip für jeden Text, den
+die App spricht (Buchstabennamen, Silben, Wörter), erzeugt mit ElevenLabs. So
+klingt sie auf jedem Gerät gleich und funktioniert auch offline. Wie die Clips
+entstehen und wie ein neues Wort seinen Clip bekommt, steht in
+[`tools/stimme/README.md`](tools/stimme/README.md).
+
+Fehlt ein Clip, nutzt die App die eingebaute Sprachausgabe des Browsers
+(`he-IL`). Findet sie auch dort keine hebräische Stimme, bleibt sie bewusst
+stumm – eine deutsche Stimme würde hebräische Buchstaben als Kauderwelsch
+vorlesen. Alles andere funktioniert ohne Audio genauso. Eine hebräische
+Gerätestimme bekommst du so:
 
 - **Windows:** Microsoft Edge verwenden (bringt Online-Stimmen mit) oder unter
   *Einstellungen → Zeit und Sprache → Sprache* das hebräische Sprachpaket
   installieren
 - **Android/iOS:** Hebräisch ist in der Regel vorhanden
+
+Nach jeder Antwort spricht die Stimme die Lösung vor, kurz nach dem
+Richtig- oder Tock-Klang – auch bei Fragen wie „Welcher Buchstabe ist
+‚Bet‘?“, bei denen es sonst nichts zu hören gibt. Bei „Finde die Paare!“
+spricht sie jedes gefundene Paar aus, beim Antippen dagegen nie – sonst wäre
+die Lösung verraten. Auf der Lernkarte von Bet, Kaf, Pe und Schin lassen
+sich die beiden Lautvarianten antippen: Die Stimme spricht sie als Silbe
+(בָ „wa“, בָּ „ba“), damit der Unterschied hörbar wird. Wer einen Hören-Knopf
+kurz nach dem Abspielen nochmal antippt, hört das Wort langsamer.
+
+Die Clips sind mit dem Gratis-Plan von ElevenLabs erzeugt. Sie dürfen deshalb
+nur nicht-kommerziell genutzt werden, und die App nennt ElevenLabs unter
+*Mehr* als Quelle der Stimme.
 
 Hinweis: Der Gottesname wird in der App nach üblicher Praxis nicht
 ausgeschrieben (ה׳) und nie von der Sprachausgabe gesprochen.
@@ -92,6 +120,9 @@ Vanilla HTML/CSS/JS ohne Build-Schritt und ohne Abhängigkeiten.
 | `css/style.css` | Anordnung der Komponenten auf den Bildschirmen |
 | `js/alefbeth.js` | Bewegungs-, Klang- und Icon-Helfer des Design Systems (`window.AlefBeth`) |
 | `js/ui.js` | reicht die Helfer an die Module weiter, dazu Dialog und Hebräisch-Markup |
+| `js/audio.js` | hebräische Stimme: spielt die Clips, sonst die Sprachausgabe des Browsers |
+| `audio/he/` | die Clips der Stimme, `index.json` ordnet jedem Text seine Datei zu |
+| `tools/stimme/` | Stimmen-Werkstatt und Einbau-Werkzeug für die Clips |
 | `fonts/` | Rubik (Oberfläche) und Frank Ruhl Libre (Hebräisch), selbst gehostet |
 | `data/letters.js` | Buchstaben & Endformen (Name, Laut, Eselsbrücke …) |
 | `data/nikud.js` | Vokalzeichen & Lesesilben |
@@ -117,7 +148,9 @@ dort unter `SOUNDS` dazu – in D-Dur-Pentatonik (MIDI-Nummern), damit sich
 `html[data-sound="off"]` (`applySound()` in `js/theme.js`).
 
 Neue Wörter hinzufügen: Eintrag in `data/words.js` ergänzen und die ID in
-einer Lektion in `data/curriculum.js` eintragen – fertig.
+einer Lektion in `data/curriculum.js` eintragen – fertig. Seinen Clip bekommt
+das Wort mit der Stimmen-Werkstatt (`tools/stimme/README.md`); bis dahin
+spricht die Gerätestimme.
 
 Gestaltung: Farben, Größen und Bewegung kommen aus dem Alef Beth Design
 System. `tokens.css`, `components.css` und `alefbeth.js` sind Kopien daraus –

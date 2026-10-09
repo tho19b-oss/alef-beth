@@ -1,4 +1,4 @@
-/* Alef Beth — Bewegungs- und Icon-Helfer aus dem Alef Beth Design System.
+/* Alef Beth — Bewegungs-, Klang- und Icon-Helfer aus dem Alef Beth Design System.
    Ein klassisches Skript ohne Abhängigkeiten; legt window.AlefBeth an.
    Die App-Module greifen über js/ui.js darauf zu. Alles respektiert
    reduzierte Bewegung (System oder html[data-motion="reduced"]). */
@@ -393,19 +393,27 @@
 
   // ---------- Startbildschirm ----------
 
-  // splash(node, { to, reveal }) spielt den Startbildschirm (.ab-splash) ab:
+  // splash(node, { to, reveal, sound }) spielt den Startbildschirm (.ab-splash) ab:
   // Das Icon sinkt um seine Kante ein, federt zurück und dockt dann an opts.to
   // an – in der App die Marke der Kopfleiste. Sobald es losfliegt, ruft es
   // opts.reveal(), damit der Screen darunter hereingleitet; ohne Ziel blendet
-  // es aus. Antippen oder eine Taste überspringt. Löst auf, sobald er weg ist.
+  // es aus. Mit opts.sound klingt dazu der Startklang, aber nur, wo der Browser
+  // schon vor der ersten Berührung Ton erlaubt (audible()). Antippen oder eine
+  // Taste überspringt, ein laufender Startklang blendet dann aus. Löst auf,
+  // sobald er weg ist, mit { played, audible }: ob er bis zum Ende lief und ob
+  // Ton erlaubt war.
   function splash(node, opts) {
     node = resolve(node);
     opts = opts || {};
-    if (!node) return Promise.resolve();
+    if (!node) return Promise.resolve({ played: false, audible: false });
     var target = resolve(opts.to);
     var timers = [];
     var revealed = false;
     var over = false;
+    var played = false;
+    var begun = false;
+    var allowed = Promise.resolve(false);
+    var tune = null; // vorbereiteter Startklang
     var settle;
     var gone = new Promise(function (res) { settle = res; });
     var later = function (fn, t) { timers.push(setTimeout(fn, t)); };
@@ -424,11 +432,12 @@
       doc.removeEventListener('keydown', skip);
       if (target) target.style.opacity = '';
       node.remove();
-      settle();
+      allowed.then(function (ok) { settle({ played: played, audible: ok }); });
     };
     var skip = function () {
       if (over) return;
       timers.forEach(clearTimeout);
+      if (tune) tune.fade();
       reveal();
       node.classList.add('is-skipped');
       later(done, ms('dur-quick', 160));
@@ -441,7 +450,7 @@
       if (!a || !a.width || !b || !b.width || !icon.animate) {
         reveal();
         node.classList.add('is-leaving');
-        later(done, ms('dur-base', 260));
+        later(function () { played = true; done(); }, ms('dur-base', 260));
         return;
       }
       var scale = b.width / a.width;
@@ -463,6 +472,7 @@
       later(function () {
         target.style.opacity = '';
         replay(target, 'is-bump');
+        played = true;
         done();
       }, timing.duration);
     };
@@ -478,8 +488,16 @@
       var started = press && press.ready ? press.ready.catch(function () {}) : Promise.resolve();
       started.then(function () {
         if (over || node.classList.contains('is-skipped')) return;
+        if (tune) tune.play();
         later(dock, ms('dur-press', 90) + ms('dur-slow', 420) + ms('dur-base', 260));
       });
+    };
+    // Erst den Screen darunter einmal zeichnen lassen, dann spielen – sonst
+    // fällt der Anfang der Bewegung in das lange erste Bild der App.
+    var begin = function () {
+      if (begun) return;
+      begun = true;
+      requestAnimationFrame(function () { requestAnimationFrame(play); });
     };
     // Weniger Bewegung gewünscht, oder schon von selbst ausgeblendet: nur aufräumen.
     if (reducedMotion() || vanished()) {
@@ -489,9 +507,20 @@
     }
     node.addEventListener('pointerdown', skip);
     doc.addEventListener('keydown', skip);
-    // Erst den Screen darunter einmal zeichnen lassen, dann spielen – sonst
-    // fällt der Anfang der Bewegung in das lange erste Bild der App.
-    requestAnimationFrame(function () { requestAnimationFrame(play); });
+    if (!opts.sound) {
+      begin();
+      return gone;
+    }
+    // Mit Startklang wartet das Icon, bis klar ist, ob Ton erlaubt ist –
+    // höchstens 400 ms; am iPhone kommt das Nein sofort. Ist Ton erlaubt, wird
+    // der Klang vorbereitet und setzt genau mit der Bewegung ein. Kommt die
+    // Antwort zu spät, bleibt es lieber still als versetzt.
+    allowed = audible();
+    allowed.then(function (ok) {
+      if (ok && !begun && !over && !node.classList.contains('is-skipped')) tune = startTune();
+      begin();
+    });
+    later(begin, 400);
     return gone;
   }
 
@@ -540,6 +569,17 @@
     return buf;
   }
 
+  // Den Raum teilen sich alle Klangketten eines Contexts: Er wird nur einmal berechnet.
+  var rooms = typeof WeakMap === 'function' ? new WeakMap() : null;
+  function roomFor(ctx) {
+    var buf = rooms && rooms.get(ctx);
+    if (!buf) {
+      buf = roomImpulse(ctx, 1.5);
+      if (rooms) rooms.set(ctx, buf);
+    }
+    return buf;
+  }
+
   // Sicherheitsnetz, falls viele Töne zugleich klingen: Spitzen über 0,8 werden
   // weich gerundet statt hart abgeschnitten.
   function softCurve() {
@@ -573,7 +613,7 @@
     soft.connect(output);
 
     var room = ctx.createConvolver();
-    room.buffer = roomImpulse(ctx, 1.5);
+    room.buffer = roomFor(ctx);
     room.connect(out);
 
     var noise = ctx.createBuffer(1, sr, sr);
@@ -677,9 +717,20 @@
       hiss(dest, t, { peak: peak * 0.35, tau: 0.004, f: Math.min(f * 2.2, 8000), q: 2 });
     }
 
-    // Die Kombo-Flamme faucht kurz auf.
+    // Eine Flamme faucht kurz auf (Kombo, Serie).
     function flame(dest, t, v) {
       hiss(dest, t, { peak: 0.24 * v, attack: 0.1, tau: 0.09, f: 450, to: 2200, sweep: 0.25, q: 0.9 });
+    }
+
+    // Plopp: ein Ton, der blitzschnell nach oben gleitet – etwas erscheint.
+    function pop(dest, t, peak) {
+      tone(dest, 1050, t, { peak: peak, attack: 0.002, tau: 0.035, from: 0.45, glide: 0.04 });
+    }
+
+    // Ein metallisches Klacken, wie ein Schloss.
+    function latch(dest, t, f) {
+      hiss(dest, t, { peak: 0.45, tau: 0.005, f: f, q: 4 });
+      tone(dest, f * 0.75, t, { peak: 0.08, attack: 0.001, tau: 0.012 });
     }
 
     // Weicher Klangteppich aus leicht verstimmten Dreiecksschwingungen.
@@ -775,6 +826,87 @@
         sparkle(ch, t + 0.5, 1, 8, 0.06);
         return 2.6;
       },
+      // Tagesziel voll (Stufe 3): Der Ring füllt sich, zugleich ploppt die
+      // Krone. Ein schneller Lauf aufwärts, der Akkord trifft den Höhepunkt
+      // des Ploppens, dazu glitzert das kleine Konfetti.
+      tagesziel: function (t) {
+        var ch = channel(0.2);
+        [74, 76, 78, 81, 83].forEach(function (m, i) { bell(ch, m, t + i * 0.03, 0.3 + i * 0.07); });
+        var top = t + 0.15;
+        pop(ch, top, 0.22);
+        chord(ch, [86, 90, 93], top, 0.45);
+        sparkle(ch, top + 0.05, 0.4, 3, 0.06);
+        return 1.1;
+      },
+      // Bonus abholen (Stufe 2): Klimpern beim Tippen, dann schwirren die
+      // Funken zum XP-Chip. Ihre Flugzeit ist zufällig (0,7–1 s), der Klang
+      // landet nach 0,85 s.
+      bonus: function (t) {
+        var ch = channel(0.22, 0.8);
+        bell(ch, 93, t, 0.5);
+        bell(ch, 98, t + 0.075, 0.7);
+        for (var i = 0; i < 7; i++) bell(ch, pickOne([98, 100, 102, 105]), t + 0.15 + i * 0.045, 0.09);
+        hiss(ch, t + 0.15, { peak: 0.035, attack: 0.3, tau: 0.12, f: 2500, to: 6000, sweep: 0.6, q: 2 });
+        var land = t + 0.85;
+        pop(ch, land, 0.12);
+        bell(ch, 98, land, 0.5);
+        bell(ch, 102, land + 0.07, 0.4);
+        return 1.4;
+      },
+      // Station frei (Lernpfad): Das Schloss klackt bei jedem Wackeln, nach
+      // 420 ms ploppt die Station in Granat auf.
+      stationFrei: function (t) {
+        var ch = channel(0.12);
+        latch(ch, t + 0.1, 3400);
+        latch(ch, t + 0.21, 2700);
+        pop(ch, t + 0.42, 0.28);
+        bell(ch, 86, t + 0.43, 0.6);
+        return 1;
+      },
+      // Einheit geschafft (Stufe 4): ein kleines Erkennungsmotiv, kurz, kurz,
+      // lang. Der volle Akkord kommt nach 0,55 s – zusammen mit dem Konfetti.
+      einheit: function (t) {
+        var ch = channel(0.26, 1.1);
+        bell(ch, 86, t, 0.7);
+        bell(ch, 86, t + 0.12, 0.7);
+        bell(ch, 93, t + 0.24, 0.9);
+        bell(ch, 98, t + 0.24, 0.35);
+        var hit = t + 0.55;
+        pad(ch, [62, 69, 74, 78], hit - 0.05, { attack: 0.08, hold: 0.6, release: 0.9, peak: 0.03 });
+        chord(ch, [74, 81, 86, 90, 98], hit, 0.42);
+        sparkle(ch, hit + 0.05, 0.9, 7, 0.06);
+        return 2.4;
+      },
+      // Serie verlängert (Erfolge): Die Flamme faucht auf, der heutige Punkt
+      // der Woche ploppt mit zwei Tönen.
+      serie: function (t) {
+        var ch = channel(0.2);
+        flame(ch, t, 1);
+        var p = t + 0.12;
+        pop(ch, p, 0.2);
+        bell(ch, 81, p, 0.55);
+        bell(ch, 86, p + 0.09, 0.7);
+        return 1;
+      },
+      // Startbildschirm: Das Icon sinkt ein (leises Tock), hüpft nach 90 ms mit
+      // den Funken (drei Töne aufwärts, kurz, kurz, lang, dazu Glitzer), fliegt
+      // nach 770 ms in die Kopfleiste (leises Wusch) und dockt nach 1,19 s an
+      // (Plink). So leise wie „richtig“, weil er bei jedem Start kommt.
+      start: function (t) {
+        var ch = channel(0.22, 0.6);
+        wood(ch, 880, t, 0.12, 0.03);
+        var up = t + 0.09;
+        bell(ch, 81, up, 0.5, 0.5);
+        bell(ch, 86, up + 0.08, 0.55, 0.5);
+        bell(ch, 90, up + 0.16, 0.75, 1.2);
+        bell(ch, 74, up + 0.16, 0.25, 1.2);
+        sparkle(ch, up + 0.1, 0.35, 4, 0.05);
+        hiss(ch, t + 0.77, { peak: 0.03, attack: 0.2, tau: 0.07, f: 900, to: 3200, sweep: 0.42, q: 1.2 });
+        var land = t + 1.19;
+        pop(ch, land, 0.1);
+        bell(ch, 98, land, 0.4, 0.6);
+        return 1.9;
+      },
     };
 
     return {
@@ -785,9 +917,11 @@
     };
   }
 
-  var SOUND_NAMES = ['richtig', 'falsch', 'paarTipp', 'paar', 'lektion', 'lektionSanft', 'abzeichen'];
+  var SOUND_NAMES = ['richtig', 'falsch', 'paarTipp', 'paar', 'lektion', 'lektionSanft', 'abzeichen',
+    'tagesziel', 'bonus', 'stationFrei', 'einheit', 'serie', 'start'];
   var audio = null;    // AudioContext – erst beim ersten Klang oder Antippen
   var engine = null;
+  var touched = false; // gab es schon eine Berührung? Vorher lässt der Browser keinen Ton zu
   var quietAt = 0;     // Zeit im AudioContext, zu der der letzte Klang verklungen ist
   var sleepTimer = 0;
 
@@ -810,8 +944,11 @@
 
   // sound('richtig', { step, flame }) · sound('paar', { k, n }) · sound('lektion') …
   // Ein Fehler beim Abspielen darf nie die Übung aufhalten – dann bleibt es still.
+  // Vor der ersten Berührung (etwa wenn eine Seite direkt mit einer Feier
+  // startet) bleibt es ebenfalls still: Der Browser hielte den Ton sonst
+  // zurück und holte ihn beim nächsten Tippen verspätet nach.
   function sound(name, opts) {
-    if (!soundOn()) return;
+    if (!touched || !soundOn()) return;
     try {
       wakeAudio();
       var start = audio.currentTime + 0.02;
@@ -826,6 +963,7 @@
   // weckt den Klang deshalb vorsorglich – so klingen auch die Feiern, die
   // zeitversetzt nach dem letzten Tippen kommen.
   function wakeOnTouch() {
+    touched = true;
     if (!soundOn()) return;
     try {
       wakeAudio();
@@ -837,6 +975,66 @@
   ['click', 'touchend', 'keydown'].forEach(function (type) {
     window.addEventListener(type, wakeOnTouch, { capture: true, passive: true });
   });
+
+  // Darf der Browser schon Ton abspielen? Nach einer Berührung immer, vorher
+  // nur mit Erlaubnis für Autoplay – etwa als installierte App auf Android oder
+  // am PC, am iPhone nie. Geprüft wird mit 12 ms Stille über ein Audio-Element:
+  // Gelingt play(), ist Ton erlaubt. So entsteht kein AudioContext auf
+  // Verdacht, den der Browser mit einer Warnung anhalten würde.
+  var SILENCE = 'data:audio/wav;base64,UklGRogAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YWQAAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA';
+  var autoplay = null;
+  function audible() {
+    if (touched) return Promise.resolve(true);
+    if (!autoplay) {
+      autoplay = new Promise(function (res) {
+        try {
+          if (navigator.getAutoplayPolicy) {
+            res(navigator.getAutoplayPolicy('audiocontext') === 'allowed');
+            return;
+          }
+          var probe = new Audio(SILENCE);
+          var p = probe.play();
+          if (!p || !p.then) {
+            res(false);
+            return;
+          }
+          p.then(function () { probe.pause(); res(true); }, function () { res(false); });
+        } catch (e) {
+          res(false);
+        }
+      });
+    }
+    return autoplay.then(function (ok) { return ok || touched; });
+  }
+
+  // Startklang für splash(): vorbereitet, bevor sich das Icon bewegt – der
+  // Aufbau soll nicht in das erste Bild der Bewegung fallen. Er hat einen
+  // eigenen Ausgang, damit Überspringen ihn ausblenden kann. Ob Ton erlaubt
+  // ist, klärt vorher audible().
+  function startTune() {
+    if (!soundOn()) return null;
+    try {
+      wakeAudio();
+      var bus = audio.createGain();
+      bus.connect(audio.destination);
+      var chain = soundEngine(audio, bus);
+      return {
+        play: function () {
+          var start = audio.currentTime + 0.02;
+          quietAt = Math.max(quietAt, start + chain.play('start', start));
+          sleepLater(quietAt - audio.currentTime + 3);
+        },
+        fade: function () {
+          bus.gain.setTargetAtTime(0, audio.currentTime, 0.02);
+          setTimeout(function () { bus.disconnect(); }, 400);
+          sleepLater(Math.max(0, quietAt - audio.currentTime) + 3);
+        },
+      };
+    } catch (e) {
+      if (window.console) console.warn('Klang konnte nicht abgespielt werden:', e);
+      return null;
+    }
+  }
 
   var api = {
     version: '1.0.0',
@@ -858,6 +1056,7 @@
     splash: splash,
     sound: sound,
     sounds: SOUND_NAMES,
+    audible: audible,
     soundOn: soundOn,
     soundSupported: soundSupported,
     soundEngine: soundEngine,

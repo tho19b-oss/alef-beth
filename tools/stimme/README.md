@@ -8,7 +8,7 @@ Stimme des Geräts.
 | --- | --- |
 | `werkstatt.html` | Erzeugt die Clips im Browser: Schlüssel, Stimme, Probe, alle erzeugen, anhören, Paket speichern. Per Doppelklick öffnen, kein Server nötig. |
 | `werkstatt-liste.mjs` | Schreibt die Sprechtexte der App (`speechEntries()` in `data/curriculum.js`) in die Werkstatt. |
-| `einbauen.mjs` | Baut ein Paket (ZIP) ein: säubert jeden Clip mit ffmpeg und schreibt `audio/he/index.json`. Braucht Node 18+ und ffmpeg. |
+| `einbauen.mjs` | Baut ein Paket (ZIP) ein: schneidet jeden Clip mit ffmpeg auf das Gesprochene zu (auch Geräusche, die ElevenLabs ans Ende hängt), gleicht die Lautheit an und schreibt `audio/he/index.json`. Braucht Node 18+ und ffmpeg. |
 
 ## Ein neues Wort bekommt seinen Clip
 
@@ -17,7 +17,9 @@ Stimme des Geräts.
 3. `werkstatt.html` öffnen, dieselbe Stimme wählen, „Fehlende erzeugen“,
    anhören, „Paket speichern“.
 4. `node tools/stimme/einbauen.mjs alef-beth-stimme.zip`: Ein Paket mit nur
-   den neuen Clips ergänzt die vorhandenen.
+   den neuen Clips ergänzt die vorhandenen. Nennt der Bericht Clips zum
+   Anhören (Pause im Clip, endet mitten im Laut), diese in der Werkstatt
+   prüfen und bei Bedarf mit „Neu“ nochmal erzeugen.
 5. In `sw.js` `VERSION` hochzählen.
 
 Bis dahin spricht für das neue Wort die Gerätestimme.

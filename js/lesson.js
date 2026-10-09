@@ -7,7 +7,7 @@ import { renderExercise, isPassive } from './exercises.js';
 import { state, save, addXp, touchStreak, completeLesson, currentStreak } from './state.js';
 import { syncBadges } from './badges.js';
 import { applyResult, dueIds } from './srs.js';
-import { audioActive, speak } from './audio.js';
+import { audioActive, speak, stopSpeech } from './audio.js';
 import { shuffle, sample } from './util.js';
 import {
   icon, he, replay, countUp, setProgress, confetti, feedback, swap, reducedMotion, confirmDialog, sound,
@@ -353,7 +353,7 @@ function runSession(host, queue, opts) {
       cancel: 'Weiter lernen',
     });
     if (quit && area.isConnected) {
-      if ('speechSynthesis' in window) speechSynthesis.cancel();
+      stopSpeech();
       location.hash = exitHash;
     }
   });
@@ -363,7 +363,7 @@ function runSession(host, queue, opts) {
   function nextStep() {
     if (!sheetOpen) return; // schon unterwegs (Doppeltipp)
     // Was die Stimme noch spricht, gehört zur alten Übung.
-    if ('speechSynthesis' in window) speechSynthesis.cancel();
+    stopSpeech();
     closeSheet();
     idx += 1;
     step();

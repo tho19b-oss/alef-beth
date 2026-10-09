@@ -8,6 +8,7 @@ import { dueIds } from './srs.js';
 import { applyTheme, applyMotion, applySound } from './theme.js';
 import { replay, splash } from './ui.js';
 import { syncBadges } from './badges.js';
+import { stopSpeech } from './audio.js';
 
 const app = document.getElementById('app');
 const nav = document.getElementById('bottomnav');
@@ -52,7 +53,7 @@ function route() {
   // Das Hereingleiten nach dem Startbildschirm gilt nur dem ersten Screen.
   app.classList.remove('is-revealing');
   nav.classList.remove('is-revealing');
-  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  stopSpeech();
   window.scrollTo(0, 0);
   updateNav(hash);
 
@@ -93,7 +94,7 @@ const isInLesson = () => document.body.classList.contains('in-lesson');
 function applyUpdate() {
   if (reloading) return; // nicht zweimal neu laden
   reloading = true;
-  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  stopSpeech();
   location.reload();
 }
 

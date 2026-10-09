@@ -59,6 +59,44 @@ export function ttsText(item) {
   return item.hebrew;
 }
 
+// Silbe einer Lautvariante: die Glyphe mit Kamatz (בָ „wa“ / בָּ „ba“). NFC
+// sortiert das Kamatz vor Dagesch und Schin-Punkt, wie in den Daten.
+export function variantSyllable(glyph) {
+  return `${glyph}\u05B8`.normalize('NFC');
+}
+
+// Alles, was die Stimme sprechen kann, jeder Text einmal. key benennt die
+// Audiodatei (audio/he/<key>.mp3), label und gruppe helfen beim Erzeugen.
+// Der Gottesname fehlt, weil ttsText für ihn nichts liefert.
+export function speechEntries() {
+  const entries = [];
+  const seen = new Set();
+  const add = (key, text, label, gruppe) => {
+    if (!text) return;
+    const nfc = text.normalize('NFC');
+    if (seen.has(nfc)) return;
+    seen.add(nfc);
+    entries.push({ key, text: nfc, label, gruppe });
+  };
+  // Laut einer Variante als Silbe mit a: „w / b“ → „wa“, „s (scharf)“ → „sa“
+  const syllable = (translit) => `${translit.split('/')[0].replace(/\(.*\)/, '').trim()}a`;
+
+  for (const l of [...LETTERS, ...FINALS]) add(l.id, ttsText(getItem(l.id)), l.name, 'Buchstabe');
+  for (const s of SYLLABLES) add(s.id, ttsText(getItem(s.id)), s.translit, 'Silbe');
+  for (const v of NIKUD) add(v.id, ttsText(getItem(v.id)), `${v.exampleTranslit} (${v.name})`, 'Silbe');
+  for (const l of LETTERS) {
+    if (l.dagesh) {
+      add(`var-${l.id}`, variantSyllable(l.glyph), `${syllable(l.translit)} (${l.name} ohne Punkt)`, 'Variante');
+      add(`var-${l.id}-dagesch`, variantSyllable(l.dagesh.glyph), `${syllable(l.dagesh.translit)} (${l.name} mit Punkt)`, 'Variante');
+    } else if (l.variant) {
+      add(`var-${l.id}`, variantSyllable(l.glyph), `${syllable(l.translit)} (${l.name})`, 'Variante');
+      add(`var-${l.id}-${l.variant.name.toLowerCase()}`, variantSyllable(l.variant.glyph), `${syllable(l.variant.translit)} (${l.variant.name})`, 'Variante');
+    }
+  }
+  for (const w of WORDS) add(w.id, ttsText(getItem(w.id)), w.translit, 'Wort');
+  return entries;
+}
+
 // Wert, über den Distraktoren als „zu ähnlich“ aussortiert werden
 function distinctKey(item, field) {
   if (field === 'meaning') return item.meaning;

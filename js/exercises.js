@@ -4,7 +4,7 @@
 // renderExercise(ex, host, onAnswered) rendert eine Übung; onAnswered(correct, detailHtml)
 // wird genau einmal gerufen, sobald der Nutzer geantwortet hat.
 
-import { getItem, display, mainLabel, subLabel, ttsText, pickDistractors } from '../data/curriculum.js';
+import { getItem, display, mainLabel, subLabel, ttsText, pickDistractors, variantSyllable } from '../data/curriculum.js';
 import { LETTERS } from '../data/letters.js';
 import { speak, speakTapped, audioActive } from './audio.js';
 import { shuffle } from './util.js';
@@ -101,9 +101,7 @@ function variant(glyph, translit, sub) {
     + `<${tag} class="ab-variant__sound text-strong">${translit}</${tag}>`
     + `<${tag} class="ab-variant__sub text-caption">${sub}</${tag}>`;
   if (!audioActive()) return `<div class="ab-variant">${lines('div')}</div>`;
-  // NFC sortiert das Kamatz vor Dagesch und Schin-Punkt, wie in den Daten.
-  const syllable = `${glyph}\u05B8`.normalize('NFC');
-  return `<button class="ab-variant" type="button" data-tts="${syllable}" aria-label="${translit} (${sub}) anhören">`
+  return `<button class="ab-variant" type="button" data-tts="${variantSyllable(glyph)}" aria-label="${translit} (${sub}) anhören">`
     + `<span class="ab-variant__spk" aria-hidden="true">${icon('speaker')}</span>${lines('span')}</button>`;
 }
 

@@ -1,7 +1,7 @@
 // Service Worker: App-Shell vorab cachen (cache-first), damit die App offline läuft.
 // Bei Änderungen VERSION hochzählen – alte Caches werden beim Aktivieren gelöscht.
 
-const VERSION = 'v26';
+const VERSION = 'v27';
 const CACHE = `alefbeth-${VERSION}`;
 
 const ASSETS = [
@@ -39,9 +39,26 @@ const ASSETS = [
   'data/curriculum.js',
 ];
 
+// Die hebräische Stimme: Liste und Clips (audio/he/). Fehlt etwas, kommt das
+// Update trotzdem – an der Stelle spricht dann eben die Stimme des Geräts.
+async function cacheVoice(cache) {
+  try {
+    const res = await fetch('audio/he/index.json', { cache: 'no-cache' });
+    if (!res.ok) return;
+    const list = await res.clone().json();
+    await cache.put('audio/he/index.json', res);
+    await Promise.all(Object.values(list.clips || {})
+      .map((file) => cache.add(`audio/he/${file}`).catch(() => {})));
+  } catch {
+    // ohne Netz oder ohne Liste gibt es nichts zu cachen
+  }
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+    caches.open(CACHE)
+      .then((cache) => cache.addAll(ASSETS).then(() => cacheVoice(cache)))
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -103,6 +120,8 @@ self.addEventListener('periodicsync', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET' || !request.url.startsWith(self.location.origin)) return;
+  // Die Werkzeuge gehören nicht zur App und sollen nie veraltet aus dem Cache kommen.
+  if (request.url.startsWith(new URL('tools/', self.registration.scope).href)) return;
   event.respondWith(
     caches.match(request, { ignoreSearch: true }).then((cached) => {
       if (cached) return cached;

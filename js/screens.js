@@ -10,7 +10,7 @@ import { BADGES } from './badges.js';
 import { scheduleReminder, parseTime, DEFAULT_TIME } from './notify.js';
 import { applyTheme, applyMotion, applySound } from './theme.js';
 import { dueIds, nextDue } from './srs.js';
-import { speakTapped, ttsSupported, hasHebrewVoice, hebrewVoiceName, audioActive } from './audio.js';
+import { speakTapped, ttsSupported, voiceAvailable, voiceInfo, audioActive } from './audio.js';
 import { activeVersion, checkForUpdate } from './version.js';
 import { todayStr } from './util.js';
 import {
@@ -535,12 +535,18 @@ const settingText = (forId, title, desc = '') => `
     desc ? `<span class="ab-setting__desc text-caption">${desc}</span>` : ''}</label>`;
 
 export function renderSettings(host) {
-  const voiceOk = ttsSupported() && hasHebrewVoice();
+  const voiceOk = voiceAvailable();
+  const voice = voiceInfo();
   let voiceLine;
-  if (!ttsSupported()) {
+  if (voice?.clips) {
+    // Die Herkunft nennt ElevenLabs – das verlangt der Gratis-Plan, mit dem die
+    // Clips erzeugt sind.
+    voiceLine = `Hebräische Stimme: <b>${voice.name}</b>${voice.herkunft ? `, ${voice.herkunft}` : ''}.
+      Fehlt ein Clip, spricht die Stimme des Geräts.`;
+  } else if (!ttsSupported()) {
     voiceLine = 'Dieser Browser unterstützt keine Sprachausgabe.';
   } else if (voiceOk) {
-    voiceLine = `Hebräische Stimme aktiv: <b>${hebrewVoiceName()}</b>`;
+    voiceLine = `Hebräische Stimme aktiv: <b>${voice.name}</b>`;
   } else {
     voiceLine = `Keine hebräische Stimme gefunden – die App bleibt deshalb stumm,
       statt Hebräisch mit deutscher Stimme vorzulesen. Tipp: Microsoft Edge bringt

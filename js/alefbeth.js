@@ -393,19 +393,27 @@
 
   // ---------- Startbildschirm ----------
 
-  // splash(node, { to, reveal }) spielt den Startbildschirm (.ab-splash) ab:
+  // splash(node, { to, reveal, sound }) spielt den Startbildschirm (.ab-splash) ab:
   // Das Icon sinkt um seine Kante ein, federt zurück und dockt dann an opts.to
   // an – in der App die Marke der Kopfleiste. Sobald es losfliegt, ruft es
   // opts.reveal(), damit der Screen darunter hereingleitet; ohne Ziel blendet
-  // es aus. Antippen oder eine Taste überspringt. Löst auf, sobald er weg ist.
+  // es aus. Mit opts.sound klingt dazu der Startklang, aber nur, wo der Browser
+  // schon vor der ersten Berührung Ton erlaubt (audible()). Antippen oder eine
+  // Taste überspringt, ein laufender Startklang blendet dann aus. Löst auf,
+  // sobald er weg ist, mit { played, audible }: ob er bis zum Ende lief und ob
+  // Ton erlaubt war.
   function splash(node, opts) {
     node = resolve(node);
     opts = opts || {};
-    if (!node) return Promise.resolve();
+    if (!node) return Promise.resolve({ played: false, audible: false });
     var target = resolve(opts.to);
     var timers = [];
     var revealed = false;
     var over = false;
+    var played = false;
+    var begun = false;
+    var allowed = Promise.resolve(false);
+    var tune = null; // vorbereiteter Startklang
     var settle;
     var gone = new Promise(function (res) { settle = res; });
     var later = function (fn, t) { timers.push(setTimeout(fn, t)); };
@@ -424,11 +432,12 @@
       doc.removeEventListener('keydown', skip);
       if (target) target.style.opacity = '';
       node.remove();
-      settle();
+      allowed.then(function (ok) { settle({ played: played, audible: ok }); });
     };
     var skip = function () {
       if (over) return;
       timers.forEach(clearTimeout);
+      if (tune) tune.fade();
       reveal();
       node.classList.add('is-skipped');
       later(done, ms('dur-quick', 160));
@@ -441,7 +450,7 @@
       if (!a || !a.width || !b || !b.width || !icon.animate) {
         reveal();
         node.classList.add('is-leaving');
-        later(done, ms('dur-base', 260));
+        later(function () { played = true; done(); }, ms('dur-base', 260));
         return;
       }
       var scale = b.width / a.width;
@@ -463,6 +472,7 @@
       later(function () {
         target.style.opacity = '';
         replay(target, 'is-bump');
+        played = true;
         done();
       }, timing.duration);
     };
@@ -478,8 +488,16 @@
       var started = press && press.ready ? press.ready.catch(function () {}) : Promise.resolve();
       started.then(function () {
         if (over || node.classList.contains('is-skipped')) return;
+        if (tune) tune.play();
         later(dock, ms('dur-press', 90) + ms('dur-slow', 420) + ms('dur-base', 260));
       });
+    };
+    // Erst den Screen darunter einmal zeichnen lassen, dann spielen – sonst
+    // fällt der Anfang der Bewegung in das lange erste Bild der App.
+    var begin = function () {
+      if (begun) return;
+      begun = true;
+      requestAnimationFrame(function () { requestAnimationFrame(play); });
     };
     // Weniger Bewegung gewünscht, oder schon von selbst ausgeblendet: nur aufräumen.
     if (reducedMotion() || vanished()) {
@@ -489,9 +507,20 @@
     }
     node.addEventListener('pointerdown', skip);
     doc.addEventListener('keydown', skip);
-    // Erst den Screen darunter einmal zeichnen lassen, dann spielen – sonst
-    // fällt der Anfang der Bewegung in das lange erste Bild der App.
-    requestAnimationFrame(function () { requestAnimationFrame(play); });
+    if (!opts.sound) {
+      begin();
+      return gone;
+    }
+    // Mit Startklang wartet das Icon, bis klar ist, ob Ton erlaubt ist –
+    // höchstens 400 ms; am iPhone kommt das Nein sofort. Ist Ton erlaubt, wird
+    // der Klang vorbereitet und setzt genau mit der Bewegung ein. Kommt die
+    // Antwort zu spät, bleibt es lieber still als versetzt.
+    allowed = audible();
+    allowed.then(function (ok) {
+      if (ok && !begun && !over && !node.classList.contains('is-skipped')) tune = startTune();
+      begin();
+    });
+    later(begin, 400);
     return gone;
   }
 
@@ -540,6 +569,17 @@
     return buf;
   }
 
+  // Den Raum teilen sich alle Klangketten eines Contexts: Er wird nur einmal berechnet.
+  var rooms = typeof WeakMap === 'function' ? new WeakMap() : null;
+  function roomFor(ctx) {
+    var buf = rooms && rooms.get(ctx);
+    if (!buf) {
+      buf = roomImpulse(ctx, 1.5);
+      if (rooms) rooms.set(ctx, buf);
+    }
+    return buf;
+  }
+
   // Sicherheitsnetz, falls viele Töne zugleich klingen: Spitzen über 0,8 werden
   // weich gerundet statt hart abgeschnitten.
   function softCurve() {
@@ -573,7 +613,7 @@
     soft.connect(output);
 
     var room = ctx.createConvolver();
-    room.buffer = roomImpulse(ctx, 1.5);
+    room.buffer = roomFor(ctx);
     room.connect(out);
 
     var noise = ctx.createBuffer(1, sr, sr);
@@ -848,6 +888,25 @@
         bell(ch, 86, p + 0.09, 0.7);
         return 1;
       },
+      // Startbildschirm: Das Icon sinkt ein (leises Tock), hüpft nach 90 ms mit
+      // den Funken (drei Töne aufwärts, kurz, kurz, lang, dazu Glitzer), fliegt
+      // nach 770 ms in die Kopfleiste (leises Wusch) und dockt nach 1,19 s an
+      // (Plink). So leise wie „richtig“, weil er bei jedem Start kommt.
+      start: function (t) {
+        var ch = channel(0.22, 0.6);
+        wood(ch, 880, t, 0.12, 0.03);
+        var up = t + 0.09;
+        bell(ch, 81, up, 0.5, 0.5);
+        bell(ch, 86, up + 0.08, 0.55, 0.5);
+        bell(ch, 90, up + 0.16, 0.75, 1.2);
+        bell(ch, 74, up + 0.16, 0.25, 1.2);
+        sparkle(ch, up + 0.1, 0.35, 4, 0.05);
+        hiss(ch, t + 0.77, { peak: 0.03, attack: 0.2, tau: 0.07, f: 900, to: 3200, sweep: 0.42, q: 1.2 });
+        var land = t + 1.19;
+        pop(ch, land, 0.1);
+        bell(ch, 98, land, 0.4, 0.6);
+        return 1.9;
+      },
     };
 
     return {
@@ -859,7 +918,7 @@
   }
 
   var SOUND_NAMES = ['richtig', 'falsch', 'paarTipp', 'paar', 'lektion', 'lektionSanft', 'abzeichen',
-    'tagesziel', 'bonus', 'stationFrei', 'einheit', 'serie'];
+    'tagesziel', 'bonus', 'stationFrei', 'einheit', 'serie', 'start'];
   var audio = null;    // AudioContext – erst beim ersten Klang oder Antippen
   var engine = null;
   var touched = false; // gab es schon eine Berührung? Vorher lässt der Browser keinen Ton zu
@@ -917,6 +976,66 @@
     window.addEventListener(type, wakeOnTouch, { capture: true, passive: true });
   });
 
+  // Darf der Browser schon Ton abspielen? Nach einer Berührung immer, vorher
+  // nur mit Erlaubnis für Autoplay – etwa als installierte App auf Android oder
+  // am PC, am iPhone nie. Geprüft wird mit 12 ms Stille über ein Audio-Element:
+  // Gelingt play(), ist Ton erlaubt. So entsteht kein AudioContext auf
+  // Verdacht, den der Browser mit einer Warnung anhalten würde.
+  var SILENCE = 'data:audio/wav;base64,UklGRogAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YWQAAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA';
+  var autoplay = null;
+  function audible() {
+    if (touched) return Promise.resolve(true);
+    if (!autoplay) {
+      autoplay = new Promise(function (res) {
+        try {
+          if (navigator.getAutoplayPolicy) {
+            res(navigator.getAutoplayPolicy('audiocontext') === 'allowed');
+            return;
+          }
+          var probe = new Audio(SILENCE);
+          var p = probe.play();
+          if (!p || !p.then) {
+            res(false);
+            return;
+          }
+          p.then(function () { probe.pause(); res(true); }, function () { res(false); });
+        } catch (e) {
+          res(false);
+        }
+      });
+    }
+    return autoplay.then(function (ok) { return ok || touched; });
+  }
+
+  // Startklang für splash(): vorbereitet, bevor sich das Icon bewegt – der
+  // Aufbau soll nicht in das erste Bild der Bewegung fallen. Er hat einen
+  // eigenen Ausgang, damit Überspringen ihn ausblenden kann. Ob Ton erlaubt
+  // ist, klärt vorher audible().
+  function startTune() {
+    if (!soundOn()) return null;
+    try {
+      wakeAudio();
+      var bus = audio.createGain();
+      bus.connect(audio.destination);
+      var chain = soundEngine(audio, bus);
+      return {
+        play: function () {
+          var start = audio.currentTime + 0.02;
+          quietAt = Math.max(quietAt, start + chain.play('start', start));
+          sleepLater(quietAt - audio.currentTime + 3);
+        },
+        fade: function () {
+          bus.gain.setTargetAtTime(0, audio.currentTime, 0.02);
+          setTimeout(function () { bus.disconnect(); }, 400);
+          sleepLater(Math.max(0, quietAt - audio.currentTime) + 3);
+        },
+      };
+    } catch (e) {
+      if (window.console) console.warn('Klang konnte nicht abgespielt werden:', e);
+      return null;
+    }
+  }
+
   var api = {
     version: '1.0.0',
     reducedMotion: reducedMotion,
@@ -937,6 +1056,7 @@
     splash: splash,
     sound: sound,
     sounds: SOUND_NAMES,
+    audible: audible,
     soundOn: soundOn,
     soundSupported: soundSupported,
     soundEngine: soundEngine,

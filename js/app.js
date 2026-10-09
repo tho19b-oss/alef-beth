@@ -8,7 +8,8 @@ import { dueIds } from './srs.js';
 import { applyTheme, applyMotion, applySound } from './theme.js';
 import { replay, splash } from './ui.js';
 import { syncBadges } from './badges.js';
-import { stopSpeech } from './audio.js';
+import { speak, stopSpeech } from './audio.js';
+import { getItem, ttsText } from '../data/curriculum.js';
 
 const app = document.getElementById('app');
 const nav = document.getElementById('bottomnav');
@@ -118,6 +119,9 @@ window.addEventListener('hebrewvoiceready', () => {
 // dann sinkt es ein und dockt als Marke in der Kopfleiste an, während der
 // erste Screen hereingleitet. Ob er läuft, hat schon der Kopf von index.html
 // entschieden (html.is-splash: einmal pro Sitzung, nie bei weniger Bewegung).
+// Dazu klingt der Startklang, und nach dem Andocken sagt die Stimme
+// „Schalom“ – beides nur, wo der Browser schon vor dem ersten Antippen Ton
+// erlaubt (installierte App auf Android oder am PC; am iPhone bleibt es still).
 function startSplash() {
   const el = document.querySelector('.ab-splash');
   if (!el) return;
@@ -126,13 +130,23 @@ function startSplash() {
     el.remove();
     return;
   }
+  const hash = location.hash;
+  const mark = app.querySelector('.ab-topbar .ab-brand__mark');
   splash(el, {
-    to: app.querySelector('.ab-topbar .ab-brand__mark'),
+    to: mark,
+    sound: true,
     reveal() {
       app.classList.add('is-revealing');
       nav.classList.add('is-revealing');
     },
-  }).then(() => root.classList.remove('is-splash'));
+  }).then(({ played, audible }) => {
+    root.classList.remove('is-splash');
+    // Begrüßt wird nur auf Screens mit Kopfleiste (nicht mitten in einer
+    // Lektion) und nur, solange niemand weitergetippt hat.
+    if (played && audible && mark) {
+      setTimeout(() => { if (location.hash === hash) speak(ttsText(getItem('w-shalom'))); }, 110);
+    }
+  });
 }
 
 applyTheme();

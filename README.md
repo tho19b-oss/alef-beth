@@ -44,7 +44,11 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
   am iPhone gilt der Stummschalter
 - **Startbildschirm:** Beim Öffnen sinkt das App-Icon ein, federt zurück und
   dockt als Marke in der Kopfleiste an, während die Startseite hereingleitet –
-  einmal pro Sitzung, Antippen überspringt, bei reduzierter Bewegung entfällt er
+  einmal pro Sitzung, Antippen überspringt, bei reduzierter Bewegung entfällt er.
+  Dazu klingt ein kurzes Glockenspiel-Motiv, und nach dem Andocken sagt die
+  Stimme „Schalom“ – aber nur, wo der Browser schon vor dem ersten Antippen Ton
+  erlaubt (als installierte App auf Android oder am PC). Am iPhone bleibt der
+  Start still
 - **Tagesziel:** ein Ring auf der Startseite füllt sich mit den XP des Tages
   (50, 100 oder 200 XP, einstellbar unter *Mehr*). Ist er voll, gibt es
   +20 XP zum Abholen – wer das vergisst, bekommt den Bonus am nächsten Tag

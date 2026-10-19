@@ -1,7 +1,7 @@
 // Service Worker: App-Shell vorab cachen (cache-first), damit die App offline läuft.
 // Bei Änderungen VERSION hochzählen – alte Caches werden beim Aktivieren gelöscht.
 
-const VERSION = 'v32';
+const VERSION = 'v33';
 const CACHE = `alefbeth-${VERSION}`;
 
 const ASSETS = [
@@ -41,6 +41,7 @@ const ASSETS = [
   'data/curriculum.js',
   'data/giur.js',
   'data/giur/kaschrut.js',
+  'data/giur/schabbat.js',
 ];
 
 // Die hebräische Stimme: Liste und Clips (audio/he/). Fehlt etwas, kommt das

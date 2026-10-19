@@ -60,8 +60,8 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
   des Prüfungskatalogs fürs Beit Din in 18 Teilen. Pro Teil gibt es die Fragen zum
   Nachlesen und eine Karten-Runde: Frage lesen, laut antworten, aufdecken,
   „Gewusst“ oder „Nochmal“. Die Karten laufen durch dieselbe Wiederholungsleiter
-  wie die Hebräisch-Karten, aber getrennt davon. Aufbereitet ist bisher Teil 1
-  (Kaschrut); Antworten beginnen als **Entwurf**, den ein Rabbiner oder Lehrer prüfen
+  wie die Hebräisch-Karten, aber getrennt davon. Aufbereitet sind bisher Teil 1
+  (Kaschrut) und Teil 2 (Schabbat); Antworten beginnen als **Entwurf**, den ein Rabbiner oder Lehrer prüfen
   muss, und tragen das sichtbar als Status („Entwurf“ oder „Geprüft“). Bei jeder
   Antwort lässt sich festhalten,
   ob sie stimmt, und eine Anmerkung notieren; den Stand gibt man pro Teil als Text
@@ -165,7 +165,7 @@ dort unter `SOUNDS` dazu – in D-Dur-Pentatonik (MIDI-Nummern), damit sich
 Einen weiteren Giur-Teil aufnehmen: `data/giur/<teil>.js` nach dem Muster von
 `kaschrut.js` anlegen, in `data/giur.js` importieren und beim Teil unter `fragen`
 eintragen, dazu die Datei in `sw.js` (`ASSETS`) und `VERSION` hochzählen. Fragen-IDs
-(`kas-01` …) nie umnummerieren, daran hängt der Lernstand. Ist eine Antwort von einem
+(`kas-01`, `schab-01` …) nie umnummerieren, daran hängt der Lernstand. Ist eine Antwort von einem
 Rabbiner geprüft, kommt `status: 'geprueft'` dazu. Den Prüfbogen erzeugt
 `node tools/giur-pruefbogen.mjs <teil>`: eine HTML-Datei, in der man jede Antwort
 beurteilt (stimmt, mit Änderung, falsch) und kommentiert. Der Browser speichert von

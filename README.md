@@ -62,7 +62,9 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
   „Gewusst“ oder „Nochmal“. Die Karten laufen durch dieselbe Wiederholungsleiter
   wie die Hebräisch-Karten, aber getrennt davon. Aufbereitet ist bisher Teil 1
   (Kaschrut); alle Antworten sind **Entwürfe**, die ein Rabbiner oder Lehrer prüfen
-  muss, und tragen das sichtbar als Status
+  muss, und tragen das sichtbar als Status. Bei jeder Antwort lässt sich festhalten,
+  ob sie stimmt, und eine Anmerkung notieren; den Stand gibt man pro Teil als Text
+  oder Datei weiter (im selben Format wie der Prüfbogen aus `tools/`)
 - **Nachschlagen:** Alphabet- und Nikud-Tabelle mit Sprachausgabe
 - **Am Rechner:** Tasten 1–4 wählen eine Antwort, Enter geht weiter
 - **Version sichtbar:** Unter *Mehr → Version* steht die installierte Fassung,
@@ -138,6 +140,7 @@ Vanilla HTML/CSS/JS ohne Build-Schritt und ohne Abhängigkeiten.
 | `data/giur.js` | die 18 Teile des Prüfungskatalogs (Fragenzahl, Beschreibung) |
 | `data/giur/<teil>.js` | Fragen und Antwort-Entwürfe eines Teils (Aufbau: Kopf von `kaschrut.js`) |
 | `js/giur.js` | Giur-Bereich: Teile-Liste, Fragenliste, Karten-Runde |
+| `js/giur-pruefung.js` | Prüfung der Antworten: Beurteilung, Notiz, Weitergabe, Laden |
 | `tools/giur-pruefbogen.mjs` | erzeugt aus einem Teil einen ausfüllbaren Prüfbogen (HTML) für den Rabbiner |
 | `js/lesson.js` | Lektions-Player & Übungs-Warteschlangen |
 | `js/exercises.js` | Übungstypen |

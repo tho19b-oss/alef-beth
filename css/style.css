@@ -199,3 +199,48 @@ html:not(.is-splash) .ab-splash { display: none; }
   background: linear-gradient(to top, var(--paper) 75%, transparent);
 }
 .giur-bar__pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+
+/* Prüfung der Antwort-Entwürfe (js/giur-pruefung.js) */
+.giur-review { display: grid; gap: var(--space-2); padding-top: var(--space-3); border-top: 2px solid var(--line); }
+.giur-review__label { margin: 0; color: var(--ink-soft); }
+.giur-choices { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.giur-choice {
+  flex: 1 1 auto;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 2px solid var(--line);
+  border-radius: var(--radius-full);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background-color var(--dur-quick) var(--ease-out), border-color var(--dur-quick) var(--ease-out);
+}
+.giur-choice[aria-pressed="true"].giur-choice--stimmt { background: var(--minze-soft); border-color: var(--minze); color: var(--minze-ink); }
+.giur-choice[aria-pressed="true"].giur-choice--aenderung { background: var(--gold-soft); border-color: var(--gold); color: var(--gold-ink); }
+.giur-choice[aria-pressed="true"].giur-choice--falsch { background: var(--koralle-soft); border-color: var(--koralle); color: var(--koralle-ink); }
+.giur-note { display: block; width: 100%; min-height: 72px; padding: var(--space-2) var(--space-3); resize: vertical; font-family: inherit; }
+
+/* Fragenliste: die Nummer zeigt, wie die Antwort beurteilt wurde */
+.giur-q[data-urteil="stimmt"] .giur-q__nr { background: var(--minze-soft); color: var(--minze-ink); }
+.giur-q[data-urteil="aenderung"] .giur-q__nr { background: var(--gold-soft); color: var(--gold-ink); }
+.giur-q[data-urteil="falsch"] .giur-q__nr { background: var(--koralle-soft); color: var(--koralle-ink); }
+
+/* Bereich „Prüfung weitergeben“ */
+.giur-export { padding: 0; }
+.giur-export > summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap-target);
+  padding: var(--space-3) var(--space-5);
+  cursor: pointer;
+}
+.giur-export > summary::-webkit-details-marker { display: none; }
+.giur-export__count { flex: 1; text-align: right; color: var(--ink-soft); }
+.giur-export .giur-q__chev { padding-top: 0; }
+.giur-export[open] .giur-q__chev { transform: rotate(90deg); }
+.giur-export__body { display: grid; gap: var(--space-3); padding: 0 var(--space-5) var(--space-5); }
+.giur-export__body p { margin: 0; color: var(--ink-soft); }
+.giur-field { display: grid; gap: var(--space-1); color: var(--ink-soft); }
+.giur-export__btns { display: grid; gap: var(--space-2); }

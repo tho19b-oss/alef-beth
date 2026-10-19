@@ -9,6 +9,9 @@ import { KASCHRUT } from './giur/kaschrut.js';
 import { SCHABBAT } from './giur/schabbat.js';
 import { FESTE } from './giur/feste.js';
 import { JAMIM_NORAIM } from './giur/jamim-noraim.js';
+import { SUKKOT } from './giur/sukkot.js';
+import { CHANUKA } from './giur/chanuka.js';
+import { PURIM } from './giur/purim.js';
 
 // geplant = Zahl der Fragen im Katalog. Teile ohne `fragen` sind noch nicht
 // aufbereitet und erscheinen in der Liste als „kommt später“.
@@ -17,9 +20,9 @@ const TEILE_ROH = [
   { id: 'schabbat', title: 'Schabbat', desc: 'Kerzen, Kiddusch, Verbote und Hawdala', geplant: 87, fragen: SCHABBAT },
   { id: 'feste', title: 'Feste (allgemein)', desc: 'Was an allen Feiertagen gilt', geplant: 18, fragen: FESTE },
   { id: 'jamim-noraim', title: 'Jamim Nora-im', desc: 'Rosch Haschana und Jom Kippur', geplant: 29, fragen: JAMIM_NORAIM },
-  { id: 'sukkot', title: 'Sukkot', desc: 'Sukka, Feststrauß, Simchat Tora', geplant: 17 },
-  { id: 'chanuka', title: 'Chanuka', desc: 'Lichterfest', geplant: 14 },
-  { id: 'purim', title: 'Purim', desc: 'Megilla, Mischloach Manot, Seudat Purim', geplant: 10 },
+  { id: 'sukkot', title: 'Sukkot', desc: 'Sukka, Feststrauß, Simchat Tora', geplant: 17, fragen: SUKKOT },
+  { id: 'chanuka', title: 'Chanuka', desc: 'Lichterfest', geplant: 14, fragen: CHANUKA },
+  { id: 'purim', title: 'Purim', desc: 'Megilla, Mischloach Manot, Seudat Purim', geplant: 10, fragen: PURIM },
   { id: 'pessach', title: 'Pessach', desc: 'Seder, Chamez, Omer', geplant: 47 },
   { id: 'schawuot', title: 'Schawuot', desc: 'Zehn Gebote und Gebräuche', geplant: 11 },
   { id: 'kalender', title: 'Der jüdische Kalender', desc: 'Monate, Feste, Fastentage', geplant: 36 },

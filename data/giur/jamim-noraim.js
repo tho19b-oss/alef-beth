@@ -215,7 +215,7 @@ export const JAMIM_NORAIM = [
     type: 'fakt',
     kurz: 'Drei: Teki’a (ein langer, gerader Ton), Schewarim (drei mittlere, gebrochene Töne) und Terua (neun oder mehr kurze Stakkato-Töne). Den Schluss bildet eine besonders lange Teki’a Gedola.',
     punkte: [
-      'Weil unklar ist, wie die „Terua“ der Tora klang (Seufzen oder Weinen), bläst man alle Varianten: Teki’a–Schewarim-Terua–Teki’a, Teki’a–Schewarim–Teki’a, Teki’a–Terua–Teki’a.',
+      'Weil unklar ist, wie die „Terua“ der Tora klang (Seufzen oder Weinen), bläst man alle Varianten: Teki’a–Schewarim–Terua–Teki’a, Teki’a–Schewarim–Teki’a, Teki’a–Terua–Teki’a.',
       'Insgesamt hört man an jedem Tag 100 Töne.',
       'Der Ausrufer heißt Makri, der Bläser Ba’al Teki’a.',
     ],

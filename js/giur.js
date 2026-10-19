@@ -122,8 +122,8 @@ export function renderGiur(host) {
       ${modeSwitchHtml('giur')}
 
       <div class="ab-hint ab-hint--info">${icon('book')}<p class="text-body"><b>Fragen fürs Beit Din.</b>
-        Alle Antworten sind Entwürfe und müssen noch von deinem Rabbiner oder Lehrer geprüft werden –
-        maßgeblich ist, was dort gelehrt wird.</p></div>
+        Antworten mit dem Status „Entwurf“ sind noch nicht von deinem Rabbiner oder Lehrer geprüft –
+        maßgeblich ist immer, was dort gelehrt wird.</p></div>
 
       <section class="home-meter ab-meter" aria-label="Fortschritt Giur-Wissen">
         <div class="ab-meter__head">

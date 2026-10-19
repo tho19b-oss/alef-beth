@@ -61,8 +61,9 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
   Nachlesen und eine Karten-Runde: Frage lesen, laut antworten, aufdecken,
   „Gewusst“ oder „Nochmal“. Die Karten laufen durch dieselbe Wiederholungsleiter
   wie die Hebräisch-Karten, aber getrennt davon. Aufbereitet ist bisher Teil 1
-  (Kaschrut); alle Antworten sind **Entwürfe**, die ein Rabbiner oder Lehrer prüfen
-  muss, und tragen das sichtbar als Status. Bei jeder Antwort lässt sich festhalten,
+  (Kaschrut); Antworten beginnen als **Entwurf**, den ein Rabbiner oder Lehrer prüfen
+  muss, und tragen das sichtbar als Status („Entwurf“ oder „Geprüft“). Bei jeder
+  Antwort lässt sich festhalten,
   ob sie stimmt, und eine Anmerkung notieren; den Stand gibt man pro Teil als Text
   oder Datei weiter (im selben Format wie der Prüfbogen aus `tools/`)
 - **Nachschlagen:** Alphabet- und Nikud-Tabelle mit Sprachausgabe

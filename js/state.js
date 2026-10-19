@@ -3,6 +3,7 @@
 
 import { todayStr } from './util.js';
 import { hasItem } from '../data/curriculum.js';
+import { hasQuestion } from '../data/giur.js';
 
 const KEY = 'alefbeth-state-v1';
 const DAY = 86400000;
@@ -15,6 +16,7 @@ const DEFAULTS = {
   streak: { count: 0, lastDay: null },
   lessons: {},   // lessonId -> { score, completedAt }
   srs: {},       // itemId  -> { streak, due, seen }
+  giur: { cards: {} }, // Giur-Wissen: Frage-ID -> { streak, due, seen }, getrennt von srs
   daily: { day: null, xp: 0, claimed: false }, // XP des heutigen Tages fürs Tagesziel
   history: {},   // YYYY-MM-DD -> XP an diesem Tag (letzte Wochen, für die Wochenansicht)
   stats: { listenCorrect: 0, bestStreak: 0 },
@@ -36,6 +38,15 @@ function pruneSrs(srs) {
   const clean = {};
   for (const [id, entry] of Object.entries(srs || {})) {
     if (hasItem(id) && entry && typeof entry.due === 'number') clean[id] = entry;
+  }
+  return clean;
+}
+
+// Dasselbe für Giur-Karten: Fragen, die es nicht mehr gibt, fliegen raus.
+function pruneCards(cards) {
+  const clean = {};
+  for (const [id, entry] of Object.entries(cards || {})) {
+    if (hasQuestion(id) && entry && typeof entry.due === 'number') clean[id] = entry;
   }
   return clean;
 }
@@ -64,6 +75,7 @@ function load() {
         },
         lessons: s.lessons || {},
         srs: pruneSrs(s.srs),
+        giur: { cards: pruneCards(s.giur?.cards) },
       };
     }
   } catch (e) {

@@ -1,7 +1,7 @@
 // Service Worker: App-Shell vorab cachen (cache-first), damit die App offline läuft.
 // Bei Änderungen VERSION hochzählen – alte Caches werden beim Aktivieren gelöscht.
 
-const VERSION = 'v23';
+const VERSION = 'v24';
 const CACHE = `alefbeth-${VERSION}`;
 
 const ASSETS = [
@@ -33,10 +33,13 @@ const ASSETS = [
   'js/exercises.js',
   'js/lesson.js',
   'js/screens.js',
+  'js/giur.js',
   'data/letters.js',
   'data/nikud.js',
   'data/words.js',
   'data/curriculum.js',
+  'data/giur.js',
+  'data/giur/kaschrut.js',
 ];
 
 self.addEventListener('install', (event) => {

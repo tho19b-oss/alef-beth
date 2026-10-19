@@ -56,6 +56,13 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
 - **Erfolge:** eigener Tab mit der Serien-Woche, sieben Abzeichen (vom ersten
   Buchstaben bis zur ersten Bracha, gesperrte zeigen den Weg dorthin) und den
   Gesamtzahlen. Ein neues Abzeichen erscheint direkt im Abschluss der Lektion
+- **Giur-Wissen:** Umschalter oben auf der Lernen-Seite. Dahinter stehen die Fragen
+  des Prüfungskatalogs fürs Beit Din in 18 Teilen. Pro Teil gibt es die Fragen zum
+  Nachlesen und eine Karten-Runde: Frage lesen, laut antworten, aufdecken,
+  „Gewusst“ oder „Nochmal“. Die Karten laufen durch dieselbe Wiederholungsleiter
+  wie die Hebräisch-Karten, aber getrennt davon. Aufbereitet ist bisher Teil 1
+  (Kaschrut); alle Antworten sind **Entwürfe**, die ein Rabbiner oder Lehrer prüfen
+  muss, und tragen das sichtbar als Status
 - **Nachschlagen:** Alphabet- und Nikud-Tabelle mit Sprachausgabe
 - **Am Rechner:** Tasten 1–4 wählen eine Antwort, Enter geht weiter
 - **Version sichtbar:** Unter *Mehr → Version* steht die installierte Fassung,
@@ -128,6 +135,10 @@ Vanilla HTML/CSS/JS ohne Build-Schritt und ohne Abhängigkeiten.
 | `data/nikud.js` | Vokalzeichen & Lesesilben |
 | `data/words.js` | Wortschatz (Hebräisch, Umschrift, Bedeutung) |
 | `data/curriculum.js` | Einheiten & Lektionen, Item-Registry |
+| `data/giur.js` | die 18 Teile des Prüfungskatalogs (Fragenzahl, Beschreibung) |
+| `data/giur/<teil>.js` | Fragen und Antwort-Entwürfe eines Teils (Aufbau: Kopf von `kaschrut.js`) |
+| `js/giur.js` | Giur-Bereich: Teile-Liste, Fragenliste, Karten-Runde |
+| `tools/giur-pruefbogen.mjs` | erzeugt aus einem Teil einen druckfähigen Prüfbogen für den Rabbiner |
 | `js/lesson.js` | Lektions-Player & Übungs-Warteschlangen |
 | `js/exercises.js` | Übungstypen |
 | `js/srs.js` | Spaced-Repetition-Logik |
@@ -146,6 +157,13 @@ dort unter `SOUNDS` dazu – in D-Dur-Pentatonik (MIDI-Nummern), damit sich
 überlappende Klänge nicht beißen – und wird an der passenden Stelle mit
 `sound('name')` aus `js/ui.js` aufgerufen. Der Schalter „Soundeffekte“ setzt
 `html[data-sound="off"]` (`applySound()` in `js/theme.js`).
+
+Einen weiteren Giur-Teil aufnehmen: `data/giur/<teil>.js` nach dem Muster von
+`kaschrut.js` anlegen, in `data/giur.js` importieren und beim Teil unter `fragen`
+eintragen, dazu die Datei in `sw.js` (`ASSETS`) und `VERSION` hochzählen. Fragen-IDs
+(`kas-01` …) nie umnummerieren, daran hängt der Lernstand. Ist eine Antwort von einem
+Rabbiner geprüft, kommt `status: 'geprueft'` dazu. Den Prüfbogen erzeugt
+`node tools/giur-pruefbogen.mjs <teil>` (als PDF: im Browser drucken).
 
 Neue Wörter hinzufügen: Eintrag in `data/words.js` ergänzen und die ID in
 einer Lektion in `data/curriculum.js` eintragen – fertig. Seinen Clip bekommt

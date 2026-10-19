@@ -98,3 +98,104 @@ html:not(.is-splash) .ab-splash { display: none; }
 .stats__lessons .ab-icon { color: var(--gold-ink); }
 .ab-version.is-muted { color: var(--ink-soft); font-weight: 500; }
 .about { display: grid; gap: var(--space-3); padding: var(--space-5); }
+
+/* ===== Giur-Wissen (js/giur.js) ===== */
+.giur { display: grid; gap: var(--space-4); }
+
+/* Umschalter Hebräisch lesen | Giur-Wissen, oben auf der Lernen-Seite */
+.modeswitch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border-radius: var(--radius-full);
+  background: var(--well);
+}
+.modeswitch a {
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  border-radius: var(--radius-full);
+  color: var(--ink-soft);
+  transition: background-color var(--dur-quick) var(--ease-out), color var(--dur-quick) var(--ease-out);
+}
+.modeswitch a[aria-current="page"] { background: var(--card); color: var(--ink); box-shadow: var(--shadow-card); }
+
+/* Liste der Teile (Zeilen: Komponente ab-alpha) */
+.giur-teile { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+.giur-soon { --_d: 0px; border-style: dashed; background: var(--well); color: var(--ink-soft); }
+.giur-soon .ab-alpha__glyph { background: var(--paper); }
+.giur-chevron { flex: none; color: var(--ink-soft); }
+.giur-chevron .ab-icon { width: var(--icon-sm); height: var(--icon-sm); }
+.giur-meter__note { margin: var(--space-2) 0 0; color: var(--ink-soft); }
+
+/* Ein Teil */
+.giur-back { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--tap-target); width: fit-content; color: var(--tekhelet-ink); }
+.giur-back .ab-icon { width: var(--icon-sm); height: var(--icon-sm); transform: scaleX(-1); }
+.giur-desc { margin: 0; color: var(--ink-soft); }
+.giur-of { color: var(--ink-soft); }
+.giur-card-progress { width: 100%; flex: none; }
+
+.giur-list { display: grid; gap: var(--space-3); }
+.giur-q { border: 2px solid var(--line); border-radius: var(--radius-lg); background: var(--card); }
+.giur-q > summary {
+  list-style: none;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-height: var(--tap-target);
+  padding: var(--space-3);
+  cursor: pointer;
+}
+.giur-q > summary::-webkit-details-marker { display: none; }
+.giur-q__nr {
+  flex: none;
+  min-width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-full);
+  background: var(--well);
+  color: var(--ink-soft);
+}
+.giur-q__text { flex: 1; min-width: 0; padding-top: 4px; }
+.giur-q__chev { flex: none; padding-top: 7px; color: var(--ink-soft); transition: transform var(--dur-quick) var(--ease-out); }
+.giur-q__chev .ab-icon { width: var(--icon-sm); height: var(--icon-sm); }
+.giur-q[open] .giur-q__chev { transform: rotate(90deg); }
+.giur-q__body { display: grid; gap: var(--space-3); padding: var(--space-1) var(--space-4) var(--space-4); }
+
+/* Etiketten: Fragetyp, Status (Entwurf / Geprüft), Lernstufe */
+.giur-tags { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.giur-tags .ab-pips { margin-left: auto; }
+.giur-type, .giur-status { padding: 4px 12px; border-radius: var(--radius-full); }
+.giur-type { background: var(--well); color: var(--ink-soft); }
+.giur-status--entwurf { background: var(--gold-soft); color: var(--gold-ink); }
+.giur-status--geprueft { background: var(--minze-soft); color: var(--minze-ink); }
+
+/* Antwort: Kernantwort, Merkpunkte, Hebräisch, Quelle, Hinweis */
+.giur-answer { display: grid; gap: var(--space-3); }
+.giur-answer__label { margin: 0; color: var(--granat-ink); }
+.giur-answer__kurz { margin: 0; }
+.giur-points { margin: 0; padding-left: var(--space-5); display: grid; gap: var(--space-2); }
+.giur-sub { margin: 0; padding-left: var(--space-6); }
+.giur-hebrew { display: grid; gap: var(--space-1); }
+.giur-hebrew .ab-showcase { margin: 0; }
+.giur-hebrew__label, .giur-hebrew__translit, .giur-hebrew__de,
+.giur-source, .giur-draftnote { margin: 0; color: var(--ink-soft); }
+
+/* Karten-Runde: Frage, aufdecken, bewerten – die Knöpfe bleiben unten stehen */
+.giur-card { display: grid; gap: var(--space-3); }
+.giur-card__q { margin: 0; }
+.giur-card__prompt { margin: 0; color: var(--ink-soft); }
+.giur-card__answer { display: grid; gap: var(--space-3); padding-top: var(--space-4); border-top: 2px solid var(--line); outline: none; }
+.giur-card__answer[hidden] { display: none; }
+.giur-again { margin: 0; color: var(--gold-ink); }
+.giur-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin-top: var(--space-4);
+  padding: var(--space-3) 0 calc(var(--space-2) + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--paper) 75%, transparent);
+}
+.giur-bar__pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }

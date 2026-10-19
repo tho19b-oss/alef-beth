@@ -3,6 +3,7 @@
 import { state } from './state.js';
 import { renderHome, renderReview, renderAlphabet, renderAchievements, renderSettings } from './screens.js';
 import { runLesson, runReview, runFreePractice } from './lesson.js';
+import { renderGiur, renderGiurTeil, runGiurRound } from './giur.js';
 import { scheduleReminder } from './notify.js';
 import { dueIds } from './srs.js';
 import { applyTheme, applyMotion, applySound } from './theme.js';
@@ -23,7 +24,7 @@ function navRoute(hash) {
   if (hash === '#/alphabet') return 'alphabet';
   if (hash === '#/erfolge') return 'erfolge';
   if (hash === '#/settings') return 'settings';
-  return 'home'; // auch Lektionen gehören zum Lernpfad
+  return 'home'; // auch Lektionen und das Giur-Wissen gehören zum Lernen-Tab
 }
 
 function updateNav(hash) {
@@ -46,9 +47,13 @@ function updateNav(hash) {
   if (changed && due > 0) replay(badge, 'is-bump');
 }
 
+// #/giur/<teil>/run: eine Karten-Runde (läuft wie eine Lektion ohne Tab-Leiste)
+const isGiurRun = (hash) => hash.startsWith('#/giur/') && hash.endsWith('/run');
+
 function route() {
   const hash = location.hash || '#/';
-  const inLesson = hash.startsWith('#/lesson/') || hash === '#/review/run' || hash === '#/review/practice';
+  const inLesson = hash.startsWith('#/lesson/') || hash === '#/review/run' || hash === '#/review/practice'
+    || isGiurRun(hash);
   document.body.classList.toggle('in-lesson', inLesson);
   document.body.classList.remove('fb-open');
   // Das Hereingleiten nach dem Startbildschirm gilt nur dem ersten Screen.
@@ -60,6 +65,12 @@ function route() {
 
   if (hash.startsWith('#/lesson/')) {
     runLesson(hash.slice('#/lesson/'.length), app);
+  } else if (isGiurRun(hash)) {
+    runGiurRound(hash.split('/')[2], app);
+  } else if (hash.startsWith('#/giur/')) {
+    renderGiurTeil(app, hash.split('/')[2]);
+  } else if (hash === '#/giur') {
+    renderGiur(app);
   } else if (hash === '#/review/run') {
     runReview(app);
   } else if (hash === '#/review/practice') {

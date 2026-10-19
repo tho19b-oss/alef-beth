@@ -27,7 +27,7 @@ const num = (n) => n.toLocaleString('de-DE');
 // weekToday: an welchem Tag der heutige Punkt der Serien-Woche schon gefeiert wurde.
 const shown = { streak: null, xp: null, daily: null, weekToday: null };
 
-function topbarHtml(streak) {
+export function topbarHtml(streak) {
   // Heute schon gelernt: die Flamme flackert. Serie 0: graue Flamme.
   const flame = streak === 0 ? ' is-cold' : state.streak.lastDay === todayStr() ? ' is-lit' : '';
   const start = (key, value) => (shown[key] !== null && shown[key] < value ? shown[key] : value);
@@ -41,8 +41,16 @@ function topbarHtml(streak) {
     </header>`;
 }
 
+// Umschalter zwischen den zwei Lernbereichen der Startseite: Hebräisch lesen
+// (Lernpfad) und Giur-Wissen (Fragen fürs Beit Din, js/giur.js).
+export function modeSwitchHtml(active) {
+  const link = (key, href, label) =>
+    `<a class="text-label" href="${href}"${active === key ? ' aria-current="page"' : ''}>${label}</a>`;
+  return `<nav class="modeswitch" aria-label="Lernbereich">${link('hebrew', '#/', 'Hebräisch lesen')}${link('giur', '#/giur', 'Giur-Wissen')}</nav>`;
+}
+
 // Nur Zuwachs wird gefeiert – eine gerissene Serie springt kommentarlos zurück.
-function bumpCounters(host, streak) {
+export function bumpCounters(host, streak) {
   const values = { streak, xp: state.xp };
   for (const key of Object.keys(values)) {
     const before = shown[key];
@@ -179,6 +187,7 @@ export function renderHome(host) {
   host.innerHTML = `
     <div class="home">
       ${topbarHtml(streak)}
+      ${modeSwitchHtml('hebrew')}
 
       ${todayHtml(dailyFrom, daily, goal)}
       ${canClaimBonus() ? bonusHtml(crossing) : ''}
@@ -382,8 +391,7 @@ function formatDue(ts) {
 // Wie fest sitzt ein Zeichen? Eine Wiederholungsstufe je Punkt (1 → 3 → 7 →
 // 14 → 30 → 90 Tage, siehe srs.js); ein Fehler setzt zurück.
 const LEVELS = 6;
-function pips(id) {
-  const entry = state.srs[id];
+export function pipsHtml(entry) {
   const level = entry ? Math.min(entry.streak, LEVELS) : 0;
   const label = entry ? `Stufe ${level} von ${LEVELS}` : 'noch nicht gelernt';
   let html = '';
@@ -399,7 +407,7 @@ export function renderAlphabet(host) {
     <${tag} class="ab-alpha"${canSpeak ? ` type="button" data-tts="${tts}" aria-label="${name} anhören"` : ''}>
       <span class="ab-alpha__glyph">${he(glyph, 'glyph-md')}</span>
       <span class="ab-alpha__text"><span class="text-strong">${name}</span><span class="ab-alpha__sub text-caption">${sub}</span></span>
-      ${pips(id)}
+      ${pipsHtml(state.srs[id])}
       ${canSpeak ? `<span class="ab-alpha__spk">${icon('speaker')}</span>` : ''}
     </${tag}>`;
 

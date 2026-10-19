@@ -543,6 +543,9 @@ function celebrationText(mode, accuracy) {
     return accuracy >= 90 ? 'Alles wieder frisch im Gedächtnis.' : 'Was noch wackelt, kommt bald noch einmal.';
   }
   if (mode === 'practice') return 'Freies Üben verschiebt keine Termine – es hilft nur.';
+  if (mode === 'giur') {
+    return accuracy >= 90 ? 'Stark – das sitzt.' : 'Was noch wackelt, kommt bald wieder dran.';
+  }
   if (accuracy === 100) return 'Fehlerfrei – alles auf Anhieb richtig!';
   if (accuracy >= 90) return 'Stark – fast alles auf Anhieb richtig.';
   if (accuracy >= 60) return 'Gut gemacht! Was noch wackelt, kommt bald zur Wiederholung.';
@@ -562,9 +565,9 @@ function heroHtml(opts, badges) {
   return `<div class="ab-celebrate__trophy">${icon(opts.mode === 'lesson' ? 'crown' : 'trophy')}</div>`;
 }
 
-function renderCelebration(host, { opts, accuracy, gained, streakBefore, streak, exitHash, badges = [] }) {
+export function renderCelebration(host, { opts, accuracy, gained, streakBefore, streak, exitHash, badges = [] }) {
   const done = opts.mode === 'lesson' ? 'Lektion geschafft!'
-    : opts.mode === 'practice' ? 'Runde geschafft!'
+    : opts.mode === 'practice' || opts.mode === 'giur' ? 'Runde geschafft!'
     : 'Wiederholung geschafft!';
   const title = !badges.length ? done
     : badges.length === 1 ? 'Neues Abzeichen!' : `${badges.length} neue Abzeichen!`;

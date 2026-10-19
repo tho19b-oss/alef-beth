@@ -7,13 +7,14 @@
 
 import { KASCHRUT } from './giur/kaschrut.js';
 import { SCHABBAT } from './giur/schabbat.js';
+import { FESTE } from './giur/feste.js';
 
 // geplant = Zahl der Fragen im Katalog. Teile ohne `fragen` sind noch nicht
 // aufbereitet und erscheinen in der Liste als „kommt später“.
 const TEILE_ROH = [
   { id: 'kaschrut', title: 'Kaschrut', desc: 'Speisegesetze: erlaubte Tiere, Schlachten, Milch und Fleisch', geplant: 43, fragen: KASCHRUT },
   { id: 'schabbat', title: 'Schabbat', desc: 'Kerzen, Kiddusch, Verbote und Hawdala', geplant: 87, fragen: SCHABBAT },
-  { id: 'feste', title: 'Feste (allgemein)', desc: 'Was an allen Feiertagen gilt', geplant: 18 },
+  { id: 'feste', title: 'Feste (allgemein)', desc: 'Was an allen Feiertagen gilt', geplant: 18, fragen: FESTE },
   { id: 'jamim-noraim', title: 'Jamim Nora-im', desc: 'Rosch Haschana und Jom Kippur', geplant: 29 },
   { id: 'sukkot', title: 'Sukkot', desc: 'Sukka, Feststrauß, Simchat Tora', geplant: 17 },
   { id: 'chanuka', title: 'Chanuka', desc: 'Lichterfest', geplant: 14 },

@@ -12,6 +12,7 @@ import { JAMIM_NORAIM } from './giur/jamim-noraim.js';
 import { SUKKOT } from './giur/sukkot.js';
 import { CHANUKA } from './giur/chanuka.js';
 import { PURIM } from './giur/purim.js';
+import { PESSACH } from './giur/pessach.js';
 
 // geplant = Zahl der Fragen im Katalog. Teile ohne `fragen` sind noch nicht
 // aufbereitet und erscheinen in der Liste als „kommt später“.
@@ -23,7 +24,7 @@ const TEILE_ROH = [
   { id: 'sukkot', title: 'Sukkot', desc: 'Sukka, Feststrauß, Simchat Tora', geplant: 17, fragen: SUKKOT },
   { id: 'chanuka', title: 'Chanuka', desc: 'Lichterfest', geplant: 14, fragen: CHANUKA },
   { id: 'purim', title: 'Purim', desc: 'Megilla, Mischloach Manot, Seudat Purim', geplant: 10, fragen: PURIM },
-  { id: 'pessach', title: 'Pessach', desc: 'Seder, Chamez, Omer', geplant: 47 },
+  { id: 'pessach', title: 'Pessach', desc: 'Seder, Chamez, Omer', geplant: 47, fragen: PESSACH },
   { id: 'schawuot', title: 'Schawuot', desc: 'Zehn Gebote und Gebräuche', geplant: 11 },
   { id: 'kalender', title: 'Der jüdische Kalender', desc: 'Monate, Feste, Fastentage', geplant: 36 },
   { id: 'ethik', title: 'Ethik', desc: 'Begriffe und Grundfragen des Glaubens', geplant: 9, zusatz: 'dazu über 40 Begriffe' },

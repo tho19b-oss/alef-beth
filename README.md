@@ -138,7 +138,7 @@ Vanilla HTML/CSS/JS ohne Build-Schritt und ohne Abhängigkeiten.
 | `data/giur.js` | die 18 Teile des Prüfungskatalogs (Fragenzahl, Beschreibung) |
 | `data/giur/<teil>.js` | Fragen und Antwort-Entwürfe eines Teils (Aufbau: Kopf von `kaschrut.js`) |
 | `js/giur.js` | Giur-Bereich: Teile-Liste, Fragenliste, Karten-Runde |
-| `tools/giur-pruefbogen.mjs` | erzeugt aus einem Teil einen druckfähigen Prüfbogen für den Rabbiner |
+| `tools/giur-pruefbogen.mjs` | erzeugt aus einem Teil einen ausfüllbaren Prüfbogen (HTML) für den Rabbiner |
 | `js/lesson.js` | Lektions-Player & Übungs-Warteschlangen |
 | `js/exercises.js` | Übungstypen |
 | `js/srs.js` | Spaced-Repetition-Logik |
@@ -163,7 +163,10 @@ Einen weiteren Giur-Teil aufnehmen: `data/giur/<teil>.js` nach dem Muster von
 eintragen, dazu die Datei in `sw.js` (`ASSETS`) und `VERSION` hochzählen. Fragen-IDs
 (`kas-01` …) nie umnummerieren, daran hängt der Lernstand. Ist eine Antwort von einem
 Rabbiner geprüft, kommt `status: 'geprueft'` dazu. Den Prüfbogen erzeugt
-`node tools/giur-pruefbogen.mjs <teil>` (als PDF: im Browser drucken).
+`node tools/giur-pruefbogen.mjs <teil>`: eine HTML-Datei, in der man jede Antwort
+beurteilt (stimmt, mit Änderung, falsch) und kommentiert. Der Browser speichert von
+selbst; das Ergebnis lässt sich als Text kopieren oder als Datei speichern und
+wieder laden. Drucken als PDF geht aus dem Browser.
 
 Neue Wörter hinzufügen: Eintrag in `data/words.js` ergänzen und die ID in
 einer Lektion in `data/curriculum.js` eintragen – fertig. Seinen Clip bekommt

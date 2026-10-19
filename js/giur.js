@@ -8,9 +8,12 @@
 import { TEILE, getTeil, getQuestion, TYPE_LABEL, STATUS_LABEL } from '../data/giur.js';
 import { state, save, addXp, touchStreak, currentStreak } from './state.js';
 import { applyResult, dueIds } from './srs.js';
-import { sample } from './util.js';
+import { sample, esc } from './util.js';
 import { topbarHtml, bumpCounters, modeSwitchHtml, pipsHtml } from './screens.js';
 import { renderCelebration } from './lesson.js';
+import {
+  reviewHtml, wireReview, reviewOf, panelHtml, wirePanel,
+} from './giur-pruefung.js';
 import {
   icon, he, replay, setProgress, confirmDialog, sound, reducedMotion,
 } from './ui.js';
@@ -19,11 +22,6 @@ const ROUND = 10;      // Karten pro Runde
 const MAX_DUE = 7;     // so viele fällige Karten höchstens vorab, damit auch Neues drankommt
 const COMBO_FROM = 3;  // wie in den Lektionen: ab so vielen Treffern in Folge erscheint die Flamme
 const MAX_RETRY = 2;   // eine nicht gewusste Karte kommt höchstens zweimal zurück
-
-// Fragetexte sind reiner Text – für das Markup maskieren.
-const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({
-  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-}[c]));
 
 const cards = () => state.giur.cards;
 
@@ -79,6 +77,7 @@ function answerHtml(q) {
       ${q.quelle ? `<p class="giur-source text-caption">Quelle: ${esc(q.quelle)}</p>` : ''}
       ${q.check ? `<div class="ab-hint ab-hint--info">${icon('bulb')}<p class="text-body"><b>Beim Lehrer klären:</b> ${esc(q.check)}</p></div>` : ''}
       ${q.status === 'entwurf' ? '<p class="giur-draftnote text-caption">Entwurf – noch nicht von einem Rabbiner oder Lehrer geprüft.</p>' : ''}
+      ${reviewHtml(q)}
     </div>`;
 }
 
@@ -146,7 +145,7 @@ export function renderGiur(host) {
 
 // ---------- Ein Teil: Kennzahlen, Start und alle Fragen zum Nachlesen ----------
 
-export function renderGiurTeil(host, teilId) {
+export function renderGiurTeil(host, teilId, { openPanel = false } = {}) {
   const teil = getTeil(teilId);
   if (!teil || !teil.fragen.length) {
     location.hash = '#/giur';
@@ -162,7 +161,7 @@ export function renderGiurTeil(host, teilId) {
     : `${round.ids.length} ${round.ids.length === 1 ? 'Karte' : 'Karten'} in dieser Runde${s.due ? `, davon ${Math.min(s.due, MAX_DUE)} zur Wiederholung` : ''}.`;
 
   const item = (q) => `
-    <details class="giur-q">
+    <details class="giur-q" data-urteil="${reviewOf(q.id)?.urteil || ''}">
       <summary>
         <span class="giur-q__nr text-label">${q.nr}</span>
         <span class="giur-q__text text-strong">${esc(q.q)}</span>
@@ -192,6 +191,8 @@ export function renderGiurTeil(host, teilId) {
         <button class="ab-btn text-button" type="button" id="giur-run">${cta}</button>
       </section>
 
+      ${panelHtml(teil, openPanel)}
+
       <h2 class="screen__section text-heading">Alle Fragen</h2>
       <p class="giur-desc text-caption">Zum Nachlesen: Tippe eine Frage an, um den Antwort-Entwurf zu sehen.</p>
       <div class="giur-list">${teil.fragen.map(item).join('')}</div>
@@ -199,6 +200,15 @@ export function renderGiurTeil(host, teilId) {
 
   host.querySelector('#giur-run').addEventListener('click', () => {
     location.hash = `#/giur/${teil.id}/run`;
+  });
+
+  // Prüfung: Änderungen färben die Nummer der Frage und erneuern den Zähler.
+  const panel = wirePanel(host.querySelector('.giur-export'), teil,
+    () => renderGiurTeil(host, teil.id, { openPanel: true }));
+  wireReview(host.querySelector('.giur-list'), (id) => {
+    const item = host.querySelector(`.giur-review[data-id="${id}"]`)?.closest('.giur-q');
+    if (item) item.dataset.urteil = reviewOf(id)?.urteil || '';
+    panel.refresh();
   });
 }
 
@@ -239,6 +249,7 @@ export function runGiurRound(teilId, host) {
   const bar = host.querySelector('#card-bar');
   const progress = host.querySelector('.ab-progress');
   const comboChip = host.querySelector('.ab-combo');
+  wireReview(area); // Die Prüfung gehört zur aufgedeckten Antwort; die Karten wechseln nur den Inhalt.
 
   host.querySelector('#quit').addEventListener('click', async () => {
     const quit = await confirmDialog({
@@ -288,6 +299,7 @@ export function runGiurRound(teilId, host) {
       return;
     }
     if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.target.closest?.('textarea, input')) return; // Tippen in der Notiz bewertet nichts
     if (document.querySelector('dialog[open]')) return;
     // Liegt der Fokus auf einem Knopf, löst Enter/Leertaste diesen selbst aus.
     if (!revealed && (e.key === 'Enter' || e.key === ' ') && !document.activeElement?.closest('button')) {

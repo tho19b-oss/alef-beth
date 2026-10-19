@@ -68,8 +68,7 @@ export const SCHABBAT = [
   {
     id: 'schab-04',
     nr: 4,
-    q: 'Welche Mindestanzahl an Kerzen müssen am Schabbat gezündet werden?',
-    sub: ['Nenne einige Gründe für diese Zahl.'],
+    q: 'Welche Mindestanzahl an Kerzen müssen am Schabbat gezündet werden? Nenne einige Gründe für diese Zahl.',
     kurz: 'Mindestens zwei Kerzen. Viele zünden zusätzlich eine Kerze für jedes Kind.',
     punkte: [
       '„Sachor“ und „Schamor“: Die Zehn Gebote nennen den Schabbat in zwei Fassungen mit „Erinnere dich“ (2. Mose 20,8) und „Hüte“ (5. Mose 5,12). Die zwei Kerzen stehen für beides.',
@@ -248,8 +247,7 @@ export const SCHABBAT = [
   {
     id: 'schab-16',
     nr: 16,
-    q: 'Wie oft wird ein Kiddusch an einem Schabbat abgehalten?',
-    sub: ['Was muss man nach einem Kiddusch einhalten um es zu verwirklichen? Nenne zwei Dinge.'],
+    q: 'Wie oft wird ein Kiddusch an einem Schabbat abgehalten? Was muss man nach einem Kiddusch einhalten um es zu verwirklichen? Nenne zwei Dinge.',
     kurz: 'Zweimal: am Freitagabend und am Schabbat-Mittag nach dem Morgengebet. Damit der Kiddusch gilt, isst man anschließend am selben Ort eine Mahlzeit, und der Sprecher trinkt vom Wein.',
     punkte: [
       'Erstens: Der Kiddusch gilt nur dort, wo man anschließend die Mahlzeit isst („Kiddusch bimkom seuda“).',
@@ -302,14 +300,14 @@ export const SCHABBAT = [
   {
     id: 'schab-20',
     nr: 20,
-    q: 'Was ist „Schalosch Seudot“? Welche sind sie? Welche Zutat ist für jede Mahlzeit notwendig?',
-    kurz: '„Schalosch Seudot“ heißt „drei Mahlzeiten“: die drei Schabbat-Mahlzeiten. Es sind (1) das Abendessen am Freitagabend, (2) das Mittagessen am Schabbat und (3) die dritte Mahlzeit am Nachmittag („Seuda Schlischit“). Zu jeder gehört Brot, möglichst zwei Challot (Lechem Mischne).',
+    q: 'Was ist „Schalosh Seudot“? Welche sind sie? Welche Zutat ist für jede Mahlzeit notwendig?',
+    kurz: '„Schalosh Seudot“ heißt „drei Mahlzeiten“: die drei Schabbat-Mahlzeiten. Es sind (1) das Abendessen am Freitagabend, (2) das Mittagessen am Schabbat und (3) die dritte Mahlzeit am Nachmittag („Seuda Schlischit“). Zu jeder gehört Brot, möglichst zwei Challot (Lechem Mischne).',
     punkte: [
       'Die ersten beiden beginnen mit Kiddusch über Wein, die dritte nicht.',
       'Bei der dritten reicht ein Stück Brot von mindestens Eigröße; die meisten essen mehr. Man isst sie am Nachmittag, meist vor Sonnenuntergang.',
       'Auch wenn man satt ist, bemüht man sich um alle drei Mahlzeiten.',
     ],
-    hebrew: [{ label: 'Schalosch Seudot', text: 'שָׁלֹשׁ סְעוּדוֹת', translit: 'schalosch seudot', de: 'drei Mahlzeiten' }],
+    hebrew: [{ label: 'Schalosh Seudot', text: 'שָׁלֹשׁ סְעוּדוֹת', translit: 'schalosh seudot', de: 'drei Mahlzeiten' }],
     quelle: 'Talmud, Schabbat 117b',
   },
   {
@@ -355,8 +353,7 @@ export const SCHABBAT = [
   {
     id: 'schab-24',
     nr: 24,
-    q: 'Welche Unternehmungen und Aktivitäten sind am Schabbat untersagt?',
-    sub: ['Was wird als Arbeit angesehen am Schabbat?'],
+    q: 'Welche Unternehmungen und Aktivitäten sind am Schabbat untersagt? Was wird als Arbeit angesehen am Schabbat?',
     kurz: 'Verboten sind die 39 „Melachot“, die schöpferischen Hauptarbeiten, die für den Bau des Stiftszeltes nötig waren (Talmud, Schabbat 73a). „Arbeit“ am Schabbat meint nicht Mühe, sondern zielgerichtetes, gestaltendes Eingreifen: Man kann auch mit einem Fingertipp „arbeiten“, etwa Licht einschalten.',
     punkte: [
       'Brot: säen, pflügen, ernten, Garben binden, dreschen, worfeln, auslesen, mahlen, sieben, kneten, backen (11).',
@@ -462,8 +459,7 @@ export const SCHABBAT = [
   {
     id: 'schab-32',
     nr: 32,
-    q: 'Was ist ein Schabbat-Fahrstuhl?',
-    sub: ['Welche Vorsichtsmaßnahmen sollten bei der Nutzung beachtet werden?'],
+    q: 'Was ist ein Schabbat-Fahrstuhl? Welche Vorsichtsmaßnahmen sollten bei der Nutzung beachtet werden?',
     kurz: 'Ein Schabbat-Fahrstuhl fährt am Schabbat von allein und hält automatisch in jedem Stockwerk, sodass niemand eine Taste drücken muss. Er gilt nur dann als Schabbat-Fahrstuhl, wenn ein Rabbiner ihn dafür anerkannt hat.',
     punkte: [
       'Keine Taste drücken, auch nicht „Tür auf“ oder „Tür zu“.',
@@ -511,8 +507,7 @@ export const SCHABBAT = [
   {
     id: 'schab-36',
     nr: 36,
-    q: 'Wie schaffen wir es am Schabbat das Essen heiß zu servieren?',
-    sub: ['Wie wird das Essen warmgehalten?'],
+    q: 'Wie schaffen wir es am Schabbat das Essen heiß zu servieren? Wie wird das Essen warmgehalten?',
     kurz: 'Kochen ist am Schabbat verboten. Man serviert deshalb Essen, das vor Schabbat gekocht wurde, und hält es warm: auf einer Warmhalteplatte (Plata) oder einem Blech über abgedeckter Flamme, im Ofen bei niedriger Temperatur oder im Slow Cooker, den man vor Schabbat angeschaltet hat. Der Schabbat-Eintopf Tscholent steht oft über Nacht.',
     punkte: [
       'Das Essen muss vor Schabbat fertig oder fast fertig gekocht sein (Frage 67).',
@@ -689,8 +684,7 @@ export const SCHABBAT = [
   {
     id: 'schab-50',
     nr: 50,
-    q: 'Ist es uns gestattet am Schabbat Geschirr zu waschen?',
-    sub: ['Wenn ja, wann und wie?'],
+    q: 'Ist es uns gestattet am Schabbat Geschirr zu waschen? Wenn ja, wann und wie?',
     kurz: 'Ja, wenn man das Geschirr am Schabbat noch braucht, und unmittelbar vor der nächsten Mahlzeit. Man spült von Hand mit kaltem Wasser (oder Wasser, das vor Schabbat erhitzt wurde) und achtet darauf, nichts auszuwringen.',
     punkte: [
       'Nur Geschirr, das man am Schabbat noch benutzt. Was man erst nach Schabbat braucht, lässt man stehen.',
@@ -808,8 +802,7 @@ export const SCHABBAT = [
   {
     id: 'schab-59',
     nr: 59,
-    q: 'Wie macht man Hawdala nach Schabbat?',
-    sub: ['Was benötigen wir für die Hawdala?'],
+    q: 'Wie macht man Hawdala nach Schabbat? Was benötigen wir für die Hawdala?',
     kurz: 'Man braucht einen Becher mit Wein oder Traubensaft, Gewürze (Besamim) und eine Kerze mit mehreren Dochten. Man spricht vier Segen: über den Wein, über die Gewürze, über das Licht und den Hawdala-Segen. Dann trinkt man vom Wein und löscht die Kerze im Rest.',
     punkte: [
       'Reihenfolge: Wein, Gewürze, Licht, Hawdala-Segen.',
@@ -850,8 +843,7 @@ export const SCHABBAT = [
   {
     id: 'schab-60',
     nr: 60,
-    q: 'Wie macht man Hawdala nach Jom Tow?',
-    sub: ['Was benötigen wir für die Hawdala?'],
+    q: 'Wie macht man Hawdala nach Jom Tow? Was benötigen wir für die Hawdala?',
     kurz: 'Nach Jom Tow macht man eine kurze Hawdala: Man spricht den Segen über den Wein und den Hawdala-Segen. Gewürze und Kerze gehören nur zur Hawdala nach dem Schabbat. Man braucht also nur einen Becher mit Wein oder Traubensaft.',
     punkte: [
       'Nach Jom Kippur spricht man auch den Segen über das Licht (eine schon vor Jom Kippur entzündete Flamme), aber nicht über die Gewürze.',
@@ -1182,8 +1174,7 @@ export const SCHABBAT = [
   {
     id: 'schab-85',
     nr: 85,
-    q: 'Nenne ein Beispiel für einen „Make Bepatisch“ (letzten Hammerschlag).',
-    sub: ['Was bedeutet das?'],
+    q: 'Nenne ein Beispiel für einen „Make Bepatisch“ (letzten Hammerschlag). Was bedeutet das?',
     kurz: '„Makeh be-Patisch“ („Schlag mit dem Hammer“) ist eine der 39 Melachot: der letzte Handgriff, mit dem ein Gegenstand fertig und brauchbar wird. Beispiele: einen Ball aufpumpen oder ein Rad fertig montieren.',
     punkte: [
       'Man vollendet etwas, das noch nicht gebrauchsfertig war.',

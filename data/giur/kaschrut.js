@@ -77,7 +77,7 @@ export const KASCHRUT = [
       'Die Ausnahme gilt nur für Heuschrecken, nicht für andere Insekten.',
     ],
     quelle: '3. Mose 11,20–23.41–42',
-    check: 'Wie Gemüse und Mehl genau geprüft werden sollen (Methode, welche Sorten) – beim Lehrer nachfragen.',
+    check: 'Wie Gemüse und Mehl genau geprüft werden sollen (Methode, welche Sorten).',
   },
   {
     id: 'kas-05',
@@ -127,7 +127,7 @@ export const KASCHRUT = [
       'Verarbeiteten Fisch (Konserven, Räucherfisch, Paniertes) nur mit Hechscher kaufen.',
       'Fisch braucht keine Schechita und gilt als parwe (Frage 30).',
     ],
-    check: 'Ob und wie das Zerlegen mit Messern und Brettern des Händlers eine Rolle spielt, und wie viel Haut dranbleiben muss – konkret nachfragen.',
+    check: 'Ob und wie das Zerlegen mit Messern und Brettern des Händlers eine Rolle spielt, und wie viel Haut dranbleiben muss.',
   },
   {
     id: 'kas-09',
@@ -155,7 +155,7 @@ export const KASCHRUT = [
       'Bei Geflügel und Wild wird das Blut mit Erde bedeckt (Kisui Hadam).',
     ],
     quelle: '5. Mose 12,21; 3. Mose 17,13',
-    check: 'Wie ausführlich das Beit Din den Ablauf hören will (Überblick oder die fünf Fehler im Einzelnen).',
+    check: 'Wie ausführlich der Ablauf gewusst werden muss (Überblick oder die fünf Fehler im Einzelnen).',
   },
   {
     id: 'kas-11',
@@ -183,11 +183,11 @@ export const KASCHRUT = [
     nr: 13,
     q: 'Wo werden Sie Ihr Fleisch kaufen?',
     type: 'persoenlich',
-    kurz: 'Hier zählt deine eigene, ehrliche Antwort. Üblich: in einer koscheren Metzgerei oder einem koscheren Geschäft mit gültigem Hechscher, bei verpacktem Fleisch mit unversehrtem Siegel.',
+    kurz: 'Hier zählt die eigene, ehrliche Antwort. Üblich: in einer koscheren Metzgerei oder einem koscheren Geschäft mit gültigem Hechscher, bei verpacktem Fleisch mit unversehrtem Siegel.',
     punkte: [
       'Nenne konkret, wo du einkaufst und woran du die Aufsicht erkennst (Hechscher, Siegel, anerkanntes Rabbinat).',
       'Sag, was du tust, wenn es kein koscheres Fleisch gibt (z. B. vegetarisch oder Fisch essen).',
-      'Frag deinen Rabbiner, welche Aufsicht er anerkennt.',
+      'Beim Rabbiner erfragen, welche Aufsicht er anerkennt.',
     ],
   },
   {
@@ -202,7 +202,7 @@ export const KASCHRUT = [
       'Tiefgefrorenes Fleisch muss man vorher auftauen. Leber wird anders behandelt (Frage 15).',
       'Meist erledigt das schon der koschere Metzger.',
     ],
-    check: 'Genaue Zeiten fürs Einweichen und Salzen so übernehmen, wie dein Lehrer sie lehrt.',
+    check: 'Die genauen Zeiten fürs Einweichen und Salzen.',
   },
   {
     id: 'kas-15',
@@ -215,7 +215,7 @@ export const KASCHRUT = [
       'Auf einen Rost legen, damit das Blut abtropft.',
       'Nach dem Braten abspülen. Danach darf man sie auch weiter zubereiten, z. B. kochen.',
     ],
-    check: 'Einzelheiten (Einschneiden, ob vorher Salz) nachfragen.',
+    check: 'Einzelheiten: Einschneiden, ob vorher Salz verwendet wird.',
   },
   {
     id: 'kas-16',
@@ -238,7 +238,7 @@ export const KASCHRUT = [
     punkte: [
       'Fleisch, bei dem die Frist verpasst wurde, darf nur noch gebraten werden.',
     ],
-    check: 'Ob man die Frist durch Abspülen verlängern kann und was bei verpasster Frist gilt – den Rabbiner fragen.',
+    check: 'Ob man die Frist durch Abspülen verlängern kann und was bei verpasster Frist gilt.',
   },
   {
     id: 'kas-18',
@@ -251,7 +251,7 @@ export const KASCHRUT = [
       'Hartgekochte Eier kann man nicht prüfen, also vorher roh prüfen.',
       'Grund ist das Blutverbot (Frage 16).',
     ],
-    check: 'Die genaue Regel (ganzes Ei wegwerfen oder nur den Fleck entfernen, Fleck im Dotter oder Eiweiß) – nachfragen.',
+    check: 'Die genaue Regel: ganzes Ei wegwerfen oder nur den Fleck entfernen; Fleck im Dotter oder im Eiweiß.',
   },
   {
     id: 'kas-19',
@@ -263,7 +263,7 @@ export const KASCHRUT = [
       'Bei Einladungen: vorher klären oder eigenes Essen, Besteck und Geschirr mitbringen.',
       'Gekochtes von Nichtjuden: Frage 42. Wein: Frage 38.',
     ],
-    check: 'Was in der Praxis erlaubt ist (z. B. Salat oder Getränke im nicht koscheren Restaurant), sehen Rabbiner unterschiedlich.',
+    check: 'Was in der Praxis erlaubt ist (z. B. Salat oder Getränke im nicht koscheren Restaurant); Rabbiner sehen das unterschiedlich.',
   },
   {
     id: 'kas-20',
@@ -318,7 +318,7 @@ export const KASCHRUT = [
         de: `${BRACHA_ANFANG_DE}, Geräte zu tauchen.`,
       },
     ],
-    check: 'Die Frage ist im Katalog knapp gestellt. Gemeint ist vermutlich die Bracha beim Tauchen (Frage 21) – bitte klären.',
+    check: 'Die Frage ist im Katalog knapp gestellt. Gemeint ist vermutlich die Bracha beim Tauchen (Frage 21).',
   },
   {
     id: 'kas-23',
@@ -346,7 +346,7 @@ export const KASCHRUT = [
       'Brauch je nach Gemeinde: 6 Stunden, 3 Stunden (Brauch der deutschen Juden) oder 1 Stunde (Brauch niederländischer Juden).',
     ],
     quelle: '2. Mose 23,19; 5. Mose 14,21',
-    check: 'Welche Wartezeit dein Lehrer und das Beit Din vorgeben, ist entscheidend – genau notieren.',
+    check: 'Welche Wartezeit zwischen Fleisch und Milch gilt (6, 3 oder 1 Stunde) – das ist Brauchsache und muss genau bekannt sein.',
   },
   {
     id: 'kas-25',
@@ -359,7 +359,7 @@ export const KASCHRUT = [
       'Ein einfaches „K“ ist keine verlässliche Aufsicht: Jeder Hersteller darf es selbst aufdrucken.',
       'Gültig ist ein Zeichen nur, wenn das Rabbinat oder Beit Din es anerkennt.',
     ],
-    check: 'Ob „P“ im Katalog für Pessach oder für Pareve steht, und welche Zeichen in deiner Gemeinde anerkannt sind – nachfragen.',
+    check: 'Ob „P“ im Katalog für Pessach oder für Pareve steht, und welche Siegel anerkannt sind.',
   },
   {
     id: 'kas-26',
@@ -383,7 +383,7 @@ export const KASCHRUT = [
       'Manche warten zwischen den Ladungen zusätzlich 24 Stunden.',
       'Am sichersten sind zwei Maschinen oder getrenntes Spülen von Hand in eigenen Becken.',
     ],
-    check: 'Die Spülmaschine ist unter Rabbinern umstritten. Die Anweisung deines Lehrers genau übernehmen.',
+    check: 'Die Spülmaschine ist unter Rabbinern umstritten: Welche Regelung gilt?',
   },
   {
     id: 'kas-28',
@@ -395,7 +395,7 @@ export const KASCHRUT = [
       'Innenraum und Drehteller sauber halten, evtl. eigene Unterlagen verwenden.',
       'Wurde etwas Heißes unabgedeckt hineingestellt, den Rabbiner fragen (oft hilft Kaschern: Schale Wasser aufkochen).',
     ],
-    check: 'Wie der Rabbiner die Mikrowelle handhabt – im Zweifel fragen.',
+    check: 'Welche Regelung für die Mikrowelle gilt.',
   },
   {
     id: 'kas-29',
@@ -407,7 +407,7 @@ export const KASCHRUT = [
       'Speisen mit Deckel oder Folie abdecken; getrennte Bleche und Formen.',
       'Zwischendurch den Ofen einmal richtig heiß ausheizen.',
     ],
-    check: 'Ob beides zeitgleich im Ofen stehen darf, sehen Rabbiner unterschiedlich.',
+    check: 'Ob Milchiges und Fleischiges zeitgleich im Ofen stehen dürfen; Rabbiner sehen das unterschiedlich.',
   },
   {
     id: 'kas-30',
@@ -449,7 +449,7 @@ export const KASCHRUT = [
       },
     ],
     quelle: '4. Mose 15,17–21',
-    check: 'Wortlaut der Bracha und Reihenfolge so lernen, wie dein Lehrer sie vorspricht.',
+    check: 'Wortlaut der Bracha und Reihenfolge des Absonderns.',
   },
   {
     id: 'kas-33',
@@ -460,7 +460,7 @@ export const KASCHRUT = [
     punkte: [
       'Zwischen den beiden Mengen sondert man ohne Bracha ab.',
     ],
-    check: 'Die Gewichtsangaben unterscheiden sich je nach Quelle. Die Zahlen deines Lehrers übernehmen.',
+    check: 'Die Gewichtsangaben unterscheiden sich je nach Quelle (1,2 kg oder 2,25 kg): Welche gelten?',
   },
   {
     id: 'kas-34',
@@ -494,7 +494,7 @@ export const KASCHRUT = [
       'Grund: Harter Käse hinterlässt lange Geschmack und Reste im Mund.',
       'Die Wartezeit ist dieselbe wie in Frage 24.',
     ],
-    check: 'Ab welcher Reifezeit ein Käse „hart“ gilt und wie viele Stunden gewartet wird, beim Lehrer nachfragen.',
+    check: 'Ab welcher Reifezeit ein Käse „hart“ gilt und wie viele Stunden gewartet wird.',
   },
   {
     id: 'kas-37',
@@ -517,7 +517,7 @@ export const KASCHRUT = [
       'Gekochter bzw. pasteurisierter Wein („Mewuschal“) bleibt auch nach Berührung durch Nichtjuden erlaubt.',
       'Gilt auch für Traubensaft.',
     ],
-    check: 'Wie der Rabbiner „Mewuschal“ beurteilt und welche Weine in deiner Gemeinde anerkannt sind.',
+    check: 'Wie „Mewuschal“ beurteilt wird und welche Weine anerkannt sind.',
   },
   {
     id: 'kas-39',
@@ -530,7 +530,7 @@ export const KASCHRUT = [
       'Whisky aus Weinfässern (z. B. Sherry) kann problematisch sein.',
       'An Pessach gelten besondere Regeln (Frage 40).',
     ],
-    check: 'Welche Getränke ohne Hechscher erlaubt sind, beurteilen Rabbiner unterschiedlich.',
+    check: 'Welche Getränke ohne Hechscher erlaubt sind; Rabbiner beurteilen das unterschiedlich.',
   },
   {
     id: 'kas-40',
@@ -554,7 +554,7 @@ export const KASCHRUT = [
       'Es gibt Lösungen für die Landwirte, z. B. den Verkauf des Landes (Heter Mechira) oder das Lager des Beit Din (Otzar Beit Din). Welche gilt, hängt vom Hechscher ab.',
     ],
     quelle: '3. Mose 25,1–7; 5. Mose 15,1–2',
-    check: 'Welche Lösung für die Landwirtschaft dein Lehrer anerkennt, und wie man Reste behandelt.',
+    check: 'Welche Lösung für die Landwirtschaft anerkannt wird, und wie man Reste behandelt.',
   },
   {
     id: 'kas-42',
@@ -566,7 +566,7 @@ export const KASCHRUT = [
       'Hinter den Regeln steht die Sorge vor unkoscheren Zutaten und vor zu enger Gemeinschaft (Mischehe).',
       'In der Praxis: verpackte Produkte mit Hechscher und frisches Obst und Gemüse.',
     ],
-    check: 'Wie streng die Regeln im Alltag gehandhabt werden, z. B. bei Einladungen oder Restaurants.',
+    check: 'Wie streng die Regeln im Alltag gehandhabt werden, z. B. bei Einladungen oder in Restaurants.',
   },
   {
     id: 'kas-43',
@@ -577,6 +577,6 @@ export const KASCHRUT = [
       'Eine Zwiebel, die mit einem fleischigen Messer geschnitten wurde, gilt danach als fleischig.',
       'Essig (besonders Weinessig) und Gewürze brauchen ein Hechscher.',
     ],
-    check: 'Die Frage ist missverständlich formuliert („gewürzte Zutaten“). Gemeint sind vermutlich scharfe Zutaten – beim Lehrer klären.',
+    check: 'Die Frage ist missverständlich formuliert („gewürzte Zutaten“). Gemeint sind vermutlich scharfe Zutaten – bitte klären.',
   },
 ];

@@ -63,6 +63,8 @@ const ASSETS = [
   'data/giur/leben.js',
   'data/giur/geschichte.js',
   'data/giur/lehren.js',
+  'data/giur/synagoge.js',
+  'data/giur/tefilla.js',
 ];
 
 // Die hebräische Stimme: Liste und Clips (audio/he/). Fehlt etwas, kommt das

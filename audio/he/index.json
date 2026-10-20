@@ -2,7 +2,7 @@
   "stimme": "AlefBeth Teacher",
   "herkunft": "erzeugt mit ElevenLabs (elevenlabs.io)",
   "modell": "eleven_v3",
-  "erzeugt": "2026-10-09T08:49:49.530Z",
+  "erzeugt": "2026-10-20T20:26:06.238Z",
   "clips": {
     "אָלֶף": "alef.mp3",
     "בֵּית": "bet.mp3",
@@ -87,6 +87,15 @@
     "חַג שָׂמֵחַ": "w-chagsameach.mp3",
     "כָּשֵׁר": "w-kasher.mp3",
     "תְּפִלָּה": "w-tefilla.mp3",
-    "מִצְוָה": "w-mitzvah.mp3"
+    "מִצְוָה": "w-mitzvah.mp3",
+    "בֹּקֶר טוֹב": "gruss-bokertov.mp3",
+    "עֶרֶב טוֹב": "gruss-erevtov.mp3",
+    "לַיְלָה טוֹב": "gruss-lailatov.mp3",
+    "שַׁבָּת שָׁלוֹם": "gruss-shabbatshalom.mp3",
+    "שָׁבוּעַ טוֹב": "gruss-shavuatov.mp3",
+    "שָׁנָה טוֹבָה": "gruss-shanatova.mp3",
+    "גְּמַר חֲתִימָה טוֹבָה": "gruss-gmarchatima.mp3",
+    "חֲנֻכָּה שָׂמֵחַ": "gruss-chanukkasameach.mp3",
+    "פּוּרִים שָׂמֵחַ": "gruss-purimsameach.mp3"
   }
 }

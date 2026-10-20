@@ -1,8 +1,8 @@
 // Service Worker: App-Shell vorab cachen (cache-first), damit die App offline läuft.
-// Bei Änderungen VERSION auf das heutige Datum setzen (JJJJ.MM.TT, bei mehreren
-// Fassungen am selben Tag mit -2, -3 …) – alte Caches werden beim Aktivieren gelöscht.
+// Bei Änderungen VERSION erhöhen (Haupt.Neben.Korrektur, Regeln im README) –
+// alte Caches werden beim Aktivieren gelöscht.
 
-const VERSION = '2026.10.20';
+const VERSION = '1.0.0';
 const CACHE = `alefbeth-${VERSION}`;
 
 const ASSETS = [

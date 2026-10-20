@@ -149,12 +149,19 @@ Vanilla HTML/CSS/JS ohne Build-Schritt und ohne Abhängigkeiten.
 | `js/badges.js` | Abzeichen: Bedingungen und Fortschritt |
 | `js/theme.js` | Hell/Dunkel inkl. Farbe der Statusleiste, Schalter für Bewegung und Soundeffekte |
 | `js/version.js` | fragt die laufende Version beim Service Worker ab |
-| `sw.js` | Offline-Cache – **nach Änderungen `VERSION` aufs heutige Datum setzen!** |
+| `sw.js` | Offline-Cache – **nach Änderungen `VERSION` erhöhen!** |
 
-Die Version ist das Datum der Fassung im Format `JJJJ.MM.TT`, z. B.
-`2026.10.20`. Kommt am selben Tag noch eine Fassung dazu, wird `-2`, `-3` …
-angehängt (`2026.10.20-2`). So zeigt *Mehr → Version* auf einen Blick, wie alt
-die installierte Fassung ist.
+Die Version hat drei Teile, `Haupt.Neben.Korrektur` (z. B. `1.4.2`). Welche
+Zahl steigt, hängt von der Art der Änderung ab:
+
+- **Korrektur** (`1.4.2` → `1.4.3`): Fehler behoben, Tippfehler, kleiner
+  Feinschliff – inhaltlich kommt nichts dazu
+- **Neben** (`1.4.2` → `1.5.0`): Neues kommt dazu, z. B. ein weiterer
+  Giur-Teil, neue Wörter oder Lektionen, eine neue Funktion
+- **Haupt** (`1.4.2` → `2.0.0`): großer Umbau, nach dem sich die App spürbar
+  anders bedient
+
+Steigt eine Zahl, fangen die rechts davon wieder bei 0 an.
 
 Die Version steht **nur** in `sw.js`. Die Einstellungen fragen sie per
 `postMessage` beim laufenden Service Worker ab – es gibt also keine zweite
@@ -169,7 +176,7 @@ dort unter `SOUNDS` dazu – in D-Dur-Pentatonik (MIDI-Nummern), damit sich
 
 Einen weiteren Giur-Teil aufnehmen: `data/giur/<teil>.js` nach dem Muster von
 `kaschrut.js` anlegen, in `data/giur.js` importieren und beim Teil unter `fragen`
-eintragen, dazu die Datei in `sw.js` (`ASSETS`) und `VERSION` aufs heutige Datum setzen. Fragen-IDs
+eintragen, dazu die Datei in `sw.js` (`ASSETS`) und `VERSION` erhöhen (neuer Teil = Neben-Version). Fragen-IDs
 (`kas-01`, `schab-01` …) nie umnummerieren, daran hängt der Lernstand. Ist eine Antwort von einem
 Rabbiner geprüft, kommt `status: 'geprueft'` dazu. Den Prüfbogen erzeugt
 `node tools/giur-pruefbogen.mjs <teil>`: eine HTML-Datei, in der man jede Antwort
@@ -189,7 +196,7 @@ neue Farben oder Abstände gehören in die Tokens, nicht als feste Werte in
 `glyph-*`), hebräischer Text bekommt `lang="he"` (Helfer `he()` in `js/ui.js`).
 
 Beim Ändern von Dateien: Der Service Worker liefert aus dem Cache, ein Reload
-allein zeigt die Änderung also nicht. Entweder `VERSION` in `sw.js` neu setzen
+allein zeigt die Änderung also nicht. Entweder `VERSION` in `sw.js` erhöhen
 (dann lädt die App sich beim nächsten Start selbst neu) oder in den
 Entwicklertools unter *Application → Storage* den Cache leeren. Wird eine
 Item-ID gelöscht oder umbenannt, räumt die App gespeicherte Fortschritte dazu

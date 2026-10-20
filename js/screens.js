@@ -210,7 +210,6 @@ export function renderHome(host) {
   const total = lessons.length;
   const doneIds = lessons.filter((l) => state.lessons[l.id]).map((l) => l.id);
   const done = doneIds.length;
-  const due = dueIds(state.srs).length;
   const streak = currentStreak();
 
   const fresh = shownLessons ? doneIds.filter((id) => !shownLessons.has(id)) : [];
@@ -248,13 +247,6 @@ export function renderHome(host) {
              aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct(shownDone)}"><div class="ab-progress__fill" style="width:${pct(shownDone)}%"></div></div>
       </section>
 
-      ${due > 0 ? `
-        <div class="ab-banner" role="region" aria-label="Wiederholung fällig">
-          <span class="ab-banner__icon">${icon('repeat')}</span>
-          <p class="ab-banner__text text-body"><b>${due} ${due === 1 ? 'Karte' : 'Karten'}</b> ${due === 1 ? 'ist' : 'sind'} zur Wiederholung fällig</p>
-          <button class="ab-btn ab-btn--info ab-btn--sm text-label" type="button" id="review-now">Üben</button>
-        </div>` : ''}
-
       ${UNITS.map((u, i) => unitHtml(u, i, unlocked)).join('')}
     </div>`;
 
@@ -262,10 +254,6 @@ export function renderHome(host) {
   bumpCounters(home, streak);
   bindGreeting(home);
   home.addEventListener('click', (e) => {
-    if (e.target.closest('#review-now')) {
-      location.hash = '#/review/run';
-      return;
-    }
     const claim = e.target.closest('#claim-bonus');
     if (claim) {
       collectBonus(home, claim);

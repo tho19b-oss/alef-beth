@@ -55,6 +55,11 @@ html:not(.is-splash) .ab-splash { display: none; }
   background: var(--card);
 }
 .home .ab-unit { margin-top: var(--space-4); }
+/* Fortschritt der laufenden Einheit, im Banner unter der Beschreibung. Die
+   Rinne hat die Farbe der Banner-Kante, damit sie auf Granat zu sehen ist. */
+.ab-unit__meter { display: flex; align-items: center; gap: var(--space-3); margin-top: var(--space-4); }
+.ab-unit__meter .ab-progress { background: var(--_lc); }
+.ab-unit__count { flex: none; font-variant-numeric: tabular-nums; }
 /* Der Text neben einem Knoten gehört mit zur Tippfläche (siehe screens.js). */
 .ab-step__text { cursor: pointer; }
 

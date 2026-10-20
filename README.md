@@ -27,7 +27,8 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
   Üben“: Das holt Wackelkandidaten zurück nach vorn, schiebt aber keine
   Termine nach hinten.
 - **Motivation:** XP, Tages-Serie (Streak), Kombo ab drei richtigen Antworten
-  in Folge, Kronen auf dem Lernpfad, Gesamtfortschritt – mit Übergängen und
+  in Folge, Kronen auf dem Lernpfad, ein Fortschrittsbalken in der Karte der
+  laufenden Einheit – mit Übergängen und
   kleinen Feiern (Konfetti nur bei Meilensteinen). Wer weniger Bewegung mag,
   schaltet unter *Mehr → Bewegung reduzieren* alle Animationen ab; die
   Systemeinstellung wird ohnehin beachtet

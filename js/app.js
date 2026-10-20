@@ -4,6 +4,7 @@ import { state } from './state.js';
 import { renderHome, renderReview, renderAlphabet, renderAchievements, renderSettings } from './screens.js';
 import { runLesson, runReview, runFreePractice } from './lesson.js';
 import { renderGiur, renderGiurTeil, runGiurRound } from './giur.js';
+import { renderRangliste, syncLeaderboard } from './rangliste.js';
 import { scheduleReminder } from './notify.js';
 import { dueIds } from './srs.js';
 import { applyTheme, applyMotion, applySound } from './theme.js';
@@ -22,7 +23,7 @@ const NAV_ROUTES = ['home', 'review', 'alphabet', 'erfolge', 'settings'];
 function navRoute(hash) {
   if (hash.startsWith('#/review')) return 'review';
   if (hash === '#/alphabet') return 'alphabet';
-  if (hash === '#/erfolge') return 'erfolge';
+  if (hash === '#/erfolge' || hash.startsWith('#/rangliste')) return 'erfolge';
   if (hash === '#/settings') return 'settings';
   return 'home'; // auch Lektionen und das Giur-Wissen gehören zum Lernen-Tab
 }
@@ -62,6 +63,8 @@ function route() {
   stopSpeech();
   window.scrollTo(0, 0);
   updateNav(hash);
+  // Neuen Stand für die Rangliste hochladen (nur mit Gruppe und wenn sich etwas geändert hat).
+  if (!inLesson) syncLeaderboard();
 
   if (hash.startsWith('#/lesson/')) {
     runLesson(hash.slice('#/lesson/'.length), app);
@@ -81,6 +84,8 @@ function route() {
     renderAlphabet(app);
   } else if (hash === '#/erfolge') {
     renderAchievements(app);
+  } else if (hash.startsWith('#/rangliste')) {
+    renderRangliste(app, hash.split('/')[2] || null);
   } else if (hash === '#/settings') {
     renderSettings(app);
   } else {

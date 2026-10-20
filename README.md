@@ -70,6 +70,12 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
 - **Erfolge:** eigener Tab mit der Serien-Woche, sieben Abzeichen (vom ersten
   Buchstaben bis zur ersten Bracha, gesperrte zeigen den Weg dorthin) und den
   Gesamtzahlen. Ein neues Abzeichen erscheint direkt im Abschluss der Lektion
+- **Rangliste:** Unter *Erfolge → Rangliste* legst du eine Gruppe an oder trittst
+  einer mit Code bei. Den Code oder einen Einladungslink (`#/rangliste/<CODE>`)
+  teilst du über „Einladung teilen“. Sortiert wird nach den XP der laufenden
+  Woche, am Montag beginnen alle wieder bei 0. Daneben stehen Serie und
+  Gesamt-XP. Bis zu zehn Gruppen pro Gerät, zwischen ihnen wechselt eine
+  Auswahl oben. Die Erfolge-Seite zeigt deinen Platz
 - **Giur-Wissen:** Umschalter oben auf der Lernen-Seite. Dahinter stehen die Fragen
   des Prüfungskatalogs fürs Beit Din in 18 Teilen. Pro Teil gibt es die Fragen zum
   Nachlesen und eine Karten-Runde: Frage lesen, laut antworten, aufdecken,
@@ -88,8 +94,10 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
 - **Offline & installierbar:** Nach dem ersten Laden funktioniert die App ohne
   Internet und lässt sich „Zum Startbildschirm hinzufügen“ (PWA)
 
-Der Lernfortschritt wird lokal im Browser gespeichert (localStorage) –
-es gibt kein Konto und es verlassen keine Daten das Gerät.
+Der Lernfortschritt liegt lokal im Browser (localStorage), es gibt kein Konto.
+Nur wer einer Rangliste beitritt, schickt Namen, Wochen-XP, Gesamt-XP und Serie
+an den Server (Supabase-Projekt „alef-beth“ in Frankfurt). Lesen kann sie nur,
+wer den Gruppencode kennt.
 
 ## Aufs Handy bringen
 
@@ -163,6 +171,8 @@ Vanilla HTML/CSS/JS ohne Build-Schritt und ohne Abhängigkeiten.
 | `js/badges.js` | Abzeichen: Bedingungen und Fortschritt |
 | `js/theme.js` | Hell/Dunkel inkl. Farbe der Statusleiste, Schalter für Bewegung und Soundeffekte |
 | `js/version.js` | fragt die laufende Version beim Service Worker ab |
+| `js/rangliste.js` | Rangliste: Gruppen anlegen und beitreten, Stand hochladen, Liste zeigen |
+| `supabase/rangliste.sql` | Tabellen und Funktionen der Rangliste in Supabase |
 | `sw.js` | Offline-Cache – **nach Änderungen `VERSION` erhöhen!** |
 
 Die Version hat drei Teile, `Haupt.Neben.Korrektur` (z. B. `1.4.2`). Welche

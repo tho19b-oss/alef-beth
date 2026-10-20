@@ -61,6 +61,7 @@ const ASSETS = [
   'data/giur/kalender.js',
   'data/giur/ethik.js',
   'data/giur/leben.js',
+  'data/giur/geschichte.js',
 ];
 
 // Die hebräische Stimme: Liste und Clips (audio/he/). Fehlt etwas, kommt das

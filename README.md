@@ -61,7 +61,7 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
   Nachlesen und eine Karten-Runde: Frage lesen, laut antworten, aufdecken,
   „Gewusst“ oder „Nochmal“. Die Karten laufen durch dieselbe Wiederholungsleiter
   wie die Hebräisch-Karten, aber getrennt davon. Aufbereitet sind bisher die Teile 1
-  bis 9 (Kaschrut, Schabbat und die Feste von Rosch Haschana bis Schawuot); Antworten beginnen als **Entwurf**, den ein Rabbiner oder Lehrer prüfen
+  bis 11 (Kaschrut, Schabbat, die Feste von Rosch Haschana bis Schawuot, Kalender und Ethik); Antworten beginnen als **Entwurf**, den ein Rabbiner oder Lehrer prüfen
   muss, und tragen das sichtbar als Status („Entwurf“ oder „Geprüft“). Bei jeder
   Antwort lässt sich festhalten,
   ob sie stimmt, und eine Anmerkung notieren; den Stand gibt man pro Teil als Text

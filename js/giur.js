@@ -138,7 +138,9 @@ export function renderGiur(host) {
         </div>
         <div class="ab-progress ab-progress--gold ab-progress--slim" role="progressbar" aria-label="Gelernte Fragen"
              aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><div class="ab-progress__fill" style="width:${pct}%"></div></div>
-        <p class="giur-meter__note text-caption">${available} von ${catalog} Fragen des Katalogs sind aufbereitet, weitere Teile folgen.</p>
+        <p class="giur-meter__note text-caption">${available < catalog
+          ? `${available} von ${catalog} Fragen des Katalogs sind aufbereitet, weitere Teile folgen.`
+          : `Alle ${catalog} Fragen des Katalogs sind aufbereitet.`}</p>
       </section>
 
       <ol class="giur-teile" aria-label="Teile des Prüfungskatalogs">${TEILE.map(row).join('')}</ol>

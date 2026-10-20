@@ -2,7 +2,7 @@
 // Bei Änderungen VERSION erhöhen (Haupt.Neben.Korrektur, Regeln im README) –
 // alte Caches werden beim Aktivieren gelöscht.
 
-const VERSION = '1.2.0';
+const VERSION = '1.3.0';
 const CACHE = `alefbeth-${VERSION}`;
 // Eigener, versionsunabhängiger Cache für die Erinnerungs-Einstellung: Der
 // Worker kann localStorage nicht lesen, die Seite spiegelt sie deshalb hierher.
@@ -61,6 +61,12 @@ const ASSETS = [
   'data/giur/kalender.js',
   'data/giur/ethik.js',
   'data/giur/leben.js',
+  'data/giur/geschichte.js',
+  'data/giur/lehren.js',
+  'data/giur/synagoge.js',
+  'data/giur/tefilla.js',
+  'data/giur/brachot.js',
+  'data/giur/taharat.js',
 ];
 
 // Die hebräische Stimme: Liste und Clips (audio/he/). Fehlt etwas, kommt das

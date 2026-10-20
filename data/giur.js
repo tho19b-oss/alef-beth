@@ -17,6 +17,12 @@ import { SCHAWUOT } from './giur/schawuot.js';
 import { KALENDER } from './giur/kalender.js';
 import { ETHIK } from './giur/ethik.js';
 import { LEBEN } from './giur/leben.js';
+import { GESCHICHTE } from './giur/geschichte.js';
+import { LEHREN } from './giur/lehren.js';
+import { SYNAGOGE } from './giur/synagoge.js';
+import { TEFILLA } from './giur/tefilla.js';
+import { BRACHOT } from './giur/brachot.js';
+import { TAHARAT } from './giur/taharat.js';
 
 // geplant = Zahl der Fragen im Katalog. Teile ohne `fragen` sind noch nicht
 // aufbereitet und erscheinen in der Liste als „kommt später“.
@@ -33,12 +39,12 @@ const TEILE_ROH = [
   { id: 'kalender', title: 'Der jüdische Kalender', desc: 'Monate, Feste, Fastentage', geplant: 36, fragen: KALENDER },
   { id: 'ethik', title: 'Ethik', desc: 'Begriffe und Grundfragen des Glaubens', geplant: 51, fragen: ETHIK },
   { id: 'leben', title: 'Jüdisches Leben', desc: 'Zizit, Tefillin, Lebenszyklus, Übertritt', geplant: 79, fragen: LEBEN },
-  { id: 'geschichte', title: 'Jüdische Geschichte', desc: 'Patriarchen, Könige, Tempel', geplant: 14 },
-  { id: 'lehren', title: 'Jüdische Lehren', desc: 'Tora, Mizwot, Gelehrte', geplant: 24 },
-  { id: 'synagoge', title: 'Synagoge', desc: 'Toralesung und Begriffe', geplant: 12 },
-  { id: 'tefilla', title: 'Tefilla', desc: 'Gebete und Minjan', geplant: 20 },
-  { id: 'brachot', title: 'Brachot', desc: 'Segenssprüche und Tischgebet', geplant: 13 },
-  { id: 'taharat', title: 'Taharat Hamischpacha', desc: 'Familienreinheit', geplant: 9 },
+  { id: 'geschichte', title: 'Jüdische Geschichte', desc: 'Patriarchen, Könige, Tempel', geplant: 14, fragen: GESCHICHTE },
+  { id: 'lehren', title: 'Jüdische Lehren', desc: 'Tora, Mizwot, Gelehrte', geplant: 24, fragen: LEHREN },
+  { id: 'synagoge', title: 'Synagoge', desc: 'Toralesung und Begriffe', geplant: 12, fragen: SYNAGOGE },
+  { id: 'tefilla', title: 'Tefilla', desc: 'Gebete und Minjan', geplant: 20, fragen: TEFILLA },
+  { id: 'brachot', title: 'Brachot', desc: 'Segenssprüche und Tischgebet', geplant: 13, fragen: BRACHOT },
+  { id: 'taharat', title: 'Taharat Hamischpacha', desc: 'Familienreinheit', geplant: 9, fragen: TAHARAT },
 ];
 
 // Fehlende Angaben auffüllen: ohne type gilt 'erklaeren', ohne status 'entwurf'.

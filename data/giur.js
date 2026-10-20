@@ -21,6 +21,8 @@ import { GESCHICHTE } from './giur/geschichte.js';
 import { LEHREN } from './giur/lehren.js';
 import { SYNAGOGE } from './giur/synagoge.js';
 import { TEFILLA } from './giur/tefilla.js';
+import { BRACHOT } from './giur/brachot.js';
+import { TAHARAT } from './giur/taharat.js';
 
 // geplant = Zahl der Fragen im Katalog. Teile ohne `fragen` sind noch nicht
 // aufbereitet und erscheinen in der Liste als „kommt später“.
@@ -41,8 +43,8 @@ const TEILE_ROH = [
   { id: 'lehren', title: 'Jüdische Lehren', desc: 'Tora, Mizwot, Gelehrte', geplant: 24, fragen: LEHREN },
   { id: 'synagoge', title: 'Synagoge', desc: 'Toralesung und Begriffe', geplant: 12, fragen: SYNAGOGE },
   { id: 'tefilla', title: 'Tefilla', desc: 'Gebete und Minjan', geplant: 20, fragen: TEFILLA },
-  { id: 'brachot', title: 'Brachot', desc: 'Segenssprüche und Tischgebet', geplant: 13 },
-  { id: 'taharat', title: 'Taharat Hamischpacha', desc: 'Familienreinheit', geplant: 9 },
+  { id: 'brachot', title: 'Brachot', desc: 'Segenssprüche und Tischgebet', geplant: 13, fragen: BRACHOT },
+  { id: 'taharat', title: 'Taharat Hamischpacha', desc: 'Familienreinheit', geplant: 9, fragen: TAHARAT },
 ];
 
 // Fehlende Angaben auffüllen: ohne type gilt 'erklaeren', ohne status 'entwurf'.

@@ -55,7 +55,14 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
   dich* trägst du deinen Namen ein, dazu optional die hebräische Schreibweise
   mit Nikud. Die hebräische Zeile liest die App per Tipp vor, sofern das Gerät
   eine hebräische Stimme hat. Für frei eingegebene Namen gibt es keine
-  Aufnahme. Unter *Erfolge* steht dein Name unter der Überschrift
+  Aufnahme. Unter *Erfolge* steht dein Name unter der Überschrift.
+  Unter dem Gruß steht das hebräische Datum (etwa „9. Cheschwan 5787“). An
+  Feiertagen wechselt der Gruß: Schana tova zu Rosch haSchana, G'mar chatima
+  tova bis Jom Kippur, Chag sameach zu Sukkot, Schmini Azeret, Simchat Tora,
+  Pessach und Schawuot, dazu Chanukka sameach und Purim sameach. Den Kalender
+  rechnet der Browser selbst, die Feiertage gelten nach dem Brauch der
+  Diaspora. Der Tag wechselt um Mitternacht, am Erev-Abend grüßt die App also
+  noch wie am Vortag
 - **Tagesziel:** ein Ring auf der Startseite füllt sich mit den XP des Tages
   (50, 100 oder 200 XP, einstellbar unter *Mehr*). Ist er voll, gibt es
   +20 XP zum Abholen – wer das vergisst, bekommt den Bonus am nächsten Tag

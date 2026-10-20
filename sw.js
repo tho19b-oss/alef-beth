@@ -2,7 +2,7 @@
 // Bei Änderungen VERSION erhöhen (Haupt.Neben.Korrektur, Regeln im README) –
 // alte Caches werden beim Aktivieren gelöscht.
 
-const VERSION = '1.4.0';
+const VERSION = '1.5.0';
 const CACHE = `alefbeth-${VERSION}`;
 // Eigener, versionsunabhängiger Cache für die Erinnerungs-Einstellung: Der
 // Worker kann localStorage nicht lesen, die Seite spiegelt sie deshalb hierher.
@@ -42,6 +42,7 @@ const ASSETS = [
   'js/exercises.js',
   'js/lesson.js',
   'js/screens.js',
+  'js/kalender.js',
   'js/giur.js',
   'js/giur-pruefung.js',
   'data/letters.js',

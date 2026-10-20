@@ -13,6 +13,7 @@ import { dueIds, nextDue } from './srs.js';
 import { speakTapped, canSpeak, ttsSupported, voiceAvailable, voiceInfo, audioActive } from './audio.js';
 import { activeVersion, checkForUpdate } from './version.js';
 import { todayStr, esc } from './util.js';
+import { holidayFor, hebrewDateText } from './kalender.js';
 import {
   icon, he, countUp, replay, setProgress, ring, confetti, toast, xp as xpBurst, reducedMotion, confirmDialog,
   sound, soundSupported,
@@ -51,10 +52,13 @@ export function modeSwitchHtml(active) {
 
 // ---------- Begrüßung ----------
 
-// Gruß nach Wochentag und Uhrzeit. Am Freitag und bis Samstagabend gilt
+// Gruß nach Feiertag, Wochentag und Uhrzeit. Ein Feiertag geht vor (js/kalender.js),
+// auch vor dem Schabbat. Am Freitag und bis Samstagabend gilt
 // Schabbat Schalom, danach Schawua tov. Die Grenze um 18 Uhr ist eine grobe
 // Näherung ans Schabbat-Ende, die App kennt keine Ortszeiten.
 export function greetingFor(now = new Date()) {
+  const chag = holidayFor(now);
+  if (chag) return chag;
   const day = now.getDay();
   const h = now.getHours();
   if (day === 5 || (day === 6 && h < 18)) return { he: 'שַׁבָּת שָׁלוֹם', translit: 'Schabbat Schalom', de: 'Einen friedlichen Schabbat' };
@@ -66,7 +70,7 @@ export function greetingFor(now = new Date()) {
 }
 
 // Kopf der Lernen-Seite: der Gruß in Umschrift mit deinem Namen, darunter die
-// Bedeutung. Daneben steht der Gruß auf Hebräisch, mit dem hebräischen Namen,
+// Bedeutung, der Feiertag und das hebräische Datum. Daneben steht der Gruß auf Hebräisch, mit dem hebräischen Namen,
 // wenn einer eingetragen ist. Gibt es eine Stimme dafür, liest ein Tipp ihn vor.
 export function greetingHtml() {
   const g = greetingFor();
@@ -79,7 +83,7 @@ export function greetingHtml() {
     <section class="greeting" aria-labelledby="greeting-title">
       <div class="greeting__text">
         <h1 class="text-title" id="greeting-title">${g.translit}${name ? `, ${esc(name)}` : ''}</h1>
-        <p class="greeting__de text-caption">${g.de}</p>
+        <p class="greeting__de text-caption">${[g.de, g.name, hebrewDateText()].filter(Boolean).join(' · ')}</p>
       </div>
       <${tag} class="greeting__he"${attrs}>${speakable ? icon('speaker') : ''}${he(esc(heText), 'glyph-sm')}</${tag}>
     </section>`;

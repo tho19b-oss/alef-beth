@@ -59,13 +59,14 @@ html:not(.is-splash) .ab-splash { display: none; }
 .ab-step__text { cursor: pointer; }
 
 /* Begrüßung oben auf der Lernen-Seite (greetingHtml in screens.js) */
-.greeting { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
-.greeting__text { min-width: 0; }
+/* Reicht die Breite nicht für beides, rutscht der hebräische Gruß unter die Überschrift. */
+.greeting { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-3); }
+.greeting__text { flex: 1 1 auto; min-width: 0; }
 .greeting__text h1 { margin: 0; overflow-wrap: anywhere; }
 .greeting__de { color: var(--ink-soft); }
 .greeting__he {
-  flex: none;
-  max-width: 55%;
+  flex: 0 1 auto;
+  max-width: 100%;
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);

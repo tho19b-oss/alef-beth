@@ -149,11 +149,16 @@ Vanilla HTML/CSS/JS ohne Build-Schritt und ohne Abhängigkeiten.
 | `js/badges.js` | Abzeichen: Bedingungen und Fortschritt |
 | `js/theme.js` | Hell/Dunkel inkl. Farbe der Statusleiste, Schalter für Bewegung und Soundeffekte |
 | `js/version.js` | fragt die laufende Version beim Service Worker ab |
-| `sw.js` | Offline-Cache – **nach Änderungen `VERSION` hochzählen!** |
+| `sw.js` | Offline-Cache – **nach Änderungen `VERSION` aufs heutige Datum setzen!** |
 
-Die Versionsnummer steht **nur** in `sw.js`. Die Einstellungen fragen sie per
+Die Version ist das Datum der Fassung im Format `JJJJ.MM.TT`, z. B.
+`2026.10.20`. Kommt am selben Tag noch eine Fassung dazu, wird `-2`, `-3` …
+angehängt (`2026.10.20-2`). So zeigt *Mehr → Version* auf einen Blick, wie alt
+die installierte Fassung ist.
+
+Die Version steht **nur** in `sw.js`. Die Einstellungen fragen sie per
 `postMessage` beim laufenden Service Worker ab – es gibt also keine zweite
-Konstante, die beim Hochzählen vergessen werden könnte.
+Konstante, die beim Ändern vergessen werden könnte.
 
 Klänge: Das Glockenspiel erzeugt das Design System per Web Audio, ohne
 Audiodateien (`AlefBeth.sound` in `js/alefbeth.js`). Ein neuer Klang kommt
@@ -164,7 +169,7 @@ dort unter `SOUNDS` dazu – in D-Dur-Pentatonik (MIDI-Nummern), damit sich
 
 Einen weiteren Giur-Teil aufnehmen: `data/giur/<teil>.js` nach dem Muster von
 `kaschrut.js` anlegen, in `data/giur.js` importieren und beim Teil unter `fragen`
-eintragen, dazu die Datei in `sw.js` (`ASSETS`) und `VERSION` hochzählen. Fragen-IDs
+eintragen, dazu die Datei in `sw.js` (`ASSETS`) und `VERSION` aufs heutige Datum setzen. Fragen-IDs
 (`kas-01`, `schab-01` …) nie umnummerieren, daran hängt der Lernstand. Ist eine Antwort von einem
 Rabbiner geprüft, kommt `status: 'geprueft'` dazu. Den Prüfbogen erzeugt
 `node tools/giur-pruefbogen.mjs <teil>`: eine HTML-Datei, in der man jede Antwort
@@ -184,7 +189,7 @@ neue Farben oder Abstände gehören in die Tokens, nicht als feste Werte in
 `glyph-*`), hebräischer Text bekommt `lang="he"` (Helfer `he()` in `js/ui.js`).
 
 Beim Ändern von Dateien: Der Service Worker liefert aus dem Cache, ein Reload
-allein zeigt die Änderung also nicht. Entweder `VERSION` in `sw.js` hochzählen
+allein zeigt die Änderung also nicht. Entweder `VERSION` in `sw.js` neu setzen
 (dann lädt die App sich beim nächsten Start selbst neu) oder in den
 Entwicklertools unter *Application → Storage* den Cache leeren. Wird eine
 Item-ID gelöscht oder umbenannt, räumt die App gespeicherte Fortschritte dazu

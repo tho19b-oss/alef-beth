@@ -87,8 +87,6 @@ body {
   overflow: visible;
 }
 svg.ab-icon { fill: none; }
-.ab-icon--sm { width: var(--icon-sm); height: var(--icon-sm); }
-.ab-icon--lg { width: var(--icon-lg); height: var(--icon-lg); }
 .ab-icon .i-accent { fill: var(--icon-accent, currentColor); }
 .ab-icon [data-s] {
   stroke: var(--icon-line, currentColor);
@@ -155,8 +153,8 @@ svg.ab-icon { fill: none; }
 
 .ab-btn--secondary { --_bg: var(--card); --_fg: var(--ink); --_lc: var(--line); border-color: var(--line); }
 .ab-btn--gold { --_bg: var(--gold); --_fg: var(--on-gold); --_lc: var(--gold-ledge); }
-.ab-btn--correct, .ab-btn--success { --_bg: var(--minze); --_fg: var(--on-minze); --_lc: var(--minze-ledge); }
-.ab-btn--wrong, .ab-btn--danger { --_bg: var(--koralle); --_fg: var(--on-koralle); --_lc: var(--koralle-ledge); }
+.ab-btn--success { --_bg: var(--minze); --_fg: var(--on-minze); --_lc: var(--minze-ledge); }
+.ab-btn--danger { --_bg: var(--koralle); --_fg: var(--on-koralle); --_lc: var(--koralle-ledge); }
 .ab-btn--info { --_bg: var(--tekhelet); --_fg: var(--on-tekhelet); --_lc: var(--tekhelet-ledge); }
 
 .ab-btn--ghost { --_bg: transparent; --_fg: var(--granat-ink); --_lc: transparent; --_d: 0px; }
@@ -167,7 +165,6 @@ svg.ab-icon { fill: none; }
 }
 .ab-btn--ghost:active:not(:disabled) { transform: scale(0.97); }
 
-.ab-btn--inline { display: inline-flex; width: auto; }
 .ab-btn--sm {
   --_d: 3px;
   display: inline-flex;
@@ -1316,12 +1313,6 @@ button.ab-variant {
   -webkit-mask: var(--ab-mask-chevron-down) center / contain no-repeat;
   mask: var(--ab-mask-chevron-down) center / contain no-repeat;
   pointer-events: none;
-}
-.ab-version {
-  padding: 4px 10px;
-  border: 2px solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--paper);
 }
 
 /* ---------- Alphabet-Zeile ---------- */

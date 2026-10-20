@@ -545,18 +545,17 @@ const settingText = (forId, title, desc = '') => `
 export function renderSettings(host) {
   const voiceOk = voiceAvailable();
   const voice = voiceInfo();
-  let voiceLine;
-  if (voice?.clips) {
-    // Die Herkunft nennt ElevenLabs – das verlangt der Gratis-Plan, mit dem die
-    // Clips erzeugt sind.
-    voiceLine = `Hebräische Stimme: <b>${voice.name}</b>${voice.herkunft ? `, ${voice.herkunft}` : ''}.
-      Fehlt ein Clip, spricht die Stimme des Geräts.`;
-  } else if (!ttsSupported()) {
-    voiceLine = 'Dieser Browser unterstützt keine Sprachausgabe.';
-  } else if (voiceOk) {
-    voiceLine = `Hebräische Stimme aktiv: <b>${voice.name}</b>`;
-  } else {
-    voiceLine = `Keine hebräische Stimme gefunden – die App bleibt deshalb stumm,
+  // Die Herkunft nennt ElevenLabs – das verlangt der Gratis-Plan, mit dem die
+  // Clips erzeugt sind.
+  const voiceDesc = voice
+    ? `Stimme: ${voice.name}${voice.herkunft ? `, ${voice.herkunft}` : ''}`
+    : 'Hebräisch vorlesen';
+  // Erklärt wird nur, wenn es nichts zu hören gibt.
+  let voiceProblem = '';
+  if (!ttsSupported() && !voice) {
+    voiceProblem = 'Dieser Browser unterstützt keine Sprachausgabe. Alles andere funktioniert auch ohne Audio.';
+  } else if (!voiceOk) {
+    voiceProblem = `Keine hebräische Stimme gefunden – die App bleibt deshalb stumm,
       statt Hebräisch mit deutscher Stimme vorzulesen. Tipp: Microsoft Edge bringt
       hebräische Online-Stimmen mit – oder installiere unter Windows
       „Einstellungen → Zeit und Sprache → Sprache“ das hebräische Sprachpaket.
@@ -570,13 +569,14 @@ export function renderSettings(host) {
   const notif = state.settings.notifications;
   const notifSupported = 'Notification' in window;
   // Effektiv aktiv nur, wenn eingeschaltet UND der Browser die Erlaubnis erteilt hat.
-  const notifOn = notif.enabled && notifSupported && Notification.permission === 'granted';
+  const notifActive = () => notif.enabled && notifSupported && Notification.permission === 'granted';
 
   const NOTIF_BLOCKED_MSG = 'Benachrichtigungen sind für diese Seite im Browser blockiert. '
     + 'Öffne die Website-Einstellungen (Schloss- bzw. Info-Symbol links in der Adressleiste) → '
     + '„Benachrichtigungen“ → „Zulassen“ und lade die Seite neu.';
 
-  function notifHintText() {
+  // Hinweis unter der Erinnerung – nur, wenn sie sich nicht einschalten lässt.
+  function notifProblem() {
     if (!notifSupported) {
       return 'Benachrichtigungen sind hier nicht verfügbar – meist, weil die Seite in einem '
         + 'In-App-Browser läuft (z. B. aus einem Chat oder einer Mail geöffnet). Öffne sie direkt '
@@ -584,19 +584,19 @@ export function renderSettings(host) {
         + 'In der installierten App lässt sich die Erinnerung aktivieren.';
     }
     if (Notification.permission === 'denied') return NOTIF_BLOCKED_MSG;
-    if (state.settings.notifications.enabled && Notification.permission === 'granted') {
-      return 'Erinnerung aktiv – funktioniert, solange der Browser bzw. die App im Hintergrund geöffnet ist.';
-    }
-    return 'Aktiviere die Erinnerung, um täglich zur eingestellten Uhrzeit benachrichtigt zu werden.';
+    return '';
   }
 
   // Tagesziele in XP: eine Lektion oder Übungsrunde bringt etwa 100.
   const GOALS = [[50, 'Locker'], [100, 'Normal'], [200, 'Ehrgeizig']];
+  const hint = (id, iconName, text) =>
+    `<div class="ab-hint" id="${id}"${text ? '' : ' hidden'}>${icon(iconName)}<p class="text-body">${text}</p></div>`;
 
   host.innerHTML = `
     <div class="screen">
       <h1 class="screen__title text-title">Einstellungen</h1>
 
+      <h2 class="screen__section text-heading">Lernen</h2>
       <div class="ab-settings">
         <div class="ab-setting">
           ${settingText('set-goal', 'Tagesziel', 'Lektion ≈&nbsp;100&nbsp;XP')}
@@ -605,13 +605,31 @@ export function renderSettings(host) {
           </select></span>
         </div>
         <div class="ab-setting">
-          ${settingText('set-audio', 'Sprachausgabe', 'Hebräisch vorlesen')}
+          ${settingText('set-notif', 'Tägliche Erinnerung', 'Klappt, solange die App im Hintergrund offen ist')}
+          ${switchHtml('set-notif', notifActive(), !notifSupported)}
+        </div>
+        <div class="ab-setting" id="notif-time-row" ${notifActive() ? '' : 'hidden'}>
+          ${settingText('set-notif-time', 'Erinnerungszeit')}
+          <input class="ab-input text-strong" type="time" id="set-notif-time" value="${notif.time}">
+        </div>
+      </div>
+      ${hint('notif-hint', 'bell', notifProblem())}
+
+      <h2 class="screen__section text-heading">Ton</h2>
+      <div class="ab-settings">
+        <div class="ab-setting">
+          ${settingText('set-audio', 'Sprachausgabe', voiceDesc)}
           ${switchHtml('set-audio', state.settings.audio, !voiceOk)}
         </div>
         <div class="ab-setting">
           ${settingText('set-sounds', 'Soundeffekte', 'Töne bei Antworten und Feiern')}
           ${switchHtml('set-sounds', soundSupported() && state.settings.sounds, !soundSupported())}
         </div>
+      </div>
+      ${hint('voice-hint', 'speaker', voiceProblem)}
+
+      <h2 class="screen__section text-heading">Darstellung</h2>
+      <div class="ab-settings">
         <div class="ab-setting">
           ${settingText('set-theme', 'Erscheinungsbild')}
           <span class="ab-select"><select class="ab-input text-strong" id="set-theme">
@@ -626,46 +644,22 @@ export function renderSettings(host) {
         </div>
       </div>
 
-      <div class="ab-hint ab-hint--info">${icon('speaker')}<p class="text-body">${voiceLine}</p></div>
-
-      <h2 class="screen__section text-heading">Benachrichtigungen</h2>
-      <div class="ab-settings">
-        <div class="ab-setting">
-          ${settingText('set-notif', 'Tägliche Erinnerung')}
-          ${switchHtml('set-notif', notifOn, !notifSupported)}
-        </div>
-        <div class="ab-setting" id="notif-time-row" ${notifOn ? '' : 'hidden'}>
-          ${settingText('set-notif-time', 'Erinnerungszeit')}
-          <input class="ab-input text-strong" type="time" id="set-notif-time" value="${notif.time}">
-        </div>
-      </div>
-      <div class="ab-hint">${icon('bell')}<p class="text-body" id="notif-hint">${notifHintText()}</p></div>
-
-      <h2 class="screen__section text-heading">Daten</h2>
-      <div class="ab-hint">${icon('book')}<p class="text-body">XP, Serie und Abzeichen stehen unter
-        „Erfolge“. Alles bleibt auf diesem Gerät.</p></div>
-      <button class="ab-btn ab-btn--ghost ab-btn--danger text-button" type="button" id="set-reset">Allen Fortschritt löschen</button>
-
-      <h2 class="screen__section text-heading">Version</h2>
-      <div class="ab-settings">
-        <div class="ab-setting">
-          <span class="ab-setting__text"><span class="text-strong">Installierte Fassung</span></span>
-          <span class="ab-version text-code" id="app-version">wird geprüft …</span>
-        </div>
-      </div>
-      <button class="ab-btn ab-btn--secondary text-button" type="button" id="check-update">Nach Update suchen</button>
-      <div class="ab-hint">${icon('sparkle')}<p class="text-body" id="update-status">Prüft, ob auf dem Server
-        eine neuere Fassung liegt. Die App braucht dafür kurz Internet.</p></div>
-
-      <h2 class="screen__section text-heading">Über diese App</h2>
+      <h2 class="screen__section text-heading">Über die App</h2>
       <section class="ab-card about">
-        <p class="text-body"><b>Alef Beth</b> – Hebräisch lesen lernen: vom Alphabet über die
-          Vokalzeichen bis zu Wörtern aus Siddur und Alltag. Funktioniert offline und lässt
-          sich am Handy „Zum Startbildschirm hinzufügen“.</p>
-        <p class="text-body">Dein Fortschritt bleibt auf diesem Gerät – es gibt kein Konto, und
-          es werden keine Daten übertragen.</p>
+        <p class="text-body"><b>Alef Beth</b> – Hebräisch lesen lernen, vom Alphabet bis zu Wörtern
+          aus Siddur und Alltag. Läuft offline; dein Fortschritt bleibt auf diesem Gerät, ohne Konto
+          und ohne Datenübertragung.</p>
         <p class="text-body">Viel Erfolg auf deinem Weg – ${he('בְּהַצְלָחָה', 'glyph-sm')}!</p>
       </section>
+      <div class="ab-settings">
+        <div class="ab-setting">
+          <span class="ab-setting__text"><span class="text-strong">Version</span><span
+            class="ab-setting__desc text-caption" id="app-version" aria-live="polite">wird geprüft …</span></span>
+          <button class="ab-btn ab-btn--secondary ab-btn--sm text-label" type="button" id="check-update">Update suchen</button>
+        </div>
+      </div>
+
+      <button class="ab-btn ab-btn--ghost ab-btn--danger text-button screen__section" type="button" id="set-reset">Allen Fortschritt löschen</button>
     </div>`;
 
   renderVersion(host);
@@ -697,43 +691,37 @@ export function renderSettings(host) {
     applyMotion();
   });
 
-  const notifToggle = host.querySelector('#set-notif');
   const notifTimeRow = host.querySelector('#notif-time-row');
   const notifHint = host.querySelector('#notif-hint');
+  const showNotifProblem = (text) => {
+    notifHint.querySelector('p').textContent = text;
+    notifHint.hidden = !text;
+  };
 
-  notifToggle?.addEventListener('change', async (e) => {
+  host.querySelector('#set-notif').addEventListener('change', async (e) => {
     if (e.target.checked) {
       // Nur im Zustand 'default' zeigt der Browser den Erlaubnis-Dialog. Bei 'denied'
       // liefert requestPermission() sofort 'denied' zurück, ohne erneut zu fragen.
       let perm = Notification.permission;
       if (perm === 'default') perm = await Notification.requestPermission();
-      if (perm !== 'granted') {
-        e.target.checked = false;
-        state.settings.notifications.enabled = false;
-        notifTimeRow.hidden = true;
-        save();
-        notifHint.textContent = perm === 'denied'
-          ? NOTIF_BLOCKED_MSG
-          : 'Berechtigung nicht erteilt. Tippe erneut und wähle „Zulassen“.';
-        return;
-      }
-      state.settings.notifications.enabled = true;
-      notifTimeRow.hidden = false;
-      notifHint.textContent = 'Erinnerung aktiv – funktioniert, solange der Browser bzw. die App im Hintergrund geöffnet ist.';
-      toast(`Erinnerung aktiv – täglich um ${state.settings.notifications.time} Uhr`, { tone: 'success', icon: 'bell' });
+      if (perm !== 'granted') e.target.checked = false;
+      notif.enabled = perm === 'granted';
+      showNotifProblem(perm === 'default'
+        ? 'Berechtigung nicht erteilt. Tippe erneut und wähle „Zulassen“.'
+        : notifProblem());
+      if (notif.enabled) toast(`Erinnerung aktiv – täglich um ${notif.time} Uhr`, { tone: 'success', icon: 'bell' });
     } else {
-      state.settings.notifications.enabled = false;
-      notifTimeRow.hidden = true;
-      notifHint.textContent = 'Aktiviere die Erinnerung, um täglich zur eingestellten Uhrzeit benachrichtigt zu werden.';
+      notif.enabled = false;
     }
+    notifTimeRow.hidden = !notif.enabled;
     save();
     scheduleReminder();
   });
 
-  host.querySelector('#set-notif-time')?.addEventListener('change', (e) => {
+  host.querySelector('#set-notif-time').addEventListener('change', (e) => {
     // Ein geleertes Zeitfeld nicht übernehmen, sondern auf den Standard zurückfallen.
     const parsed = parseTime(e.target.value);
-    state.settings.notifications.time = parsed ? e.target.value : DEFAULT_TIME;
+    notif.time = parsed ? e.target.value : DEFAULT_TIME;
     if (!parsed) e.target.value = DEFAULT_TIME;
     save();
     scheduleReminder();
@@ -752,37 +740,31 @@ export function renderSettings(host) {
   });
 }
 
-// Versionszeile füllen und den Update-Knopf verdrahten.
+// Versionszeile füllen und den Update-Knopf verdrahten. Das Ergebnis der Suche
+// erscheint in der Beschreibung unter „Version“.
 async function renderVersion(host) {
   const tag = host.querySelector('#app-version');
   const btn = host.querySelector('#check-update');
-  const status = host.querySelector('#update-status');
 
   const version = await activeVersion();
   if (!tag.isConnected) return; // Screen inzwischen gewechselt
-  if (version) {
-    tag.textContent = version;
-  } else {
-    // Kein Service Worker aktiv: beim allerersten Aufruf normal, danach ein
-    // Zeichen dafür, dass die App nicht offline-fähig läuft.
-    tag.textContent = 'noch nicht offline';
-    tag.classList.add('is-muted');
-  }
+  // Kein Service Worker aktiv: beim allerersten Aufruf normal, danach ein
+  // Zeichen dafür, dass die App nicht offline-fähig läuft.
+  tag.textContent = version || 'noch nicht offline';
 
   btn.addEventListener('click', async () => {
     btn.disabled = true;
-    status.textContent = 'Suche …';
+    tag.textContent = 'Suche …';
     const result = await checkForUpdate();
     if (!btn.isConnected) return;
     btn.disabled = false;
     if (result === 'update') {
       // app.js lädt neu, sobald der neue Service Worker übernommen hat.
-      status.textContent = 'Neue Version gefunden – sie wird geladen, die App startet gleich neu.';
+      tag.textContent = 'Neue Version gefunden – die App startet gleich neu.';
     } else if (result === 'aktuell') {
-      status.textContent = `Alles aktuell – ${version || 'die installierte Fassung'} ist die neueste.`;
+      tag.textContent = `${version || 'Diese Fassung'} – alles aktuell`;
     } else {
-      status.textContent = 'Konnte nicht nachsehen – keine Internetverbindung oder der '
-        + 'Server ist gerade nicht erreichbar.';
+      tag.textContent = 'Konnte nicht nachsehen – keine Internetverbindung?';
     }
   });
 }

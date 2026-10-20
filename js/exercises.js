@@ -89,6 +89,9 @@ function wireTiles(host, options, onAnswered, detail) {
   }));
 }
 
+// Zusatz in Klammern – „(stumm)“ steht schon in Klammern und bekommt keine zweiten.
+const inParens = (t) => (!t ? '' : /^\(.*\)$/.test(t) ? ` ${t}` : ` (${t})`);
+
 // ---------- Lernkarte (neues Lernitem) ----------
 
 const fact = (label, valueHtml) => `<div class="ab-fact"><dt>${label}</dt><dd>${valueHtml}</dd></div>`;
@@ -234,7 +237,7 @@ function renderMc(ex, host, onAnswered) {
 
   const detail = ex.custom
     ? ex.custom.answerText
-    : `${he(display(item), 'glyph-sm')} = ${optLabel(item, field)}${optSub(item, field) ? ` (${optSub(item, field)})` : ''}`;
+    : `${he(display(item), 'glyph-sm')} = ${optLabel(item, field)}${inParens(optSub(item, field))}`;
   wireTiles(host, options, onAnswered, detail);
 }
 

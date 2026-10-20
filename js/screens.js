@@ -465,7 +465,7 @@ function medalHtml(b) {
         ${earned ? '' : `<span class="ab-medal__lock">${icon('lock')}</span>`}
       </div>
       <span class="ab-medal__name text-strong">${b.name}${earned ? '' : '<span class="ab-sr"> (noch nicht erreicht)</span>'}</span>
-      <span class="ab-medal__desc text-caption">${b.desc}${way ? ` · ${num(value)} / ${num(needed)}` : ''}</span>
+      <span class="ab-medal__desc text-caption">${b.desc}${way ? ` · ${num(value)}&nbsp;/&nbsp;${num(needed)}` : ''}</span>
       ${way ? `<span class="ab-medal__bar" aria-hidden="true"><i style="--value: ${Math.round((value / needed) * 100)}%"></i></span>` : ''}
     </li>`;
 }
@@ -599,7 +599,7 @@ export function renderSettings(host) {
 
       <div class="ab-settings">
         <div class="ab-setting">
-          ${settingText('set-goal', 'Tagesziel', 'Lektion ≈ 100 XP')}
+          ${settingText('set-goal', 'Tagesziel', 'Lektion ≈&nbsp;100&nbsp;XP')}
           <span class="ab-select"><select class="ab-input text-strong" id="set-goal">${GOALS.map(([xp, name]) =>
             `<option value="${xp}" ${state.settings.dailyGoal === xp ? 'selected' : ''}>${name} · ${xp} XP</option>`).join('')}
           </select></span>

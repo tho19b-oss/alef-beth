@@ -159,101 +159,206 @@ const errorText = (e) => (e instanceof TypeError
   ? 'Keine Verbindung zum Server. Bist du online?'
   : 'Das hat nicht geklappt. Versuch es gleich noch einmal.');
 
-// ---------- Karte auf der Erfolge-Seite ----------
+// ---------- Bausteine ----------
 
-export function teaserHtml() {
-  const g = me.groups.find((x) => x.code === me.current) || me.groups[0];
-  const sub = g ? `${esc(g.name)} · <span data-rank>Platz wird geladen …</span>` : 'Mit Freunden um die meisten XP der Woche';
-  return `
-    <a class="ab-alpha rl-teaser" href="#/rangliste">
-      <span class="ab-alpha__glyph rl-teaser__art">${icon('trophy')}</span>
-      <span class="ab-alpha__text"><span class="text-strong">Rangliste</span>
-        <span class="ab-alpha__sub text-caption">${sub}</span></span>
-      <span class="rl-chevron" aria-hidden="true">${icon('chevron')}</span>
-    </a>`;
+const PRIVACY = 'Gespeichert werden dein Name, deine XP und deine Serie, bei Supabase in Frankfurt. '
+  + 'Sehen kann sie nur, wer den Gruppencode kennt.';
+
+// Jede Person bekommt aus ihrer ID eine feste Farbe für den Kreis mit der Initiale.
+const TONES = ['tekhelet', 'minze', 'granat', 'koralle', 'gold'];
+function tone(id) {
+  let h = 0;
+  for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return TONES[h % TONES.length];
 }
 
-// Platz nachtragen, sobald der Server geantwortet hat.
-export async function fillTeaser(host) {
-  const slot = host.querySelector('[data-rank]');
-  if (!slot) return;
-  const g = me.groups.find((x) => x.code === me.current) || me.groups[0];
-  try {
-    const rows = withRanks(await board(g.code));
-    const mine = rows.find((r) => r.player_id === me.id);
-    if (!slot.isConnected) return;
-    slot.textContent = mine ? `Platz ${mine.rank} von ${rows.length}` : `${rows.length} dabei`;
-  } catch (_) {
-    slot.remove();
+function avatarHtml(r, size = '') {
+  const initial = [...r.name.trim()][0]?.toUpperCase() || '?';
+  return `<span class="rl-avatar rl-avatar--${tone(r.player_id)}${size ? ` rl-avatar--${size}` : ''}" aria-hidden="true">${esc(initial)}</span>`;
+}
+
+// Tage bis Sonntagabend, der heutige mitgezählt.
+function daysLeftText() {
+  const left = 7 - ((new Date().getDay() + 6) % 7);
+  return left === 1 ? 'Letzter Tag der Woche' : `Noch ${left} Tage bis Sonntag`;
+}
+
+// Ein Satz zur eigenen Lage: Abstand nach vorn oder Vorsprung.
+function standingText(rows, mine) {
+  if (!mine) return '';
+  if (rows.length === 1) return 'Du bist noch allein in der Gruppe. Lade jemanden ein.';
+  if (rows[0].week_xp === 0) return 'Diese Woche hat noch niemand XP. Eine Lektion bringt dich nach vorn.';
+  if (mine.rank === 1) {
+    const second = rows.find((r) => r.player_id !== mine.player_id);
+    const lead = mine.week_xp - second.week_xp;
+    return lead === 0 ? 'Du teilst dir Platz 1.' : `Du führst mit <b>${num(lead)} XP</b> Vorsprung.`;
   }
+  const ahead = rows.filter((r) => r.week_xp > mine.week_xp).at(-1);
+  const gap = ahead.week_xp - mine.week_xp + 1;
+  return `Noch <b>${num(gap)} XP</b> bis Platz ${ahead.rank}.`;
 }
 
-// ---------- Ranglisten-Seite ----------
-
-const backHtml = `<a class="rl-back text-label" href="#/erfolge">${icon('chevron')}Erfolge</a>`;
-
-const PRIVACY = 'Für die Rangliste speichert die App deinen Namen, deine XP und deine Serie '
-  + 'auf einem Server (Supabase in Frankfurt). Sehen kann sie nur, wer den Gruppencode kennt.';
-
-function nameFieldHtml() {
-  if (state.profile.name) return '';
-  return `
-    <div class="ab-setting profile-field">
-      <label class="ab-setting__text" for="rl-name"><span class="text-strong">Dein Name</span>
-        <span class="ab-setting__desc text-caption">So sehen dich die anderen</span></label>
-      <input class="ab-input text-strong" type="text" id="rl-name" maxlength="${NAME_MAX}" autocomplete="given-name" placeholder="Vorname" required>
-    </div>`;
-}
-
-// Formulare zum Anlegen und Beitreten. Kennt die App noch keinen Namen,
-// fragt ein Feld darüber nach ihm, für beide Formulare.
-function formsHtml() {
-  const name = nameFieldHtml();
-  return `
-    ${name ? `<div class="ab-settings">${name}</div>` : ''}
-    <form class="ab-card rl-form" data-form="create">
-      <h2 class="text-strong">Neue Gruppe anlegen</h2>
-      <div class="ab-settings">
-        <div class="ab-setting profile-field">
-          <label class="ab-setting__text" for="rl-group"><span class="text-strong">Name der Gruppe</span></label>
-          <input class="ab-input text-strong" type="text" id="rl-group" maxlength="${GROUP_MAX}" placeholder="z. B. Giur-Kurs" required>
-        </div>
-      </div>
-      <button class="ab-btn text-button" type="submit">Anlegen</button>
-    </form>
-    <form class="ab-card rl-form" data-form="join">
-      <h2 class="text-strong">Mit Code beitreten</h2>
-      <div class="ab-settings">
-        <div class="ab-setting profile-field">
-          <label class="ab-setting__text" for="rl-code"><span class="text-strong">Gruppencode</span>
-            <span class="ab-setting__desc text-caption">Sechs Zeichen, etwa K7MQ2X</span></label>
-          <input class="ab-input text-strong rl-code-input" type="text" id="rl-code" maxlength="6" autocomplete="off"
-                 autocapitalize="characters" spellcheck="false" required>
-        </div>
-      </div>
-      <button class="ab-btn ab-btn--secondary text-button" type="submit">Beitreten</button>
-    </form>`;
+// Siegertreppchen: Platz 2, 1, 3 nebeneinander, der erste steht am höchsten.
+function podiumHtml(top) {
+  const place = (r) => {
+    if (!r) return '<li class="rl-podium__place" aria-hidden="true"></li>';
+    const mine = r.player_id === me.id;
+    return `
+      <li class="rl-podium__place rl-podium__place--${r.rank}${mine ? ' is-me' : ''}">
+        ${r.rank === 1 ? `<span class="rl-podium__crown" aria-hidden="true">${icon('crown')}</span>` : ''}
+        ${avatarHtml(r, r.rank === 1 ? 'xl' : 'lg')}
+        <span class="rl-podium__name text-strong">${esc(r.name)}<span class="ab-sr">, Platz ${r.rank}</span></span>
+        <span class="rl-podium__xp text-caption">${num(r.week_xp)} XP</span>
+        <span class="rl-podium__block text-title" aria-hidden="true">${r.rank}</span>
+      </li>`;
+  };
+  return `<ol class="rl-podium" aria-label="Die ersten drei">${place(top[1])}${place(top[0])}${place(top[2])}</ol>`;
 }
 
 function rowHtml(r) {
   const mine = r.player_id === me.id;
-  const medal = r.week_xp > 0 && r.rank <= 3 ? ` rl-row--${r.rank}` : '';
-  const streak = r.streak ? `${icon('flame')}${r.streak} ${r.streak === 1 ? 'Tag' : 'Tage'} · ` : '';
+  const streak = r.streak ? `<span class="rl-row__streak">${icon('flame')}${r.streak}</span>` : '';
   return `
-    <li class="ab-alpha rl-row${medal}${mine ? ' is-me' : ''}">
-      <span class="ab-alpha__glyph"><span class="text-heading">${r.rank}</span></span>
-      <span class="ab-alpha__text"><span class="text-strong">${esc(r.name)}${mine ? ' <span class="rl-you text-caption">du</span>' : ''}</span>
-        <span class="ab-alpha__sub rl-row__sub text-caption">${streak}${num(r.xp)} XP gesamt</span></span>
+    <li class="rl-row${mine ? ' is-me' : ''}">
+      <span class="rl-row__rank text-strong">${r.rank}</span>
+      ${avatarHtml(r)}
+      <span class="rl-row__name">
+        <span class="text-strong">${esc(r.name)}</span>${mine ? '<span class="rl-you text-caption">du</span>' : ''}
+        ${streak ? `<span class="rl-row__sub text-caption">${streak}<span class="ab-sr"> Tage Serie</span></span>` : ''}
+      </span>
       <span class="rl-row__xp text-strong">${num(r.week_xp)}<span class="text-caption"> XP</span></span>
     </li>`;
 }
 
-function weekRangeText() {
-  const from = new Date(`${weekStart()}T00:00`);
-  const to = new Date(from.getFullYear(), from.getMonth(), from.getDate() + 6);
-  const f = (d) => d.toLocaleDateString('de-DE', { day: 'numeric', month: 'long' });
-  return `${f(from)} bis ${f(to)}`;
+function boardHtml(rows) {
+  const mine = rows.find((r) => r.player_id === me.id);
+  // Ab drei Leuten stehen die ersten drei auf dem Treppchen, der Rest darunter.
+  const podium = rows.length >= 3 && rows[0].week_xp > 0;
+  const rest = podium ? rows.slice(3) : rows;
+  const standing = standingText(rows, mine);
+  return `
+    ${standing ? `
+      <div class="ab-banner rl-standing" role="status">
+        <span class="ab-banner__icon">${icon(mine?.rank === 1 && rows[0].week_xp > 0 ? 'crown' : 'bolt')}</span>
+        <p class="ab-banner__text text-body">${standing}</p>
+      </div>` : ''}
+    ${podium ? podiumHtml(rows.slice(0, 3)) : ''}
+    ${rest.length ? `<ol class="ab-card rl-list" ${podium ? 'start="4"' : ''} aria-label="${podium ? 'Weitere Plätze' : 'Plätze'}">${rest.map(rowHtml).join('')}</ol>` : ''}`;
 }
+
+// Name abfragen, falls die App noch keinen kennt.
+function nameFieldHtml() {
+  if (state.profile.name) return '';
+  return `
+    <label class="rl-field">
+      <span class="text-strong">Dein Name</span>
+      <span class="rl-field__hint text-caption">So sehen dich die anderen</span>
+      <input class="ab-input text-strong" type="text" name="player" maxlength="${NAME_MAX}" autocomplete="given-name" placeholder="Vorname" required>
+    </label>`;
+}
+
+// Gründen oder beitreten, umschaltbar. Steht im Leer-Zustand auf der Seite
+// und sonst im Dialog hinter „Neue Gruppe“.
+function startFormHtml(mode = 'create') {
+  return `
+    <div class="modeswitch rl-switch" role="tablist" aria-label="Gruppe">
+      <button class="text-label" type="button" role="tab" data-mode="create" aria-selected="${mode === 'create'}">Gruppe gründen</button>
+      <button class="text-label" type="button" role="tab" data-mode="join" aria-selected="${mode === 'join'}">Code eingeben</button>
+    </div>
+    <form class="rl-start" data-mode="${mode}" novalidate>
+      ${nameFieldHtml()}
+      <label class="rl-field" data-for="create">
+        <span class="text-strong">Name der Gruppe</span>
+        <input class="ab-input text-strong" type="text" name="group" maxlength="${GROUP_MAX}" placeholder="z. B. Giur-Kurs">
+      </label>
+      <label class="rl-field" data-for="join">
+        <span class="text-strong">Gruppencode</span>
+        <span class="rl-field__hint text-caption">Sechs Zeichen, etwa K7MQ2X</span>
+        <input class="ab-input text-strong rl-code-input" type="text" name="code" maxlength="6" autocomplete="off"
+               autocapitalize="characters" spellcheck="false" inputmode="text">
+      </label>
+      <button class="ab-btn text-button" type="submit">${mode === 'create' ? 'Gruppe gründen' : 'Beitreten'}</button>
+    </form>`;
+}
+
+// Umschalter und Absenden verdrahten. onDone bekommt den Code der Gruppe.
+function wireStartForm(root, onDone) {
+  const form = root.querySelector('.rl-start');
+  const btn = form.querySelector('[type="submit"]');
+  const setMode = (mode) => {
+    form.dataset.mode = mode;
+    root.querySelectorAll('.rl-switch [data-mode]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.mode === mode)));
+    btn.textContent = mode === 'create' ? 'Gruppe gründen' : 'Beitreten';
+  };
+  root.querySelectorAll('.rl-switch [data-mode]').forEach((b) => b.addEventListener('click', () => {
+    setMode(b.dataset.mode);
+    form.querySelector(`[data-for="${b.dataset.mode}"] input`).focus();
+  }));
+  const code = form.querySelector('[name="code"]');
+  code.addEventListener('input', () => { code.value = normCode(code.value); });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const player = form.querySelector('[name="player"]');
+    if (player && !player.value.trim()) {
+      player.focus();
+      return;
+    }
+    const mode = form.dataset.mode;
+    const group = form.querySelector('[name="group"]').value.trim();
+    if (mode === 'create' && !group) {
+      form.querySelector('[name="group"]').focus();
+      return;
+    }
+    if (mode === 'join' && code.value.length !== 6) {
+      toast('Der Code hat sechs Zeichen.', { tone: 'error' });
+      code.focus();
+      return;
+    }
+    if (player) {
+      state.profile.name = player.value.trim();
+      save();
+    }
+    btn.disabled = true;
+    try {
+      if (mode === 'create') {
+        const c = await createGroup(group);
+        toast(`Gruppe „${group}“ gegründet`, { tone: 'success', icon: 'trophy' });
+        onDone(c);
+      } else {
+        const name = await joinGroup(code.value);
+        toast(`Willkommen in „${name}“`, { tone: 'success', icon: 'trophy' });
+        onDone(code.value);
+      }
+    } catch (err) {
+      toast(err.status === 404 ? 'Zu diesem Code gibt es keine Gruppe.' : errorText(err), { tone: 'error' });
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+
+// Dialog im Stil des Design Systems (ab-dialog) mit dem Start-Formular.
+function openStartDialog(onDone) {
+  const dlg = document.createElement('dialog');
+  dlg.className = 'ab-dialog rl-dialog';
+  dlg.setAttribute('aria-labelledby', 'rl-dialog-title');
+  dlg.innerHTML = `
+    <button class="ab-iconbtn rl-dialog__close" type="button" aria-label="Schließen">${icon('close')}</button>
+    <h2 class="ab-dialog__title text-heading" id="rl-dialog-title">Weitere Gruppe</h2>
+    ${startFormHtml()}`;
+  dlg.querySelector('.rl-dialog__close').addEventListener('click', () => dlg.close());
+  dlg.addEventListener('close', () => dlg.remove());
+  wireStartForm(dlg, (code) => {
+    dlg.close();
+    onDone(code);
+  });
+  document.body.append(dlg);
+  dlg.showModal();
+  dlg.querySelector('[name="player"], [name="group"]').focus();
+}
+
+// ---------- Ranglisten-Tab ----------
 
 export function renderRangliste(host, joinCode = null) {
   if (joinCode) {
@@ -261,54 +366,47 @@ export function renderRangliste(host, joinCode = null) {
     return;
   }
   if (!hasGroups()) {
-    host.innerHTML = `
-      <div class="screen">
-        ${backHtml}
-        <h1 class="screen__title text-title">Rangliste</h1>
-        <p class="rl-desc text-body">Lerne mit Freunden um die Wette. Gezählt werden die XP der
-          laufenden Woche, am Montag beginnen alle wieder bei 0.</p>
-        ${formsHtml()}
-        <div class="ab-hint ab-hint--info">${icon('lock')}<p class="text-body">${PRIVACY}</p></div>
-      </div>`;
-    wireForms(host);
+    renderEmpty(host);
     return;
   }
 
   if (!me.groups.some((g) => g.code === me.current)) me.current = me.groups[0].code;
   const g = me.groups.find((x) => x.code === me.current);
-  const picker = me.groups.length > 1
-    ? `<span class="ab-select rl-picker"><select class="ab-input text-strong" id="rl-pick" aria-label="Gruppe">${
-      me.groups.map((x) => `<option value="${x.code}"${x.code === g.code ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}</select></span>`
-    : `<p class="rl-group text-heading">${esc(g.name)}</p>`;
+  const chip = (x) => `<button class="ab-chip rl-chip text-label" type="button" data-code="${x.code}"
+    aria-pressed="${x.code === g.code}">${esc(x.name)}</button>`;
 
   host.innerHTML = `
-    <div class="screen">
-      ${backHtml}
-      <h1 class="screen__title text-title">Rangliste</h1>
-      ${picker}
-      <p class="rl-desc text-caption">XP vom ${weekRangeText()}</p>
-      <ol class="ab-alphalist rl-list" aria-live="polite"><li class="rl-status text-body">Wird geladen …</li></ol>
+    <div class="screen rl">
+      <header class="rl-head">
+        <h1 class="screen__title text-title">Rangliste</h1>
+        <span class="rl-head__week text-caption">${daysLeftText()}</span>
+      </header>
+      <div class="rl-chips" role="group" aria-label="Gruppe wählen">
+        ${me.groups.map(chip).join('')}
+        <button class="ab-chip rl-chip rl-chip--add text-label" type="button" id="rl-add">${icon('sparkle')}Neue Gruppe</button>
+      </div>
+
+      <div class="rl-board" aria-live="polite"><p class="rl-status text-body">Wird geladen …</p></div>
 
       <section class="ab-card rl-invite" aria-labelledby="rl-invite-title">
-        <h2 class="text-strong" id="rl-invite-title">Freunde einladen</h2>
-        <p class="text-body">Gruppencode</p>
-        <p class="rl-invite__code text-title">${g.code}</p>
-        <div class="rl-invite__btns">
-          <button class="ab-btn text-button" type="button" id="rl-share">Einladung teilen</button>
-          <button class="ab-btn ab-btn--ghost ab-btn--danger text-button" type="button" id="rl-leave">Gruppe verlassen</button>
+        <div class="rl-invite__text">
+          <h2 class="text-strong" id="rl-invite-title">Freunde einladen</h2>
+          <p class="text-caption">Code <span class="rl-invite__code text-strong">${g.code}</span></p>
         </div>
+        <button class="ab-btn ab-btn--sm text-label" type="button" id="rl-share">Einladen</button>
       </section>
 
-      <h2 class="screen__section text-heading">Weitere Gruppe</h2>
-      ${formsHtml()}
-      <div class="ab-hint ab-hint--info">${icon('lock')}<p class="text-body">${PRIVACY}</p></div>
+      <p class="rl-foot text-caption">${PRIVACY}</p>
+      <button class="ab-btn ab-btn--ghost ab-btn--danger ab-btn--sm text-label rl-leave" type="button" id="rl-leave">„${esc(g.name)}“ verlassen</button>
     </div>`;
 
-  host.querySelector('#rl-pick')?.addEventListener('change', (e) => {
-    me.current = e.target.value;
+  host.querySelectorAll('.rl-chip[data-code]').forEach((b) => b.addEventListener('click', () => {
+    if (b.dataset.code === me.current) return;
+    me.current = b.dataset.code;
     store();
     renderRangliste(host);
-  });
+  }));
+  host.querySelector('#rl-add').addEventListener('click', () => openStartDialog(() => renderRangliste(host)));
   host.querySelector('#rl-share').addEventListener('click', () => share(g));
   host.querySelector('#rl-leave').addEventListener('click', async () => {
     const ok = await confirmDialog({
@@ -327,23 +425,36 @@ export function renderRangliste(host, joinCode = null) {
       toast(errorText(e), { tone: 'error' });
     }
   });
-  wireForms(host);
   loadBoard(host, g.code);
 }
 
 async function loadBoard(host, code) {
-  const list = host.querySelector('.rl-list');
+  const box = host.querySelector('.rl-board');
   try {
     // Erst den eigenen Stand hochladen, damit man sich gleich richtig einsortiert sieht.
     await upload().catch(() => {});
     const rows = withRanks(await board(code));
-    if (!list.isConnected) return;
-    list.innerHTML = rows.length
-      ? rows.map(rowHtml).join('')
-      : '<li class="rl-status text-body">Die Gruppe gibt es nicht mehr.</li>';
+    if (!box.isConnected) return;
+    box.innerHTML = rows.length ? boardHtml(rows) : '<p class="rl-status text-body">Die Gruppe gibt es nicht mehr.</p>';
   } catch (e) {
-    if (list.isConnected) list.innerHTML = `<li class="rl-status text-body">${errorText(e)}</li>`;
+    if (box.isConnected) box.innerHTML = `<p class="rl-status text-body">${errorText(e)}</p>`;
   }
+}
+
+function renderEmpty(host) {
+  host.innerHTML = `
+    <div class="screen rl">
+      <h1 class="screen__title text-title">Rangliste</h1>
+      <section class="ab-card rl-hero">
+        <span class="rl-hero__art">${icon('trophy')}</span>
+        <h2 class="text-heading">Lernt um die Wette</h2>
+        <p class="text-body">Gründe eine Gruppe und lade Freunde ein, oder tritt mit einem Code bei.
+          Gezählt werden die XP der Woche, am Montag starten alle wieder bei 0.</p>
+      </section>
+      <section class="ab-card rl-startcard">${startFormHtml()}</section>
+      <p class="rl-foot text-caption">${PRIVACY}</p>
+    </div>`;
+  wireStartForm(host, () => renderRangliste(host));
 }
 
 async function share(g) {
@@ -365,55 +476,6 @@ async function share(g) {
   }
 }
 
-// Den Namen aus dem Feld übernehmen, falls die App noch keinen kennt.
-function takeName(host) {
-  const input = host.querySelector('#rl-name');
-  if (!input) return true;
-  const name = input.value.trim();
-  if (!name) {
-    input.focus();
-    return false;
-  }
-  state.profile.name = name;
-  save();
-  return true;
-}
-
-function wireForms(host) {
-  host.querySelectorAll('.rl-code-input').forEach((input) => {
-    input.addEventListener('input', () => { input.value = normCode(input.value); });
-  });
-  host.querySelectorAll('.rl-form').forEach((form) => {
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (!takeName(host)) return;
-      const btn = form.querySelector('[type="submit"]');
-      btn.disabled = true;
-      try {
-        if (form.dataset.form === 'create') {
-          const name = form.querySelector('#rl-group').value.trim();
-          if (!name) return;
-          await createGroup(name);
-          toast(`Gruppe „${name}“ angelegt`, { tone: 'success', icon: 'trophy' });
-        } else {
-          const code = normCode(form.querySelector('#rl-code').value);
-          if (code.length !== 6) {
-            toast('Der Code hat sechs Zeichen.', { tone: 'error' });
-            return;
-          }
-          const name = await joinGroup(code);
-          toast(`Willkommen in „${name}“`, { tone: 'success', icon: 'trophy' });
-        }
-        renderRangliste(host);
-      } catch (err) {
-        toast(err.status === 404 ? 'Zu diesem Code gibt es keine Gruppe.' : errorText(err), { tone: 'error' });
-      } finally {
-        btn.disabled = false;
-      }
-    });
-  });
-}
-
 // ---------- Einladung: #/rangliste/<CODE> ----------
 
 async function renderInvite(host, code) {
@@ -424,8 +486,7 @@ async function renderInvite(host, code) {
     return;
   }
   host.innerHTML = `
-    <div class="screen">
-      ${backHtml}
+    <div class="screen rl">
       <h1 class="screen__title text-title">Einladung</h1>
       <p class="rl-status text-body">Wird geladen …</p>
     </div>`;
@@ -439,23 +500,34 @@ async function renderInvite(host, code) {
   }
   if (!status.isConnected) return;
   if (!info) {
-    status.textContent = `Zum Code ${code} gibt es keine Gruppe. Vielleicht hat sie inzwischen niemand mehr.`;
+    status.innerHTML = `Zum Code ${esc(code)} gibt es keine Gruppe mehr. <a href="#/rangliste">Zur Rangliste</a>`;
     return;
   }
   status.outerHTML = `
-    <form class="ab-card rl-form rl-invite">
-      <span class="ab-alpha__glyph rl-teaser__art">${icon('trophy')}</span>
+    <section class="ab-card rl-hero">
+      <span class="rl-hero__art">${icon('trophy')}</span>
+      <p class="text-caption rl-hero__kicker">Du bist eingeladen in</p>
       <h2 class="text-heading">${esc(info.name)}</h2>
       <p class="text-body">${info.members} ${info.members === 1 ? 'Person lernt' : 'Leute lernen'} hier um die Wette.
-        Gezählt werden die XP der laufenden Woche.</p>
-      ${state.profile.name ? '' : `<div class="ab-settings">${nameFieldHtml()}</div>`}
-      <button class="ab-btn text-button" type="submit">Beitreten</button>
-    </form>
-    <div class="ab-hint ab-hint--info">${icon('lock')}<p class="text-body">${PRIVACY}</p></div>`;
-  const form = host.querySelector('.rl-form');
+        Gezählt werden die XP der Woche.</p>
+      <form class="rl-start rl-start--invite" novalidate>
+        ${nameFieldHtml()}
+        <button class="ab-btn text-button" type="submit">Beitreten</button>
+      </form>
+    </section>
+    <p class="rl-foot text-caption">${PRIVACY}</p>`;
+  const form = host.querySelector('.rl-start');
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!takeName(host)) return;
+    const player = form.querySelector('[name="player"]');
+    if (player && !player.value.trim()) {
+      player.focus();
+      return;
+    }
+    if (player) {
+      state.profile.name = player.value.trim();
+      save();
+    }
     const btn = form.querySelector('[type="submit"]');
     btn.disabled = true;
     try {

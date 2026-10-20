@@ -207,20 +207,16 @@ function stepState(l) {
 
 export function renderHome(host) {
   const lessons = orderedLessons();
-  const total = lessons.length;
   const doneIds = lessons.filter((l) => state.lessons[l.id]).map((l) => l.id);
-  const done = doneIds.length;
   const streak = currentStreak();
 
   const fresh = shownLessons ? doneIds.filter((id) => !shownLessons.has(id)) : [];
   shownLessons = new Set(doneIds);
-  const shownDone = done - fresh.length;
   // Die gerade frei gewordene Lektion wird erst gesperrt gezeichnet und dann
   // vor den Augen geöffnet.
   const unlocked = fresh.length ? lessons.find((l) => stepState(l) === 'current') : null;
   const freshUnit = UNITS.find((u) =>
     u.lessons.some((l) => fresh.includes(l.id)) && u.lessons.every((l) => state.lessons[l.id]));
-  const pct = (n) => Math.round((n / total) * 100);
 
   // Tagesziel: seit dem letzten Besuch dazugewonnene XP wachsen sichtbar nach.
   const goal = state.settings.dailyGoal;
@@ -238,16 +234,7 @@ export function renderHome(host) {
       ${todayHtml(dailyFrom, daily, goal)}
       ${canClaimBonus() ? bonusHtml(crossing) : ''}
 
-      <section class="home-meter ab-meter" aria-label="Gesamtfortschritt">
-        <div class="ab-meter__head">
-          <span class="text-strong">${done === total ? 'Alle Lektionen geschafft!' : 'Dein Weg durchs Alef-Bet'}</span>
-          <span class="ab-meter__count text-caption"><span data-count>${shownDone}</span> / ${total}</span>
-        </div>
-        <div class="ab-progress ab-progress--gold ab-progress--slim" role="progressbar" aria-label="Abgeschlossene Lektionen"
-             aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct(shownDone)}"><div class="ab-progress__fill" style="width:${pct(shownDone)}%"></div></div>
-      </section>
-
-      ${UNITS.map((u, i) => unitHtml(u, i, unlocked)).join('')}
+      ${UNITS.map((u, i) => unitHtml(u, i, { unlocked, fresh })).join('')}
     </div>`;
 
   const home = host.querySelector('.home');
@@ -271,7 +258,7 @@ export function renderHome(host) {
     location.hash = `#/lesson/${node.dataset.lesson}`;
   });
 
-  if (fresh.length) celebrateProgress(home, { done, total, unlocked, freshUnit });
+  if (fresh.length) celebrateProgress(home, { unlocked, freshUnit });
   else showCurrentStep(home);
   // Höchstens eine große Feier pro Screen: eine geschaffte Einheit hat Vorrang
   // vor dem Konfetti des Tagesziels.
@@ -288,16 +275,19 @@ function showCurrentStep(home) {
   if (step.getBoundingClientRect().bottom > navTop) step.scrollIntoView({ block: 'center' });
 }
 
-// Rückkehr aus einer geschafften Lektion: Balken und Zähler wachsen, die
-// Kamera fährt zur nächsten Lektion, deren Schloss aufspringt. Eine ganz
-// geschaffte Einheit bekommt Konfetti und einen Toast (Feier-Stufe 4).
-function celebrateProgress(home, { done, total, unlocked, freshUnit }) {
-  const bar = home.querySelector('.home-meter .ab-progress');
+// Rückkehr aus einer geschafften Lektion: Balken und Zähler der Einheit
+// wachsen, die Kamera fährt zur nächsten Lektion, deren Schloss aufspringt.
+// Eine ganz geschaffte Einheit hat keinen Balken mehr. Sie bekommt Konfetti
+// und einen Toast (Feier-Stufe 4).
+function celebrateProgress(home, { unlocked, freshUnit }) {
+  const meter = !freshUnit && home.querySelector('.ab-unit__meter');
   const calm = reducedMotion();
-  setTimeout(() => {
-    setProgress(bar, (done / total) * 100);
-    countUp(home.querySelector('.ab-meter__count [data-count]'), done, { duration: 500 });
-  }, 300);
+  if (meter) {
+    setTimeout(() => {
+      setProgress(meter.querySelector('.ab-progress'), (meter.dataset.done / meter.dataset.total) * 100);
+      countUp(meter.querySelector('[data-count]'), Number(meter.dataset.done), { duration: 500 });
+    }, 300);
+  }
 
   const step = unlocked && home.querySelector(`[data-step="${unlocked.id}"]`);
   const target = step || home.querySelector(`#unit-${freshUnit?.id}`);
@@ -329,7 +319,23 @@ function celebrateProgress(home, { done, total, unlocked, freshUnit }) {
   }, calm ? 0 : 650);
 }
 
-function unitHtml(u, i, unlocked) {
+// Die laufende Einheit trägt den Fortschrittsbalken. Gezeichnet wird der
+// Stand ohne die gerade geschafften Lektionen, celebrateProgress() lässt ihn
+// danach wachsen.
+function unitMeterHtml(u, fresh) {
+  const total = u.lessons.length;
+  const done = u.lessons.filter((l) => state.lessons[l.id]).length;
+  const from = done - u.lessons.filter((l) => fresh.includes(l.id)).length;
+  const pct = Math.round((from / total) * 100);
+  return `
+    <div class="ab-unit__meter" data-done="${done}" data-total="${total}">
+      <div class="ab-progress ab-progress--gold ab-progress--slim" role="progressbar" aria-label="Geschaffte Lektionen der Einheit"
+           aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><div class="ab-progress__fill" style="width:${pct}%"></div></div>
+      <span class="ab-unit__count text-label"><span data-count>${from}</span> / ${total}</span>
+    </div>`;
+}
+
+function unitHtml(u, i, { unlocked, fresh }) {
   const states = u.lessons.map(stepState);
   const allDone = states.every((s) => s === 'done');
   const locked = states[0] === 'locked';
@@ -341,6 +347,7 @@ function unitHtml(u, i, unlocked) {
         <p class="ab-unit__kicker text-overline">Einheit ${i + 1}${allDone ? ' · geschafft' : ''}</p>
         <h2 class="ab-unit__title text-heading" id="unit-${u.id}">${u.title}</h2>
         <p class="ab-unit__desc text-body">${locked ? `Wird frei, sobald Einheit ${i} geschafft ist.` : u.desc}</p>
+        ${allDone || locked ? '' : unitMeterHtml(u, fresh)}
       </header>
       ${locked ? '' : `<ol class="ab-path" aria-labelledby="unit-${u.id}">${
         u.lessons.map((l) => stepHtml(l, l.id === unlocked?.id ? 'locked' : undefined)).join('')}</ol>`}

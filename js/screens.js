@@ -284,9 +284,20 @@ export function renderHome(host) {
   });
 
   if (fresh.length) celebrateProgress(home, { done, total, unlocked, freshUnit });
+  else showCurrentStep(home);
   // Höchstens eine große Feier pro Screen: eine geschaffte Einheit hat Vorrang
   // vor dem Konfetti des Tagesziels.
   if (dailyFrom < daily) fillToday(home, daily, goal, { celebrate: !freshUnit });
+}
+
+// Beim Öffnen: Liegt die aktuelle Lektion unter der Tab-Leiste, springt die
+// Seite ohne Animation dorthin. Sonst stünde sie nach ein paar geschafften
+// Lektionen zwei Bildschirme tief.
+function showCurrentStep(home) {
+  const step = home.querySelector('.ab-step--current');
+  if (!step) return;
+  const navTop = document.getElementById('bottomnav').getBoundingClientRect().top;
+  if (step.getBoundingClientRect().bottom > navTop) step.scrollIntoView({ block: 'center' });
 }
 
 // Rückkehr aus einer geschafften Lektion: Balken und Zähler wachsen, die

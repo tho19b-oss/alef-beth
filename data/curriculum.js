@@ -6,6 +6,7 @@
 import { LETTERS, FINALS } from './letters.js';
 import { NIKUD, SYLLABLES } from './nikud.js';
 import { WORDS } from './words.js';
+import { GREETINGS } from './greetings.js';
 
 // ---------- Registry: jede Lern-Einheit (Buchstabe/Vokal/Silbe/Wort) unter ihrer id ----------
 
@@ -94,6 +95,7 @@ export function speechEntries() {
     }
   }
   for (const w of WORDS) add(w.id, ttsText(getItem(w.id)), w.translit, 'Wort');
+  for (const [id, g] of Object.entries(GREETINGS)) add(`gruss-${id.toLowerCase()}`, g.he, g.translit, 'Gruß');
   return entries;
 }
 

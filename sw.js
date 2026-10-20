@@ -2,7 +2,7 @@
 // Bei Änderungen VERSION erhöhen (Haupt.Neben.Korrektur, Regeln im README) –
 // alte Caches werden beim Aktivieren gelöscht.
 
-const VERSION = '1.7.0';
+const VERSION = '1.8.0';
 const CACHE = `alefbeth-${VERSION}`;
 // Eigener, versionsunabhängiger Cache für die Erinnerungs-Einstellung: Der
 // Worker kann localStorage nicht lesen, die Seite spiegelt sie deshalb hierher.
@@ -49,6 +49,7 @@ const ASSETS = [
   'data/letters.js',
   'data/nikud.js',
   'data/words.js',
+  'data/greetings.js',
   'data/curriculum.js',
   'data/giur.js',
   'data/giur/kaschrut.js',

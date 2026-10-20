@@ -14,6 +14,7 @@ import { speakTapped, canSpeak, ttsSupported, voiceAvailable, voiceInfo, audioAc
 import { activeVersion, checkForUpdate } from './version.js';
 import { todayStr, esc } from './util.js';
 import { holidayFor, hebrewDateText } from './kalender.js';
+import { GREETINGS } from '../data/greetings.js';
 import {
   icon, he, countUp, replay, setProgress, ring, confetti, toast, xp as xpBurst, reducedMotion, confirmDialog,
   sound, soundSupported,
@@ -61,12 +62,12 @@ export function greetingFor(now = new Date()) {
   if (chag) return chag;
   const day = now.getDay();
   const h = now.getHours();
-  if (day === 5 || (day === 6 && h < 18)) return { he: 'שַׁבָּת שָׁלוֹם', translit: 'Schabbat Schalom', de: 'Einen friedlichen Schabbat' };
-  if (day === 6) return { he: 'שָׁבוּעַ טוֹב', translit: 'Schawua tov', de: 'Eine gute Woche' };
-  if (h >= 5 && h < 11) return { he: 'בֹּקֶר טוֹב', translit: 'Boker tov', de: 'Guten Morgen' };
-  if (h >= 11 && h < 17) return { he: 'שָׁלוֹם', translit: 'Schalom', de: 'Hallo' };
-  if (h >= 17 && h < 22) return { he: 'עֶרֶב טוֹב', translit: 'Erev tov', de: 'Guten Abend' };
-  return { he: 'לַיְלָה טוֹב', translit: 'Laila tov', de: 'Gute Nacht' };
+  if (day === 5 || (day === 6 && h < 18)) return GREETINGS.shabbatShalom;
+  if (day === 6) return GREETINGS.shavuaTov;
+  if (h >= 5 && h < 11) return GREETINGS.bokerTov;
+  if (h >= 11 && h < 17) return GREETINGS.shalom;
+  if (h >= 17 && h < 22) return GREETINGS.erevTov;
+  return GREETINGS.lailaTov;
 }
 
 // Kopf der Lernen-Seite: der Gruß in Umschrift mit deinem Namen, darunter die

@@ -5,6 +5,8 @@
 // Feiertage nach dem Brauch der Diaspora (zwei Tage Rosch haSchana,
 // acht Tage Pessach, zwei Tage Schawuot).
 
+import { GREETINGS } from '../data/greetings.js';
+
 const fmt = (() => {
   try {
     const f = new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -34,7 +36,7 @@ export function hebrewDateText(d = new Date()) {
   return h ? `${h.day}. ${MONTHS[h.month] || h.month} ${h.year}` : '';
 }
 
-const CHAG = { he: 'חַג שָׂמֵחַ', translit: 'Chag sameach', de: 'Frohes Fest' };
+const CHAG = GREETINGS.chagSameach;
 
 // Feiertag an diesem Tag mit passendem Gruß, sonst null.
 export function holidayFor(d = new Date()) {
@@ -43,10 +45,10 @@ export function holidayFor(d = new Date()) {
   const { day, month } = h;
   const is = (m, from, to = from) => month === m && day >= from && day <= to;
 
-  if (is('Tishri', 1, 2)) return { name: 'Rosch haSchana', he: 'שָׁנָה טוֹבָה', translit: 'Schana tova', de: 'Ein gutes neues Jahr' };
+  if (is('Tishri', 1, 2)) return { name: 'Rosch haSchana', ...GREETINGS.shanaTova };
   // Zwischen Rosch haSchana und Jom Kippur
-  if (is('Tishri', 3, 9)) return { name: 'Tage der Umkehr', he: 'גְּמַר חֲתִימָה טוֹבָה', translit: "G'mar chatima tova", de: 'Eine gute Besiegelung' };
-  if (is('Tishri', 10)) return { name: 'Jom Kippur', he: 'גְּמַר חֲתִימָה טוֹבָה', translit: "G'mar chatima tova", de: 'Eine gute Besiegelung' };
+  if (is('Tishri', 3, 9)) return { name: 'Tage der Umkehr', ...GREETINGS.gmarChatima };
+  if (is('Tishri', 10)) return { name: 'Jom Kippur', ...GREETINGS.gmarChatima };
   if (is('Tishri', 15, 21)) return { name: 'Sukkot', ...CHAG };
   if (is('Tishri', 22)) return { name: 'Schmini Azeret', ...CHAG };
   if (is('Tishri', 23)) return { name: 'Simchat Tora', ...CHAG };
@@ -56,11 +58,11 @@ export function holidayFor(d = new Date()) {
   for (let i = 0; i < 8; i += 1) {
     const back = hebrewDate(new Date(d.getFullYear(), d.getMonth(), d.getDate() - i));
     if (back.month === 'Kislev' && back.day === 25) {
-      return { name: `Chanukka, ${i + 1}. Tag`, he: 'חֲנֻכָּה שָׂמֵחַ', translit: 'Chanukka sameach', de: 'Frohes Chanukka' };
+      return { name: `Chanukka, ${i + 1}. Tag`, ...GREETINGS.chanukkaSameach };
     }
   }
   // Purim im Schaltjahr im Adar II, sonst im Adar
-  if (is('Adar', 14) || is('Adar II', 14)) return { name: 'Purim', he: 'פּוּרִים שָׂמֵחַ', translit: 'Purim sameach', de: 'Frohes Purim' };
+  if (is('Adar', 14) || is('Adar II', 14)) return { name: 'Purim', ...GREETINGS.purimSameach };
   if (is('Nisan', 15, 22)) return { name: 'Pessach', ...CHAG };
   if (is('Sivan', 6, 7)) return { name: 'Schawuot', ...CHAG };
   return null;

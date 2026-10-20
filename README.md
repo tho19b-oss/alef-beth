@@ -45,8 +45,9 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
 - **Startbildschirm:** Beim Öffnen sinkt das App-Icon ein, federt zurück und
   dockt als Marke in der Kopfleiste an, während die Startseite hereingleitet –
   einmal pro Sitzung, Antippen überspringt, bei reduzierter Bewegung entfällt er.
-  Dazu klingt ein kurzes Glockenspiel-Motiv, und nach dem Andocken sagt die
-  Stimme „Schalom“ – aber nur, wo der Browser schon vor dem ersten Antippen Ton
+  Dazu klingt ein kurzes Glockenspiel-Motiv, und nach dem Andocken spricht
+  die Stimme den Gruß, der oben auf der Lernen-Seite steht (siehe
+  *Begrüßung*). Das geht nur, wo der Browser schon vor dem ersten Antippen Ton
   erlaubt (als installierte App auf Android oder am PC). Am iPhone bleibt der
   Start still
 - **Begrüßung:** Oben auf der Lernen-Seite grüßt die App je nach Tageszeit
@@ -160,6 +161,7 @@ Vanilla HTML/CSS/JS ohne Build-Schritt und ohne Abhängigkeiten.
 | `data/letters.js` | Buchstaben & Endformen (Name, Laut, Eselsbrücke …) |
 | `data/nikud.js` | Vokalzeichen & Lesesilben |
 | `data/words.js` | Wortschatz (Hebräisch, Umschrift, Bedeutung) |
+| `data/greetings.js` | Grüße für Begrüßung und Startstimme |
 | `data/curriculum.js` | Einheiten & Lektionen, Item-Registry |
 | `data/giur.js` | die 18 Teile des Prüfungskatalogs (Fragenzahl, Beschreibung) |
 | `data/giur/<teil>.js` | Fragen und Antwort-Entwürfe eines Teils (Aufbau: Kopf von `kaschrut.js`) |

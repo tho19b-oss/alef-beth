@@ -101,12 +101,14 @@ async function upload() {
 
 // Beim Screenwechsel aufgerufen: lädt hoch, wenn sich seit dem letzten Mal
 // etwas geändert hat. Ohne Netz bleibt es beim alten Stand, der nächste
-// Screenwechsel versucht es wieder.
+// Screenwechsel versucht es wieder. Läuft schon ein Upload, bekommt der
+// Aufrufer dessen Promise, damit niemand denselben Stand zweimal schickt.
 let syncing = null;
 export function syncLeaderboard() {
-  if (!hasGroups() || !playerName() || syncing) return;
-  if (JSON.stringify(stand()) === me.sent) return;
+  if (syncing) return syncing;
+  if (!hasGroups() || !playerName() || JSON.stringify(stand()) === me.sent) return Promise.resolve();
   syncing = upload().catch(() => {}).finally(() => { syncing = null; });
+  return syncing;
 }
 
 // ---------- Gruppen ----------
@@ -431,8 +433,9 @@ export function renderRangliste(host, joinCode = null) {
 async function loadBoard(host, code) {
   const box = host.querySelector('.rl-board');
   try {
-    // Erst den eigenen Stand hochladen, damit man sich gleich richtig einsortiert sieht.
-    await upload().catch(() => {});
+    // Erst einen geänderten eigenen Stand hochladen, damit man sich gleich
+    // richtig einsortiert sieht.
+    await syncLeaderboard();
     const rows = withRanks(await board(code));
     if (!box.isConnected) return;
     box.innerHTML = rows.length ? boardHtml(rows) : '<p class="rl-status text-body">Die Gruppe gibt es nicht mehr.</p>';

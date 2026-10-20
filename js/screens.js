@@ -14,6 +14,7 @@ import { speakTapped, canSpeak, ttsSupported, voiceAvailable, voiceInfo, audioAc
 import { activeVersion, checkForUpdate } from './version.js';
 import { todayStr, esc } from './util.js';
 import { holidayFor, hebrewDateText } from './kalender.js';
+import { teaserHtml, fillTeaser, hasGroups } from './rangliste.js';
 import {
   icon, he, countUp, replay, setProgress, ring, confetti, toast, xp as xpBurst, reducedMotion, confirmDialog,
   sound, soundSupported,
@@ -568,6 +569,8 @@ export function renderAchievements(host) {
         <p class="ab-streak__note text-body">${streakNote(streak, learnedToday)}</p>
       </article>
 
+      ${teaserHtml()}
+
       <h2 class="screen__section text-heading">Abzeichen <span class="screen__count text-caption">${earned} von ${BADGES.length}</span></h2>
       <ul class="ab-medals">${BADGES.map(medalHtml).join('')}</ul>
 
@@ -579,6 +582,8 @@ export function renderAchievements(host) {
         <span class="ab-chip ab-chip--due text-label" role="listitem">${icon('repeat')}${cards} ${cards === 1 ? 'Karte' : 'Karten'} im Training</span>
       </div>
     </div>`;
+
+  if (hasGroups()) fillTeaser(host);
 
   if (popToday) {
     replay(host.querySelector('.ab-streak'), 'is-extended');
@@ -721,8 +726,8 @@ export function renderSettings(host) {
       <h2 class="screen__section text-heading">Über die App</h2>
       <section class="ab-card about">
         <p class="text-body"><b>Alef Beth</b> – Hebräisch lesen lernen, vom Alphabet bis zu Wörtern
-          aus Siddur und Alltag. Läuft offline; dein Fortschritt bleibt auf diesem Gerät, ohne Konto
-          und ohne Datenübertragung.</p>
+          aus Siddur und Alltag. Läuft offline; dein Fortschritt bleibt auf diesem Gerät, ohne Konto.
+          Nur wenn du einer Rangliste beitrittst, gehen dein Name, deine XP und deine Serie an den Server.</p>
         <p class="text-body">Viel Erfolg auf deinem Weg – ${he('בְּהַצְלָחָה', 'glyph-sm')}!</p>
       </section>
       <div class="ab-settings">

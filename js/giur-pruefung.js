@@ -12,7 +12,7 @@ import { icon, toast } from './ui.js';
 
 const FORMAT = 'giur-pruefbogen-v1';
 
-export const URTEILE = [
+const URTEILE = [
   ['stimmt', 'Stimmt so'],
   ['aenderung', 'Mit Änderung'],
   ['falsch', 'Falsch'],
@@ -84,7 +84,7 @@ export function wireReview(root, onChange = () => {}) {
 
 // ---------- Zahlen und Weitergabe ----------
 
-export function reviewStats(teil) {
+function reviewStats(teil) {
   const rs = teil.fragen.map((q) => reviewOf(q.id)).filter(Boolean);
   const count = (u) => rs.filter((r) => r.urteil === u).length;
   return {

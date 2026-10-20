@@ -181,7 +181,6 @@
   --layer-nav: 40;
   --layer-sheet: 50;
   --layer-toast: 60;
-  --layer-dialog: 70;
   --layer-fx: 80;
   --layer-splash: 90;
   /* Dauern */
@@ -201,7 +200,6 @@
   --font-sans: Rubik, "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-hebrew: "Frank Ruhl Libre Hebrew", "Frank Ruhl Libre", "Noto Serif Hebrew", "Arial Hebrew", David, serif;
   --font-serif: "Frank Ruhl Libre", Georgia, "Times New Roman", serif;
-  --font-mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
 }
 
 /* ---------- Typo-Stile: Größe, Zeilenhöhe, Gewicht kommen nur von hier ---------- */
@@ -225,5 +223,3 @@
 .text-numeral { font-family: var(--font-sans); font-size: 40px; line-height: 44px; font-weight: 800; letter-spacing: -0.02em; }
 /* Akzent */
 .text-letter-name { font-family: var(--font-serif); font-size: 30px; line-height: 36px; font-weight: 700; }
-/* Technik */
-.text-code { font-family: var(--font-mono); font-size: 13px; line-height: 20px; font-weight: 600; }

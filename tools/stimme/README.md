@@ -20,7 +20,7 @@ Stimme des Geräts.
    den neuen Clips ergänzt die vorhandenen. Nennt der Bericht Clips zum
    Anhören (Pause im Clip, endet mitten im Laut), diese in der Werkstatt
    prüfen und bei Bedarf mit „Neu“ nochmal erzeugen.
-5. In `sw.js` `VERSION` hochzählen.
+5. In `sw.js` `VERSION` erhöhen (neue Clips = Neben-Version, z. B. `1.4.2` → `1.5.0`).
 
 Bis dahin spricht für das neue Wort die Gerätestimme.
 

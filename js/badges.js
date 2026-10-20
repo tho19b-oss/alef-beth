@@ -33,7 +33,7 @@ export const BADGES = [
     progress: () => [done('u3l5') ? 1 : 0, 1] },
 ];
 
-export function isEarned(badge) {
+function isEarned(badge) {
   const [value, needed] = badge.progress();
   return value >= needed;
 }

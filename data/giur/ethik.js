@@ -8,13 +8,15 @@
 //
 // Frage 1 verlangt 43 Begriffe (im Katalog mit א bis מג gezählt). Jeder Begriff
 // ist eine eigene Karte mit der Nummer 1.1 bis 1.43 und der ID eth-01-01 bis
-// eth-01-43, damit man sie einzeln lernen und beurteilen kann.
+// eth-01-43, damit man sie einzeln lernen und beurteilen kann. Der lange
+// Einleitungssatz des Katalogs („Erkläre die folgenden Mizwot und ethische
+// Terminologien:“) ist dafür auf „Erkläre den Begriff:“ gekürzt.
 //
 // Felder je Frage: siehe Kopf von kaschrut.js.
 //
 // Nur reiner Text: Die Anzeige maskiert alles, HTML hat hier keine Wirkung.
 
-const FRAGE_1 = 'Erkläre die folgenden Mizwot und ethische Terminologien:';
+const FRAGE_1 = 'Erkläre den Begriff:';
 
 // Ein Begriff aus Frage 1. n = laufende Nummer (א = 1 … מג = 43).
 function begriff(n, name, hebr, de, kurz, mehr = {}) {

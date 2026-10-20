@@ -59,6 +59,7 @@ const ASSETS = [
   'data/giur/pessach.js',
   'data/giur/schawuot.js',
   'data/giur/kalender.js',
+  'data/giur/ethik.js',
 ];
 
 // Die hebräische Stimme: Liste und Clips (audio/he/). Fehlt etwas, kommt das

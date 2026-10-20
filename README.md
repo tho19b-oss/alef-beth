@@ -49,6 +49,13 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
   Stimme „Schalom“ – aber nur, wo der Browser schon vor dem ersten Antippen Ton
   erlaubt (als installierte App auf Android oder am PC). Am iPhone bleibt der
   Start still
+- **Begrüßung:** Oben auf der Lernen-Seite grüßt die App je nach Tageszeit
+  (Boker tov, Schalom, Erev tov, Laila tov), am Freitag und Samstag mit
+  Schabbat Schalom und ab Samstagabend mit Schawua tov. Unter *Mehr → Über
+  dich* trägst du deinen Namen ein, dazu optional die hebräische Schreibweise
+  mit Nikud. Die hebräische Zeile liest die App per Tipp vor, sofern das Gerät
+  eine hebräische Stimme hat. Für frei eingegebene Namen gibt es keine
+  Aufnahme. Unter *Erfolge* steht dein Name unter der Überschrift
 - **Tagesziel:** ein Ring auf der Startseite füllt sich mit den XP des Tages
   (50, 100 oder 200 XP, einstellbar unter *Mehr*). Ist er voll, gibt es
   +20 XP zum Abholen – wer das vergisst, bekommt den Bonus am nächsten Tag

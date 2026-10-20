@@ -9,7 +9,7 @@ import { TEILE, getTeil, getQuestion, TYPE_LABEL, STATUS_LABEL } from '../data/g
 import { state, save, addXp, touchStreak, currentStreak } from './state.js';
 import { applyResult, dueIds } from './srs.js';
 import { sample, esc } from './util.js';
-import { topbarHtml, bumpCounters, modeSwitchHtml, pipsHtml } from './screens.js';
+import { topbarHtml, bumpCounters, modeSwitchHtml, pipsHtml, greetingHtml, bindGreeting } from './screens.js';
 import { renderCelebration } from './lesson.js';
 import {
   reviewHtml, wireReview, reviewOf, panelHtml, wirePanel,
@@ -125,6 +125,7 @@ export function renderGiur(host) {
   host.innerHTML = `
     <div class="giur">
       ${topbarHtml(streak)}
+      ${greetingHtml()}
       ${modeSwitchHtml('giur')}
 
       <div class="ab-hint ab-hint--info">${icon('book')}<p class="text-body"><b>Fragen fürs Beit Din.</b>
@@ -147,6 +148,7 @@ export function renderGiur(host) {
     </div>`;
 
   bumpCounters(host.querySelector('.giur'), streak);
+  bindGreeting(host);
   host.querySelectorAll('[data-teil]').forEach((b) =>
     b.addEventListener('click', () => { location.hash = `#/giur/${b.dataset.teil}`; }));
 }

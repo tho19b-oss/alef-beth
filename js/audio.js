@@ -216,6 +216,13 @@ export function speak(text, { slow = false, from = null } = {}) {
   else endCurrent();
 }
 
+// Lässt sich dieser Text vorlesen? Für frei eingegebene Texte wie den eigenen
+// Namen gibt es keinen Clip, dann braucht es eine hebräische Gerätestimme.
+export function canSpeak(text) {
+  if (!text || !audioActive()) return false;
+  return clips.has(text.normalize('NFC')) || (ttsSupported() && hasHebrewVoice());
+}
+
 // Ein Hören-Knopf wurde angetippt. Kam sein Wort eben erst (auch automatisch
 // beim Aufdecken), hat man es wohl nicht verstanden – dann klingt es langsamer.
 export function speakTapped(btn) {

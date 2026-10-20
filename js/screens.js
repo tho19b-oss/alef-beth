@@ -10,9 +10,9 @@ import { BADGES } from './badges.js';
 import { scheduleReminder, parseTime, DEFAULT_TIME } from './notify.js';
 import { applyTheme, applyMotion, applySound } from './theme.js';
 import { dueIds, nextDue } from './srs.js';
-import { speakTapped, ttsSupported, voiceAvailable, voiceInfo, audioActive } from './audio.js';
+import { speakTapped, canSpeak, ttsSupported, voiceAvailable, voiceInfo, audioActive } from './audio.js';
 import { activeVersion, checkForUpdate } from './version.js';
-import { todayStr } from './util.js';
+import { todayStr, esc } from './util.js';
 import {
   icon, he, countUp, replay, setProgress, ring, confetti, toast, xp as xpBurst, reducedMotion, confirmDialog,
   sound, soundSupported,
@@ -47,6 +47,47 @@ export function modeSwitchHtml(active) {
   const link = (key, href, label) =>
     `<a class="text-label" href="${href}"${active === key ? ' aria-current="page"' : ''}>${label}</a>`;
   return `<nav class="modeswitch" aria-label="Lernbereich">${link('hebrew', '#/', 'Hebräisch lesen')}${link('giur', '#/giur', 'Giur-Wissen')}</nav>`;
+}
+
+// ---------- Begrüßung ----------
+
+// Gruß nach Wochentag und Uhrzeit. Am Freitag und bis Samstagabend gilt
+// Schabbat Schalom, danach Schawua tov. Die Grenze um 18 Uhr ist eine grobe
+// Näherung ans Schabbat-Ende, die App kennt keine Ortszeiten.
+export function greetingFor(now = new Date()) {
+  const day = now.getDay();
+  const h = now.getHours();
+  if (day === 5 || (day === 6 && h < 18)) return { he: 'שַׁבָּת שָׁלוֹם', translit: 'Schabbat Schalom', de: 'Einen friedlichen Schabbat' };
+  if (day === 6) return { he: 'שָׁבוּעַ טוֹב', translit: 'Schawua tov', de: 'Eine gute Woche' };
+  if (h >= 5 && h < 11) return { he: 'בֹּקֶר טוֹב', translit: 'Boker tov', de: 'Guten Morgen' };
+  if (h >= 11 && h < 17) return { he: 'שָׁלוֹם', translit: 'Schalom', de: 'Hallo' };
+  if (h >= 17 && h < 22) return { he: 'עֶרֶב טוֹב', translit: 'Erev tov', de: 'Guten Abend' };
+  return { he: 'לַיְלָה טוֹב', translit: 'Laila tov', de: 'Gute Nacht' };
+}
+
+// Kopf der Lernen-Seite: der Gruß in Umschrift mit deinem Namen, darunter die
+// Bedeutung. Daneben steht der Gruß auf Hebräisch, mit dem hebräischen Namen,
+// wenn einer eingetragen ist. Gibt es eine Stimme dafür, liest ein Tipp ihn vor.
+export function greetingHtml() {
+  const g = greetingFor();
+  const { name, nameHe } = state.profile;
+  const heText = nameHe ? `${g.he}, ${nameHe}` : g.he;
+  const speakable = canSpeak(heText);
+  const tag = speakable ? 'button' : 'span';
+  const attrs = speakable ? ` type="button" data-tts="${esc(heText)}" aria-label="Gruß auf Hebräisch anhören"` : '';
+  return `
+    <section class="greeting" aria-labelledby="greeting-title">
+      <div class="greeting__text">
+        <h1 class="text-title" id="greeting-title">${g.translit}${name ? `, ${esc(name)}` : ''}</h1>
+        <p class="greeting__de text-caption">${g.de}</p>
+      </div>
+      <${tag} class="greeting__he"${attrs}>${speakable ? icon('speaker') : ''}${he(esc(heText), 'glyph-sm')}</${tag}>
+    </section>`;
+}
+
+export function bindGreeting(host) {
+  const btn = host.querySelector('.greeting__he[data-tts]');
+  if (btn) btn.addEventListener('click', () => speakTapped(btn));
 }
 
 // Nur Zuwachs wird gefeiert – eine gerissene Serie springt kommentarlos zurück.
@@ -187,6 +228,7 @@ export function renderHome(host) {
   host.innerHTML = `
     <div class="home">
       ${topbarHtml(streak)}
+      ${greetingHtml()}
       ${modeSwitchHtml('hebrew')}
 
       ${todayHtml(dailyFrom, daily, goal)}
@@ -213,6 +255,7 @@ export function renderHome(host) {
 
   const home = host.querySelector('.home');
   bumpCounters(home, streak);
+  bindGreeting(home);
   home.addEventListener('click', (e) => {
     if (e.target.closest('#review-now')) {
       location.hash = '#/review/run';
@@ -470,6 +513,14 @@ function medalHtml(b) {
     </li>`;
 }
 
+// Unter der Überschrift: wessen Erfolge das sind, mit dem hebräischen Namen.
+function ownerHtml() {
+  const { name, nameHe } = state.profile;
+  if (!name && !nameHe) return '';
+  const parts = [name && `<span class="text-strong">${esc(name)}</span>`, nameHe && he(esc(nameHe), 'glyph-sm')].filter(Boolean);
+  return `<p class="screen__owner">${parts.join('<span aria-hidden="true">·</span>')}</p>`;
+}
+
 export function renderAchievements(host) {
   const streak = currentStreak();
   const today = todayStr();
@@ -499,6 +550,7 @@ export function renderAchievements(host) {
   host.innerHTML = `
     <div class="screen">
       <h1 class="screen__title text-title">Erfolge</h1>
+      ${ownerHtml()}
 
       <article class="ab-card ab-streak${streak ? '' : ' is-cold'}" aria-labelledby="streak-title">
         <div class="ab-streak__hero">
@@ -596,6 +648,24 @@ export function renderSettings(host) {
     <div class="screen">
       <h1 class="screen__title text-title">Einstellungen</h1>
 
+      <h2 class="screen__section text-heading">Über dich</h2>
+      <div class="ab-settings">
+        <div class="ab-setting profile-field">
+          ${settingText('set-name', 'Dein Name', 'Für die Begrüßung auf der Startseite')}
+          <input class="ab-input text-strong" type="text" id="set-name" maxlength="30" autocomplete="given-name"
+                 placeholder="Vorname" value="${esc(state.profile.name)}">
+        </div>
+        <div class="ab-setting profile-field">
+          ${settingText('set-name-he', 'Name auf Hebräisch', 'Mit Nikud, so wie er gelesen wird')}
+          <span class="profile-field__he">
+            <input class="ab-input glyph-sm" type="text" id="set-name-he" maxlength="30" lang="he" dir="rtl"
+                   autocomplete="off" spellcheck="false" value="${esc(state.profile.nameHe)}">
+            <button class="ab-audio profile-field__listen" type="button" id="listen-name" aria-label="Namen anhören" hidden>${icon('speaker')}</button>
+          </span>
+        </div>
+      </div>
+      ${hint('name-hint', 'speaker', '')}
+
       <h2 class="screen__section text-heading">Lernen</h2>
       <div class="ab-settings">
         <div class="ab-setting">
@@ -663,6 +733,33 @@ export function renderSettings(host) {
     </div>`;
 
   renderVersion(host);
+
+  // Namen: jede Eingabe sofort speichern, beim Verlassen Leerzeichen kappen.
+  // Der Hören-Knopf erscheint, sobald es einen hebräischen Namen und eine
+  // Stimme dafür gibt. Ohne Gerätestimme erklärt ein Hinweis, warum er fehlt.
+  const nameHe = host.querySelector('#set-name-he');
+  const listen = host.querySelector('#listen-name');
+  const nameHint = host.querySelector('#name-hint');
+  const updateListen = () => {
+    const text = nameHe.value.trim();
+    listen.dataset.tts = text;
+    listen.hidden = !canSpeak(text);
+    nameHint.querySelector('p').textContent = text && audioActive() && listen.hidden
+      ? 'Zum Vorlesen deines Namens braucht dieses Gerät eine hebräische Stimme. Am Handy hat Chrome meist eine dabei.'
+      : '';
+    nameHint.hidden = !nameHint.querySelector('p').textContent;
+  };
+  for (const [id, key] of [['#set-name', 'name'], ['#set-name-he', 'nameHe']]) {
+    const input = host.querySelector(id);
+    input.addEventListener('input', () => {
+      state.profile[key] = input.value.trim();
+      save();
+      if (key === 'nameHe') updateListen();
+    });
+    input.addEventListener('change', () => { input.value = input.value.trim(); });
+  }
+  listen.addEventListener('click', () => speakTapped(listen));
+  updateListen();
 
   host.querySelector('#set-goal').addEventListener('change', (e) => {
     state.settings.dailyGoal = Number(e.target.value);

@@ -24,6 +24,9 @@ const DEFAULTS = {
   history: {},   // YYYY-MM-DD -> XP an diesem Tag (letzte Wochen, für die Wochenansicht)
   stats: { listenCorrect: 0, bestStreak: 0 },
   badges: null,  // Abzeichen-ID -> Zeitpunkt; null = Stand von vor den Abzeichen
+  // Wie die App dich anspricht: name für die Begrüßung, nameHe für die
+  // hebräische Zeile (mit Nikud, so wie er gelesen wird). Leer = ohne Namen.
+  profile: { name: '', nameHe: '' },
   settings: {
     audio: true,   // hebräische Sprachausgabe
     sounds: true,  // Soundeffekte bei Antworten und Feiern
@@ -80,6 +83,7 @@ function load() {
         // Ältere Stände kennen keine Bestmarke: die laufende Serie ist die beste bekannte.
         stats: { ...d.stats, bestStreak: s.streak?.count || 0, ...(s.stats || {}) },
         badges: s.badges ?? null,
+        profile: { ...d.profile, ...(s.profile || {}) },
         settings: {
           ...d.settings,
           ...(s.settings || {}),

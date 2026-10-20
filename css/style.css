@@ -58,6 +58,31 @@ html:not(.is-splash) .ab-splash { display: none; }
 /* Der Text neben einem Knoten gehört mit zur Tippfläche (siehe screens.js). */
 .ab-step__text { cursor: pointer; }
 
+/* Begrüßung oben auf der Lernen-Seite (greetingHtml in screens.js) */
+.greeting { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.greeting__text { min-width: 0; }
+.greeting__text h1 { margin: 0; overflow-wrap: anywhere; }
+.greeting__de { color: var(--ink-soft); }
+.greeting__he {
+  flex: none;
+  max-width: 55%;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: var(--space-1) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--tekhelet-soft);
+  color: var(--tekhelet-ink);
+  font: inherit;
+}
+button.greeting__he { cursor: pointer; }
+.greeting__he .ab-icon { flex: none; width: var(--icon-sm); height: var(--icon-sm); }
+.greeting__he.is-playing .w1 { animation: ab-wave 900ms var(--ease-in-out) infinite; }
+.greeting__he.is-playing .w2 { animation: ab-wave 900ms var(--ease-in-out) 150ms infinite; }
+button.greeting__he:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
 /* Karte „Heute“: kleiner Tagesziel-Ring (ab-goal--sm) neben dem Text */
 .today { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) var(--space-5); }
 .today__ring { flex: none; }
@@ -91,11 +116,20 @@ html:not(.is-splash) .ab-splash { display: none; }
 .review-card .ab-btn { margin-top: var(--space-3); }
 
 /* Erfolge */
+.screen__owner { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); margin: calc(var(--space-2) * -1) 0 0; color: var(--ink-soft); }
 .screen__count { margin-left: var(--space-2); color: var(--ink-soft); }
 
 /* Einstellungen */
 .stats { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .stats__lessons .ab-icon { color: var(--gold-ink); }
+/* Über dich: Namensfelder. Schmal wird die Zeile zweistöckig. */
+.profile-field { flex-wrap: wrap; }
+.profile-field .ab-setting__text { flex: 1 1 12rem; }
+.profile-field .ab-input { flex: 1 1 10rem; min-width: 0; width: 100%; }
+.profile-field__he { flex: 1 1 10rem; display: flex; align-items: center; gap: var(--space-2); }
+.profile-field__he .ab-input { flex: 1; text-align: right; }
+.profile-field__listen { width: 44px; height: 44px; }
+.profile-field__listen .ab-icon { width: var(--icon-sm); height: var(--icon-sm); }
 .about { display: grid; gap: var(--space-3); padding: var(--space-5); }
 
 /* ===== Giur-Wissen (js/giur.js) ===== */

@@ -2,7 +2,7 @@
 // Bei Änderungen VERSION erhöhen (Haupt.Neben.Korrektur, Regeln im README) –
 // alte Caches werden beim Aktivieren gelöscht.
 
-const VERSION = '1.0.0';
+const VERSION = '1.0.1';
 const CACHE = `alefbeth-${VERSION}`;
 
 const ASSETS = [

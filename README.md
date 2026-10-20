@@ -70,12 +70,13 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
 - **Erfolge:** eigener Tab mit der Serien-Woche, sieben Abzeichen (vom ersten
   Buchstaben bis zur ersten Bracha, gesperrte zeigen den Weg dorthin) und den
   Gesamtzahlen. Ein neues Abzeichen erscheint direkt im Abschluss der Lektion
-- **Rangliste:** Unter *Erfolge → Rangliste* legst du eine Gruppe an oder trittst
-  einer mit Code bei. Den Code oder einen Einladungslink (`#/rangliste/<CODE>`)
-  teilst du über „Einladung teilen“. Sortiert wird nach den XP der laufenden
-  Woche, am Montag beginnen alle wieder bei 0. Daneben stehen Serie und
-  Gesamt-XP. Bis zu zehn Gruppen pro Gerät, zwischen ihnen wechselt eine
-  Auswahl oben. Die Erfolge-Seite zeigt deinen Platz
+- **Rangliste:** eigener Tab in der unteren Leiste. Du gründest eine Gruppe
+  oder trittst mit Code bei. Den Code oder einen Einladungslink
+  (`#/rangliste/<CODE>`) teilst du über „Einladen“. Sortiert wird nach den XP
+  der laufenden Woche, am Montag beginnen alle wieder bei 0. Die ersten drei
+  stehen auf einem Treppchen, darunter der Rest. Ein Satz oben sagt, wie viele
+  XP dir zum nächsten Platz fehlen. Bis zu zehn Gruppen pro Gerät, gewechselt
+  wird über die Chips oben, „Neue Gruppe“ öffnet einen Dialog
 - **Giur-Wissen:** Umschalter oben auf der Lernen-Seite. Dahinter stehen die Fragen
   des Prüfungskatalogs fürs Beit Din in 18 Teilen. Pro Teil gibt es die Fragen zum
   Nachlesen und eine Karten-Runde: Frage lesen, laut antworten, aufdecken,

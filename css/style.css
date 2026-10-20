@@ -145,7 +145,7 @@ button.greeting__he:focus-visible { outline: 3px solid var(--focus); outline-off
   border-radius: var(--radius-full);
   background: var(--well);
 }
-.modeswitch a {
+.modeswitch a, .modeswitch button {
   display: grid;
   place-items: center;
   min-height: 44px;
@@ -153,20 +153,20 @@ button.greeting__he:focus-visible { outline: 3px solid var(--focus); outline-off
   color: var(--ink-soft);
   transition: background-color var(--dur-quick) var(--ease-out), color var(--dur-quick) var(--ease-out);
 }
-.modeswitch a[aria-current="page"] { background: var(--card); color: var(--ink); box-shadow: var(--shadow-card); }
+.modeswitch a[aria-current="page"], .modeswitch button[aria-selected="true"] { background: var(--card); color: var(--ink); box-shadow: var(--shadow-card); }
 
 /* Liste der Teile (Zeilen: Komponente ab-alpha) */
 .giur-teile { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
 .giur-soon { --_d: 0px; border-style: dashed; background: var(--well); color: var(--ink-soft); }
 .giur-soon .ab-alpha__glyph { background: var(--paper); }
-.giur-chevron, .rl-chevron { flex: none; color: var(--ink-soft); }
-.giur-chevron .ab-icon, .rl-chevron .ab-icon { width: var(--icon-sm); height: var(--icon-sm); }
+.giur-chevron { flex: none; color: var(--ink-soft); }
+.giur-chevron .ab-icon { width: var(--icon-sm); height: var(--icon-sm); }
 .giur-meter__note { margin: var(--space-2) 0 0; color: var(--ink-soft); }
 
 /* Ein Teil */
-.giur-back, .rl-back { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--tap-target); width: fit-content; color: var(--tekhelet-ink); }
-.giur-back .ab-icon, .rl-back .ab-icon { width: var(--icon-sm); height: var(--icon-sm); transform: scaleX(-1); }
-.giur-desc, .rl-desc { margin: 0; color: var(--ink-soft); }
+.giur-back { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--tap-target); width: fit-content; color: var(--tekhelet-ink); }
+.giur-back .ab-icon { width: var(--icon-sm); height: var(--icon-sm); transform: scaleX(-1); }
+.giur-desc { margin: 0; color: var(--ink-soft); }
 .giur-of { color: var(--ink-soft); }
 .giur-card-progress { width: 100%; flex: none; }
 
@@ -281,27 +281,122 @@ button.greeting__he:focus-visible { outline: 3px solid var(--focus); outline-off
 .giur-export__btns { display: grid; gap: var(--space-2); }
 
 /* ===== Rangliste (js/rangliste.js) ===== */
-/* Zeilen: Komponente ab-alpha */
-.rl-teaser .rl-teaser__art, .rl-invite .rl-teaser__art { background: var(--gold-soft); color: var(--gold-ink); }
-.rl-teaser__art .ab-icon { width: var(--icon-lg); height: var(--icon-lg); }
-.rl-group { margin: 0; }
-.rl-picker { width: 100%; }
-.rl-picker .ab-input { width: 100%; }
-.rl-list { list-style: none; margin: 0; padding: 0; }
+/* Sechs Tabs: auf schmalen Handys Pille und Beschriftung etwas kleiner */
+.ab-nav__pill::before { max-width: calc(100% - 4px); }
+.ab-nav__label { white-space: nowrap; }
+@media (max-width: 380px) {
+  .ab-nav__label { font-size: 12px; letter-spacing: -0.01em; }
+}
+
+.modeswitch button { border: 0; background: none; cursor: pointer; }
+
+.rl { gap: var(--space-4); }
+.rl-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2); }
+.rl-head .screen__title { margin-bottom: 0; }
+.rl-head__week { color: var(--ink-soft); }
 .rl-status { margin: 0; color: var(--ink-soft); }
-.rl-row.is-me { border-color: var(--tekhelet); background: var(--tekhelet-soft); }
-.rl-row--1 .ab-alpha__glyph { background: var(--gold-soft); color: var(--gold-ink); }
-.rl-row--2 .ab-alpha__glyph { background: var(--well); color: var(--ink); }
-.rl-row--3 .ab-alpha__glyph { background: var(--koralle-soft); color: var(--koralle-ink); }
-.rl-row__sub { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; }
-.rl-row__sub .ab-icon { width: 14px; height: 14px; color: var(--koralle); }
-.rl-row__xp { flex: none; white-space: nowrap; }
+.rl-foot { margin: 0; color: var(--ink-soft); text-align: center; }
+
+/* Gruppen als Chips, die letzte legt eine neue an */
+.rl-chips { display: flex; gap: var(--space-2); overflow-x: auto; margin: 0 calc(var(--space-4) * -1); padding: 2px var(--space-4) var(--space-1); scrollbar-width: none; }
+.rl-chip { flex: none; padding: 0 14px; border: 2px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
+.rl-chip[aria-pressed="true"] { border-color: var(--granat); background: var(--granat-soft); color: var(--granat-ink); }
+.rl-chip--add { border-style: dashed; color: var(--ink-soft); }
+.rl-chip--add .ab-icon { color: var(--gold); }
+
+.rl-board { display: grid; gap: var(--space-4); }
+.rl-standing .ab-banner__text { margin: 0; }
+
+/* Initiale im Farbkreis */
+.rl-avatar {
+  --_bg: var(--tekhelet-soft);
+  --_fg: var(--tekhelet-ink);
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-full);
+  background: var(--_bg);
+  color: var(--_fg);
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+}
+.rl-avatar--minze { --_bg: var(--minze-soft); --_fg: var(--minze-ink); }
+.rl-avatar--granat { --_bg: var(--granat-soft); --_fg: var(--granat-ink); }
+.rl-avatar--koralle { --_bg: var(--koralle-soft); --_fg: var(--koralle-ink); }
+.rl-avatar--gold { --_bg: var(--gold-soft); --_fg: var(--gold-ink); }
+.rl-avatar--lg { width: 56px; height: 56px; font-size: 24px; }
+.rl-avatar--xl { width: 68px; height: 68px; font-size: 30px; }
+
+/* Siegertreppchen */
+.rl-podium { list-style: none; margin: 0; padding: var(--space-2) 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: var(--space-2); }
+.rl-podium__place { position: relative; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: var(--space-1); text-align: center; }
+.rl-podium__crown { color: var(--gold); margin-bottom: -6px; }
+.rl-podium__crown .ab-icon { width: 30px; height: 30px; }
+.rl-podium__place .rl-avatar { box-shadow: 0 0 0 3px var(--paper); }
+.rl-podium__place.is-me .rl-avatar { box-shadow: 0 0 0 3px var(--paper), 0 0 0 6px var(--tekhelet); }
+.rl-podium__name { max-width: 100%; margin-top: var(--space-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rl-podium__xp { color: var(--ink-soft); }
+.rl-podium__block {
+  width: 100%;
+  margin-top: var(--space-1);
+  display: grid;
+  place-items: start center;
+  padding-top: var(--space-2);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background: var(--well);
+  color: var(--ink-soft);
+  transform-origin: bottom;
+  animation: rl-rise var(--dur-slow) var(--ease-spring) both;
+}
+.rl-podium__place--1 .rl-podium__block { height: 104px; background: var(--gold-soft); color: var(--gold-ink); animation-delay: 160ms; }
+.rl-podium__place--2 .rl-podium__block { height: 76px; animation-delay: 80ms; }
+.rl-podium__place--3 .rl-podium__block { height: 56px; background: var(--koralle-soft); color: var(--koralle-ink); }
+@keyframes rl-rise { from { transform: scaleY(0.2); opacity: 0; } }
+
+/* Liste: Zeilen in einer Karte, durch Linien getrennt */
+.rl-list { list-style: none; margin: 0; padding: var(--space-1) 0; display: grid; }
+.rl-row { display: flex; align-items: center; gap: var(--space-3); min-height: 64px; padding: var(--space-2) var(--space-4); }
+.rl-row + .rl-row { border-top: 2px solid var(--line); }
+.rl-row.is-me { background: var(--tekhelet-soft); }
+.rl-row__rank { flex: none; width: 2ch; text-align: center; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.rl-row__name { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--space-2); }
+.rl-row__name > .text-strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rl-row__sub { flex-basis: 100%; color: var(--ink-soft); }
+.rl-row__streak { display: inline-flex; align-items: center; gap: 2px; }
+.rl-row__streak .ab-icon { width: 14px; height: 14px; color: var(--koralle); }
+.rl-row__xp { flex: none; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .rl-row__xp .text-caption { color: var(--ink-soft); }
-.rl-you { margin-left: var(--space-1); padding: 0 var(--space-2); border-radius: var(--radius-full); background: var(--tekhelet); color: var(--on-tekhelet); }
-.rl-form { display: grid; gap: var(--space-3); }
-.rl-form h2 { margin: 0; }
-.rl-invite { display: grid; justify-items: center; gap: var(--space-2); text-align: center; }
-.rl-invite p, .rl-invite h2 { margin: 0; }
-.rl-invite__code { letter-spacing: 0.18em; font-variant-numeric: tabular-nums; }
-.rl-invite__btns { display: grid; gap: var(--space-2); width: 100%; margin-top: var(--space-2); }
-.rl-invite .ab-settings { width: 100%; text-align: left; }
+.rl-you { padding: 0 var(--space-2); border-radius: var(--radius-full); background: var(--tekhelet); color: var(--on-tekhelet); }
+
+/* Einladen */
+.rl-invite { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.rl-invite h2, .rl-invite p { margin: 0; }
+.rl-invite__text { display: grid; gap: 2px; }
+.rl-invite__text .text-caption { color: var(--ink-soft); }
+.rl-invite__code { color: var(--ink); letter-spacing: 0.12em; }
+.rl-leave { justify-self: center; }
+
+/* Leer-Zustand, Einladung, Start-Formular */
+.rl-hero { display: grid; justify-items: center; gap: var(--space-2); text-align: center; }
+.rl-hero h2, .rl-hero p { margin: 0; }
+.rl-hero > .text-body { color: var(--ink-soft); }
+.rl-hero__kicker { color: var(--ink-soft); }
+.rl-hero__art { width: 88px; height: 88px; margin-bottom: var(--space-2); display: grid; place-items: center; border-radius: var(--radius-full); background: var(--gold-soft); color: var(--gold); }
+.rl-hero__art .ab-icon { width: 48px; height: 48px; }
+.rl-startcard { display: grid; gap: var(--space-4); }
+.rl-start { display: grid; gap: var(--space-4); width: 100%; text-align: left; }
+.rl-start[data-mode="create"] [data-for="join"], .rl-start[data-mode="join"] [data-for="create"] { display: none; }
+.rl-start--invite { margin-top: var(--space-2); }
+.rl-field { display: grid; gap: var(--space-1); }
+.rl-field__hint { color: var(--ink-soft); }
+.rl-field .ab-input { width: 100%; margin-top: var(--space-1); }
+.rl-code-input { letter-spacing: 0.2em; text-transform: uppercase; }
+
+.rl-dialog { position: relative; display: grid; gap: var(--space-4); }
+.rl-dialog:not([open]) { display: none; }
+.rl-dialog .ab-dialog__title { margin: 0; text-align: left; }
+.rl-dialog__close { position: absolute; top: var(--space-3); right: var(--space-3); }

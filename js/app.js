@@ -18,12 +18,13 @@ const nav = document.getElementById('bottomnav');
 // Hebräische Textstellen tragen lang="he" direkt im Markup (he() in ui.js):
 // Screenreader und Browser wählen dadurch Aussprache und Schrift richtig.
 
-const NAV_ROUTES = ['home', 'review', 'alphabet', 'erfolge', 'settings'];
+const NAV_ROUTES = ['home', 'review', 'alphabet', 'rangliste', 'erfolge', 'settings'];
 
 function navRoute(hash) {
   if (hash.startsWith('#/review')) return 'review';
   if (hash === '#/alphabet') return 'alphabet';
-  if (hash === '#/erfolge' || hash.startsWith('#/rangliste')) return 'erfolge';
+  if (hash.startsWith('#/rangliste')) return 'rangliste';
+  if (hash === '#/erfolge') return 'erfolge';
   if (hash === '#/settings') return 'settings';
   return 'home'; // auch Lektionen und das Giur-Wissen gehören zum Lernen-Tab
 }

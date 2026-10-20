@@ -2,8 +2,16 @@
 // Bei Änderungen VERSION erhöhen (Haupt.Neben.Korrektur, Regeln im README) –
 // alte Caches werden beim Aktivieren gelöscht.
 
-const VERSION = '1.0.1';
+const VERSION = '1.0.2';
 const CACHE = `alefbeth-${VERSION}`;
+// Eigener, versionsunabhängiger Cache für die Erinnerungs-Einstellung: Der
+// Worker kann localStorage nicht lesen, die Seite spiegelt sie deshalb hierher.
+const REMINDER_CACHE = 'alefbeth-reminder';
+const REMINDER_KEY = 'reminder-config';
+// So lange nach der eingestellten Uhrzeit darf die Erinnerung noch kommen.
+// Später (Handy schlief, Browser hat den Worker spät geweckt) lieber gar nicht
+// als irgendwann am Abend.
+const REMINDER_LATE_MS = 60 * 60 * 1000;
 
 const ASSETS = [
   '.',
@@ -15,11 +23,11 @@ const ASSETS = [
   'fonts/rubik-latin.woff2',
   'fonts/frankruhllibre-hebrew.woff2',
   'fonts/frankruhllibre-latin.woff2',
-  'icons/icon.svg',
-  'icons/icon-192.png',
-  'icons/icon-512.png',
-  'icons/icon-maskable-512.png',
-  'icons/apple-touch-icon.png',
+  'icons/icon-v2.svg',
+  'icons/icon-192-v2.png',
+  'icons/icon-512-v2.png',
+  'icons/icon-maskable-512-v2.png',
+  'icons/apple-touch-icon-v2.png',
   'js/alefbeth.js',
   'js/ui.js',
   'js/app.js',
@@ -78,23 +86,20 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE && k !== REMINDER_CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('message', (event) => {
-  // Lern-Erinnerung: Seite schickt { type: 'SHOW_REMINDER' }, SW zeigt Notification.
+  // Lern-Erinnerung: Die Seite spiegelt ihre Einstellung ({ enabled, time }) …
+  if (event.data?.type === 'SET_REMINDER') {
+    event.waitUntil(saveReminderConfig(event.data.enabled, event.data.time));
+  }
+  // … und meldet, wenn die Uhrzeit erreicht ist. Ob wirklich eine kommt,
+  // entscheidet maybeShowReminder (Zeitfenster, höchstens einmal am Tag).
   if (event.data?.type === 'SHOW_REMINDER') {
-    event.waitUntil(
-      self.registration.showNotification('Alef Beth – Zeit zum Lernen! 📖', {
-        body: 'Deine Hebräisch-Übungen warten auf dich.',
-        icon: 'icons/icon-192.png',
-        badge: 'icons/icon-192.png',
-        tag: 'daily-reminder',
-        renotify: false,
-      })
-    );
+    event.waitUntil(maybeShowReminder());
   }
   // Versionsabfrage für die Einstellungen. VERSION lebt nur hier – so kann die
   // Anzeige nicht von der tatsächlich ausgelieferten Fassung abweichen.
@@ -116,19 +121,62 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Periodic Background Sync (Chrome Android / installierte PWA): tägliche Erinnerung.
+// Periodic Background Sync (Chrome Android / installierte PWA): Chrome weckt den
+// Worker, wann es will – nicht zur eingestellten Uhrzeit. Deshalb hier nur
+// nachsehen, ob die Erinnerung gerade fällig ist, statt blind eine zu zeigen.
 self.addEventListener('periodicsync', (event) => {
-  if (event.tag === 'srs-reminder') {
-    event.waitUntil(
-      self.registration.showNotification('Alef Beth – Zeit zum Lernen! 📖', {
-        body: 'Deine Hebräisch-Übungen warten auf dich.',
-        icon: 'icons/icon-192.png',
-        badge: 'icons/icon-192.png',
-        tag: 'daily-reminder',
-      })
-    );
-  }
+  if (event.tag === 'srs-reminder') event.waitUntil(maybeShowReminder());
 });
+
+async function readReminderConfig() {
+  try {
+    const res = await (await caches.open(REMINDER_CACHE)).match(REMINDER_KEY);
+    return res ? await res.json() : null;
+  } catch {
+    return null;
+  }
+}
+
+async function writeReminderConfig(config) {
+  const cache = await caches.open(REMINDER_CACHE);
+  await cache.put(REMINDER_KEY, new Response(JSON.stringify(config), {
+    headers: { 'Content-Type': 'application/json' },
+  }));
+}
+
+async function saveReminderConfig(enabled, time) {
+  const prev = (await readReminderConfig()) || {};
+  await writeReminderConfig({ ...prev, enabled: !!enabled, time: String(time || '') });
+}
+
+// Lokales Datum als "JJJJ-MM-TT" – Schlüssel für „heute schon erinnert“.
+function dayKey(d) {
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+async function maybeShowReminder() {
+  const config = await readReminderConfig();
+  if (!config?.enabled) return;
+  const m = /^(\d{1,2}):(\d{2})$/.exec(config.time || '');
+  if (!m) return;
+
+  const now = new Date();
+  const target = new Date(now);
+  target.setHours(Number(m[1]), Number(m[2]), 0, 0);
+  const late = now - target;
+  if (late < 0 || late > REMINDER_LATE_MS) return;   // zu früh oder zu spät
+  const today = dayKey(now);
+  if (config.lastShown === today) return;           // heute schon erinnert
+
+  await writeReminderConfig({ ...config, lastShown: today });
+  await self.registration.showNotification('Alef Beth – Zeit zum Lernen! 📖', {
+    body: 'Deine Hebräisch-Übungen warten auf dich.',
+    icon: 'icons/icon-192.png',
+    badge: 'icons/icon-192.png',
+    tag: 'daily-reminder',
+  });
+}
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;

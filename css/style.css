@@ -159,6 +159,7 @@ html:not(.is-splash) .ab-splash { display: none; }
   color: var(--ink-soft);
 }
 .giur-q__text { flex: 1; min-width: 0; padding-top: 4px; }
+.giur-q__subs { display: block; margin-top: var(--space-1); font-weight: normal; color: var(--ink-soft); }
 .giur-q__chev { flex: none; padding-top: 7px; color: var(--ink-soft); transition: transform var(--dur-quick) var(--ease-out); }
 .giur-q__chev .ab-icon { width: var(--icon-sm); height: var(--icon-sm); }
 .giur-q[open] .giur-q__chev { transform: rotate(90deg); }

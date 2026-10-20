@@ -86,6 +86,12 @@ function subList(q) {
   return `<ol class="giur-sub text-body" type="a">${q.sub.map((s) => `<li>${esc(s)}</li>`).join('')}</ol>`;
 }
 
+// Unterfragen in einer Zeile, für die zugeklappte Fragenliste.
+function subLine(q) {
+  if (!q.sub?.length) return '';
+  return `<span class="giur-q__subs text-caption">${(q.sub.length === 1 ? [esc(q.sub[0])] : q.sub.map((s, i) => `${String.fromCharCode(97 + i)}. ${esc(s)}`)).join(' · ')}</span>`;
+}
+
 // ---------- Übersicht: die 18 Teile ----------
 
 export function renderGiur(host) {
@@ -160,18 +166,19 @@ export function renderGiurTeil(host, teilId, { openPanel = false } = {}) {
     ? 'Alles gelernt und nichts fällig. Freies Üben verschiebt keine Termine, hilft aber trotzdem.'
     : `${round.ids.length} ${round.ids.length === 1 ? 'Karte' : 'Karten'} in dieser Runde${s.due ? `, davon ${Math.min(s.due, MAX_DUE)} zur Wiederholung` : ''}.`;
 
+  const allDraft = teil.fragen.every((q) => q.status === 'entwurf');
+
   const item = (q) => `
     <details class="giur-q" data-urteil="${reviewOf(q.id)?.urteil || ''}">
       <summary>
         <span class="giur-q__nr text-label">${q.nr}</span>
-        <span class="giur-q__text text-strong">${esc(q.q)}</span>
+        <span class="giur-q__text text-strong">${esc(q.q)}${subLine(q)}</span>
         <span class="giur-q__chev">${icon('chevron')}</span>
       </summary>
       <div class="giur-q__body">
         <div class="giur-tags">
           <span class="giur-type text-label">${TYPE_LABEL[q.type]}</span>${statusPill(q)}${pipsHtml(cards()[q.id])}
         </div>
-        ${subList(q)}
         ${answerHtml(q)}
       </div>
     </details>`;
@@ -194,7 +201,7 @@ export function renderGiurTeil(host, teilId, { openPanel = false } = {}) {
       ${panelHtml(teil, openPanel)}
 
       <h2 class="screen__section text-heading">Alle Fragen</h2>
-      <p class="giur-desc text-caption">Zum Nachlesen: Tippe eine Frage an, um den Antwort-Entwurf zu sehen.</p>
+      <p class="giur-desc text-caption">Zum Nachlesen: Tippe eine Frage an, um ${allDraft ? 'den Antwort-Entwurf' : 'die Antwort'} zu sehen.</p>
       <div class="giur-list">${teil.fragen.map(item).join('')}</div>
     </div>`;
 

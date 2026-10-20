@@ -26,7 +26,7 @@ export const SCHAWUOT = [
   {
     id: 'schaw-02',
     nr: 2,
-    q: 'Wann wird Schawuot“ gefeiert?',
+    q: 'Wann wird Schawuot gefeiert?',
     type: 'fakt',
     kurz: 'Am 6. Siwan, außerhalb Israels auch am 7. Siwan, am Tag nach dem 49. Tag des Omer-Zählens.',
     punkte: ['Die Tora nennt kein Datum, nur das Zählen (Frage 1). Weil der Kalender heute feststeht, fällt es immer auf den 6. Siwan.'],

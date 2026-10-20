@@ -283,7 +283,7 @@ button.greeting__he:focus-visible { outline: 3px solid var(--focus); outline-off
 /* ===== Rangliste (js/rangliste.js) ===== */
 /* Zeilen: Komponente ab-alpha */
 .rl-teaser .rl-teaser__art, .rl-invite .rl-teaser__art { background: var(--gold-soft); color: var(--gold-ink); }
-.rl-teaser__art .ab-icon { width: var(--icon-md); height: var(--icon-md); }
+.rl-teaser__art .ab-icon { width: var(--icon-lg); height: var(--icon-lg); }
 .rl-group { margin: 0; }
 .rl-picker { width: 100%; }
 .rl-picker .ab-input { width: 100%; }

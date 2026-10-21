@@ -399,9 +399,7 @@ export function renderReview(host) {
         <p class="review-card__text text-body">Du hast <b>${learned}</b> ${learned === 1 ? 'Zeichen' : 'Zeichen und Wörter'}
           im Training. Die nächsten Karten sind fällig: <b>${when}</b>.</p>
         <button class="ab-btn ab-btn--secondary text-button" type="button" id="free-practice">Trotzdem eine Runde üben</button>
-      </section>
-      <div class="ab-hint ab-hint--reward">${icon('sparkle')}<p class="text-body">Freies Üben schadet nichts:
-        Es verschiebt keine Termine nach hinten, holt aber Wackelkandidaten zurück nach vorn.</p></div>`;
+      </section>`;
   } else {
     body = `
       <section class="ab-card review-card" aria-labelledby="review-title">
@@ -479,9 +477,6 @@ function alphabetHtml() {
 
   return `
     <h2 class="screen__section text-heading" id="alphabet">Das Alef-Bet</h2>
-    <div class="ab-hint">${icon('book')}<p class="text-body">Zum Nachschlagen – gelesen wird von rechts
-      nach links.${canSpeak ? ' Tippe eine Zeile an, um den Namen zu hören.' : ''} Die Punkte zeigen,
-      wie fest ein Zeichen sitzt: Jede gelungene Wiederholung füllt einen mehr.</p></div>
     <div class="ab-alphalist">${letterRows}</div>
     <h2 class="screen__section text-heading">Nikud – die Vokalzeichen</h2>
     <div class="ab-alphalist">${nikudRows}</div>`;

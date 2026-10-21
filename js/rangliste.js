@@ -179,10 +179,16 @@ function avatarHtml(r, size = '') {
   return `<span class="rl-avatar rl-avatar--${tone(r.player_id)}${size ? ` rl-avatar--${size}` : ''}" aria-hidden="true">${esc(initial)}</span>`;
 }
 
-// Tage bis Sonntagabend, der heutige mitgezählt.
-function daysLeftText() {
-  const left = 7 - ((new Date().getDay() + 6) % 7);
-  return left === 1 ? 'Letzter Tag der Woche' : `Noch ${left} Tage bis Sonntag`;
+// Restzeit bis Sonntag 24 Uhr, wenn die neue Woche beginnt: erst Tage und
+// Stunden, am letzten Tag nur Stunden, in der letzten Stunde Minuten.
+function timeLeftText(now = new Date()) {
+  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7 - ((now.getDay() + 6) % 7));
+  const min = Math.ceil((end - now) / 60000);
+  const days = Math.floor(min / 1440);
+  const hours = Math.floor((min % 1440) / 60);
+  if (min < 60) return `Neustart in ${min} Min.`;
+  if (!days) return `Neustart in ${hours} Std.`;
+  return `Neustart in ${days} ${days === 1 ? 'Tag' : 'Tagen'}${hours ? `, ${hours} Std.` : ''}`;
 }
 
 // Ein Satz zur eigenen Lage: Abstand nach vorn oder Vorsprung.
@@ -381,7 +387,7 @@ export function renderRangliste(host, joinCode = null) {
     <div class="screen rl">
       <header class="rl-head">
         <h1 class="screen__title text-title">Rangliste</h1>
-        <span class="rl-head__week text-caption">${daysLeftText()}</span>
+        <span class="rl-head__week text-caption">${timeLeftText()}</span>
       </header>
       <div class="rl-chips" role="group" aria-label="Gruppe wählen">
         ${me.groups.map(chip).join('')}
@@ -398,7 +404,6 @@ export function renderRangliste(host, joinCode = null) {
         <button class="ab-btn ab-btn--sm text-label" type="button" id="rl-share">Einladen</button>
       </section>
 
-      <p class="rl-foot text-caption">${PRIVACY}</p>
       <button class="ab-btn ab-btn--ghost ab-btn--danger ab-btn--sm text-label rl-leave" type="button" id="rl-leave">„${esc(g.name)}“ verlassen</button>
     </div>`;
 

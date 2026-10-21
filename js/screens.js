@@ -10,7 +10,7 @@ import { BADGES } from './badges.js';
 import { scheduleReminder, parseTime, DEFAULT_TIME } from './notify.js';
 import { applyTheme, applyMotion, applySound } from './theme.js';
 import { dueIds, nextDue } from './srs.js';
-import { speakTapped, canSpeak, ttsSupported, voiceAvailable, voiceInfo, audioActive } from './audio.js';
+import { speakTapped, canSpeak, ttsSupported, voiceAvailable, voiceInfo, audioActive, listenPausedUntil } from './audio.js';
 import { activeVersion, checkForUpdate } from './version.js';
 import { todayStr, esc } from './util.js';
 import { holidayFor, hebrewDateText } from './kalender.js';
@@ -605,6 +605,14 @@ const settingText = (forId, title, desc = '') => `
   <label class="ab-setting__text" for="${forId}"><span class="text-strong">${title}</span>${
     desc ? `<span class="ab-setting__desc text-caption">${desc}</span>` : ''}</label>`;
 
+// „Kann gerade nicht hören“ in einer Übung pausiert die Hör-Übungen für eine Stunde.
+function listenDesc() {
+  const until = listenPausedUntil();
+  if (!until) return 'Wort hören, dann das richtige antippen';
+  const time = new Date(until).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  return `Pausiert bis ${time} Uhr`;
+}
+
 export function renderSettings(host) {
   const voiceOk = voiceAvailable();
   const voice = voiceInfo();
@@ -703,6 +711,10 @@ export function renderSettings(host) {
           ${switchHtml('set-audio', state.settings.audio, !voiceOk)}
         </div>
         <div class="ab-setting">
+          ${settingText('set-listen', 'Hör-Übungen', listenDesc())}
+          ${switchHtml('set-listen', state.settings.listen && !listenPausedUntil(), !voiceOk)}
+        </div>
+        <div class="ab-setting">
           ${settingText('set-sounds', 'Soundeffekte', 'Töne bei Antworten und Feiern')}
           ${switchHtml('set-sounds', soundSupported() && state.settings.sounds, !soundSupported())}
         </div>
@@ -780,6 +792,13 @@ export function renderSettings(host) {
   host.querySelector('#set-audio').addEventListener('change', (e) => {
     state.settings.audio = e.target.checked;
     save();
+  });
+  host.querySelector('#set-listen').addEventListener('change', (e) => {
+    // Einschalten beendet auch eine laufende Pause.
+    state.settings.listen = e.target.checked;
+    state.settings.listenPauseUntil = 0;
+    save();
+    host.querySelector('label[for="set-listen"] .ab-setting__desc').textContent = listenDesc();
   });
   host.querySelector('#set-sounds').addEventListener('change', (e) => {
     state.settings.sounds = e.target.checked;

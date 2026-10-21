@@ -15,13 +15,15 @@ export function isPassive(ex) {
   return ex.kind === 'intro' || ex.kind === 'info';
 }
 
-export function renderExercise(ex, host, onAnswered) {
+// onSkipListen: Hör-Übungen bieten „Kann gerade nicht hören“ an, wenn der
+// Player diese Funktion mitgibt.
+export function renderExercise(ex, host, onAnswered, { onSkipListen } = {}) {
   host.innerHTML = '';
   switch (ex.kind) {
     case 'intro': return renderIntro(ex, host);
     case 'info': return renderInfo(ex, host);
     case 'mc': return renderMc(ex, host, onAnswered);
-    case 'listen': return renderListen(ex, host, onAnswered);
+    case 'listen': return renderListen(ex, host, onAnswered, onSkipListen);
     case 'match': return renderMatch(ex, host, onAnswered);
     default: throw new Error(`Unbekannter Übungstyp: ${ex.kind}`);
   }
@@ -243,7 +245,7 @@ function renderMc(ex, host, onAnswered) {
 
 // ---------- Hören & Wählen ----------
 
-function renderListen(ex, host, onAnswered) {
+function renderListen(ex, host, onAnswered, onSkip) {
   const item = getItem(ex.itemId);
   const tts = ttsText(item);
   const options = shuffle(optionItemsFor(ex, item, 'main').map((it) => ({ it, correct: it.id === item.id })));
@@ -251,9 +253,11 @@ function renderListen(ex, host, onAnswered) {
   host.innerHTML = `
     <p class="ab-question text-question">Was hörst du?</p>
     <div class="ab-prompt">${audioButton(tts, { big: true, label: 'Nochmal anhören' })}</div>
-    <div class="ab-tiles">${options.map((o, i) => tile(i, he(display(o.it), tileSize(o.it)))).join('')}</div>`;
+    <div class="ab-tiles">${options.map((o, i) => tile(i, he(display(o.it), tileSize(o.it)))).join('')}</div>
+    ${onSkip ? '<button class="ab-btn ab-btn--ghost text-button ab-listen-skip" type="button">Kann gerade nicht hören</button>' : ''}`;
   wireAudio(host);
   autoplay(host, tts);
+  host.querySelector('.ab-listen-skip')?.addEventListener('click', onSkip, { once: true });
 
   wireTiles(host, options, onAnswered, `${he(display(item), 'glyph-sm')} – ${mainLabel(item)}`);
 }

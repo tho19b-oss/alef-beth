@@ -30,6 +30,8 @@ const DEFAULTS = {
   settings: {
     audio: true,   // hebräische Sprachausgabe
     sounds: true,  // Soundeffekte bei Antworten und Feiern
+    listen: true,  // Hör-Übungen („Was hörst du?“) in Lektionen und Runden
+    listenPauseUntil: 0, // „Kann gerade nicht hören“: bis zu diesem Zeitpunkt keine Hör-Übungen
     theme: 'auto',
     reduceMotion: false,
     dailyGoal: 100,

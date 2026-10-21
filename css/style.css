@@ -98,6 +98,7 @@ button.greeting__he:focus-visible { outline: 3px solid var(--focus); outline-off
 
 /* ===== Lektion ===== */
 .lesson-stage { margin-top: var(--space-4); }
+.ab-listen-skip { display: flex; margin: var(--space-4) auto 0; }
 
 /* ===== Üben, Alef-Bet, Einstellungen ===== */
 .screen { display: grid; gap: var(--space-3); }

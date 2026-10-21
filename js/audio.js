@@ -76,6 +76,23 @@ export function audioActive() {
   return voiceAvailable() && state.settings.audio;
 }
 
+// Hör-Übungen lassen sich ganz abschalten oder für eine Stunde pausieren
+// („Kann gerade nicht hören“). Die übrige Sprachausgabe bleibt dabei an.
+const LISTEN_PAUSE_MS = 60 * 60 * 1000;
+
+export function listenPausedUntil() {
+  const until = state.settings.listenPauseUntil || 0;
+  return until > Date.now() ? until : 0;
+}
+
+export function listenActive() {
+  return audioActive() && state.settings.listen && !listenPausedUntil();
+}
+
+export function pauseListening() {
+  state.settings.listenPauseUntil = Date.now() + LISTEN_PAUSE_MS;
+}
+
 // Für die Einstellungen: welche Stimme spricht und woher sie kommt.
 export function voiceInfo() {
   if (clips.size) return { clips: true, name: clipList.stimme || 'Aufnahme', herkunft: clipList.herkunft || '' };

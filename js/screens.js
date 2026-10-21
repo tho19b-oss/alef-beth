@@ -417,7 +417,9 @@ export function renderReview(host) {
     <div class="screen">
       <h1 class="screen__title text-title">Üben &amp; Wiederholen</h1>
       ${body}
+      ${alphabetHtml()}
     </div>`;
+  bindAlphabet(host);
   host.querySelector('#start-review')?.addEventListener('click', () => {
     location.hash = '#/review/run';
   });
@@ -437,7 +439,7 @@ function formatDue(ts) {
   return d.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
 }
 
-// ---------- Alphabet-Tabelle ----------
+// ---------- Alphabet-Tabelle (unten auf der Üben-Seite) ----------
 
 // Wie fest sitzt ein Zeichen? Eine Wiederholungsstufe je Punkt (1 → 3 → 7 →
 // 14 → 30 → 90 Tage, siehe srs.js); ein Fehler setzt zurück.
@@ -450,7 +452,7 @@ export function pipsHtml(entry) {
   return `<span class="ab-pips" role="img" aria-label="${label}">${html}</span>`;
 }
 
-export function renderAlphabet(host) {
+function alphabetHtml() {
   // Ohne hebräische Stimme wären die Zeilen tote Knöpfe – dann als Liste zeigen.
   const canSpeak = audioActive();
   const tag = canSpeak ? 'button' : 'div';
@@ -475,17 +477,17 @@ export function renderAlphabet(host) {
     `${v.soundLabel} – Beispiel: ${he(v.example)} „${v.exampleTranslit}“`,
   )).join('');
 
-  host.innerHTML = `
-    <div class="screen">
-      <h1 class="screen__title text-title">Das Alef-Bet</h1>
-      <div class="ab-hint">${icon('book')}<p class="text-body">Zum Nachschlagen – gelesen wird von rechts
-        nach links.${canSpeak ? ' Tippe eine Zeile an, um den Namen zu hören.' : ''} Die Punkte zeigen,
-        wie fest ein Zeichen sitzt: Jede gelungene Wiederholung füllt einen mehr.</p></div>
-      <div class="ab-alphalist">${letterRows}</div>
-      <h2 class="screen__section text-heading">Nikud – die Vokalzeichen</h2>
-      <div class="ab-alphalist">${nikudRows}</div>
-    </div>`;
+  return `
+    <h2 class="screen__section text-heading" id="alphabet">Das Alef-Bet</h2>
+    <div class="ab-hint">${icon('book')}<p class="text-body">Zum Nachschlagen – gelesen wird von rechts
+      nach links.${canSpeak ? ' Tippe eine Zeile an, um den Namen zu hören.' : ''} Die Punkte zeigen,
+      wie fest ein Zeichen sitzt: Jede gelungene Wiederholung füllt einen mehr.</p></div>
+    <div class="ab-alphalist">${letterRows}</div>
+    <h2 class="screen__section text-heading">Nikud – die Vokalzeichen</h2>
+    <div class="ab-alphalist">${nikudRows}</div>`;
+}
 
+function bindAlphabet(host) {
   host.querySelectorAll('[data-tts]').forEach((b) => b.addEventListener('click', () => speakTapped(b)));
 }
 

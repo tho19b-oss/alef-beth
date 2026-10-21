@@ -1,7 +1,7 @@
 // Einstieg: Hash-Router, Theme, Bottom-Navigation, Service-Worker-Registrierung.
 
 import { state } from './state.js';
-import { renderHome, renderReview, renderAlphabet, renderAchievements, renderSettings, greetingFor } from './screens.js';
+import { renderHome, renderReview, renderAchievements, renderSettings, greetingFor } from './screens.js';
 import { runLesson, runReview, runFreePractice } from './lesson.js';
 import { renderGiur, renderGiurTeil, runGiurRound } from './giur.js';
 import { renderRangliste, syncLeaderboard } from './rangliste.js';
@@ -17,11 +17,11 @@ const nav = document.getElementById('bottomnav');
 // Hebräische Textstellen tragen lang="he" direkt im Markup (he() in ui.js):
 // Screenreader und Browser wählen dadurch Aussprache und Schrift richtig.
 
-const NAV_ROUTES = ['home', 'review', 'alphabet', 'rangliste', 'erfolge', 'settings'];
+const NAV_ROUTES = ['home', 'review', 'rangliste', 'erfolge', 'settings'];
 
 function navRoute(hash) {
-  if (hash.startsWith('#/review')) return 'review';
-  if (hash === '#/alphabet') return 'alphabet';
+  // Die Alef-Bet-Tafel steht seit 1.11 unten auf der Üben-Seite.
+  if (hash.startsWith('#/review') || hash === '#/alphabet') return 'review';
   if (hash.startsWith('#/rangliste')) return 'rangliste';
   if (hash === '#/erfolge') return 'erfolge';
   if (hash === '#/settings') return 'settings';
@@ -81,7 +81,9 @@ function route() {
   } else if (hash === '#/review') {
     renderReview(app);
   } else if (hash === '#/alphabet') {
-    renderAlphabet(app);
+    // Alter Link auf den früheren Reiter: Üben-Seite, gleich bei der Tafel.
+    renderReview(app);
+    app.querySelector('#alphabet')?.scrollIntoView();
   } else if (hash === '#/erfolge') {
     renderAchievements(app);
   } else if (hash.startsWith('#/rangliste')) {

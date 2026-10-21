@@ -95,6 +95,7 @@ button.greeting__he:focus-visible { outline: 3px solid var(--focus); outline-off
 .today__text { display: grid; gap: 2px; min-width: 0; }
 .today__kicker { color: var(--gold-ink); }
 .today__note { color: var(--ink-soft); }
+.today.is-leaving { animation: ab-fade-out var(--dur-base) var(--ease-in) forwards; }
 
 /* ===== Lektion ===== */
 .lesson-stage { margin-top: var(--space-4); }

@@ -7,10 +7,10 @@ import { renderExercise, isPassive } from './exercises.js';
 import { state, save, addXp, touchStreak, completeLesson, currentStreak } from './state.js';
 import { syncBadges } from './badges.js';
 import { applyResult, dueIds } from './srs.js';
-import { audioActive, speak, stopSpeech } from './audio.js';
+import { listenActive, pauseListening, speak, stopSpeech } from './audio.js';
 import { shuffle, sample } from './util.js';
 import {
-  icon, he, replay, countUp, setProgress, confetti, feedback, swap, reducedMotion, confirmDialog, sound,
+  icon, he, replay, countUp, setProgress, confetti, feedback, swap, reducedMotion, confirmDialog, sound, toast,
 } from './ui.js';
 
 // ---------- Warteschlangen pro Lektionstyp ----------
@@ -49,7 +49,7 @@ function buildLetters(lesson) {
   for (const id of shuffle(lesson.newItems)) {
     q.push({ kind: 'mc', dir: 'de2he', itemId: id, poolIds: pool });
   }
-  if (audioActive()) {
+  if (listenActive()) {
     for (const id of sample(lesson.newItems, 3)) {
       q.push({ kind: 'listen', itemId: id, poolIds: pool });
     }
@@ -152,7 +152,7 @@ function buildNikud(lesson) {
   for (const id of lesson.syllables) {
     q.push({ kind: 'mc', dir: 'he2de', itemId: id, poolIds: sylPool });
   }
-  if (audioActive()) {
+  if (listenActive()) {
     for (const id of sample(lesson.syllables, 2)) {
       q.push({ kind: 'listen', itemId: id, poolIds: sylPool });
     }
@@ -176,7 +176,7 @@ function buildWords(lesson) {
     q.push({ kind: 'mc', dir: 'de2he', itemId: id, poolIds: pool, field: 'meaning' });
   }
   q.push({ kind: 'match', itemIds: [...lesson.newItems] });
-  if (audioActive()) {
+  if (listenActive()) {
     for (const id of sample(lesson.newItems.filter((x) => !getItem(x).noTts), 2)) {
       q.push({ kind: 'listen', itemId: id, poolIds: pool });
     }
@@ -247,10 +247,10 @@ function reviewExercise(id, lessonId = null) {
     return { kind: 'mc', dir: 'de2he', itemId: id, poolIds: pool, field: 'meaning' };
   }
   if (item.type === 'syllable') {
-    if (audioActive() && Math.random() < 0.3) return { kind: 'listen', itemId: id, poolIds: pool };
+    if (listenActive() && Math.random() < 0.3) return { kind: 'listen', itemId: id, poolIds: pool };
     return { kind: 'mc', dir: 'he2de', itemId: id, poolIds: pool };
   }
-  if (audioActive() && item.type === 'letter' && Math.random() < 0.25) {
+  if (listenActive() && item.type === 'letter' && Math.random() < 0.25) {
     return { kind: 'listen', itemId: id, poolIds: pool };
   }
   return { kind: 'mc', dir: Math.random() < 0.5 ? 'he2de' : 'de2he', itemId: id, poolIds: pool };
@@ -480,7 +480,7 @@ function runSession(host, queue, opts) {
     const ex = queue[idx];
     const render = (h) => {
       window.scrollTo(0, 0);
-      renderExercise(ex, h, (correct, detail) => answered(ex, correct, detail));
+      renderExercise(ex, h, (correct, detail) => answered(ex, correct, detail), { onSkipListen: skipListening });
       if (isPassive(ex)) openSheet({ tone: 'neutral' });
     };
     // Die alte Übung gleitet hinaus, während die Leiste abtaucht, dann
@@ -488,6 +488,22 @@ function runSession(host, queue, opts) {
     // (ab-enter), dafür reicht ein Überblenden.
     if (idx === 0) render(area);
     else swap(area, render, { direction: isPassive(ex) ? 'fade' : 'forward', viewTransition: false });
+  }
+
+  // „Kann gerade nicht hören“: eine Stunde lang keine Hör-Übungen. Diese und
+  // alle noch offenen werden zur Lese-Frage mit demselben Item, ohne Fehler
+  // und ohne XP-Verlust.
+  function skipListening() {
+    if (sheetOpen) return;
+    stopSpeech();
+    pauseListening();
+    save();
+    for (let i = idx; i < queue.length; i += 1) {
+      const ex = queue[i];
+      if (ex.kind === 'listen') queue[i] = { ...ex, kind: 'mc', dir: 'he2de' };
+    }
+    toast('Eine Stunde lang keine Hör-Übungen', { icon: 'speaker', duration: 3000 });
+    step();
   }
 
   function finish() {

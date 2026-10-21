@@ -115,11 +115,7 @@ export function bumpCounters(host, streak) {
 // ---------- Tagesziel ----------
 
 function todayNote(value, goal) {
-  if (value >= goal) {
-    return state.daily.claimed
-      ? `Ziel von ${goal} XP geschafft, Bonus abgeholt. Bis morgen!`
-      : `Geschafft! Dein Ziel von ${goal} XP ist erreicht.`;
-  }
+  if (value >= goal) return `Geschafft! Dein Ziel von ${goal} XP ist erreicht.`;
   if (value === 0) return 'Eine Lektion bringt dich ungefähr ans Ziel.';
   return `Noch ${goal - value} XP bis zum Ziel.`;
 }
@@ -186,10 +182,11 @@ function collectBonus(home, btn) {
   shown.xp = state.xp;
   sound('bonus');
   xpBurst(btn, GOAL_BONUS, { to: home.querySelector('#chip-xp'), total: state.xp });
-  home.querySelector('.today__note').textContent = todayNote(todayXp(), state.settings.dailyGoal);
-  const banner = home.querySelector('#goal-bonus');
-  banner.classList.add('is-leaving');
-  setTimeout(() => banner.remove(), reducedMotion() ? 0 : 320);
+  // Ziel erreicht und Bonus abgeholt: Karte und Banner gehen beide.
+  for (const el of [home.querySelector('.today'), home.querySelector('#goal-bonus')]) {
+    el.classList.add('is-leaving');
+    setTimeout(() => el.remove(), reducedMotion() ? 0 : 320);
+  }
 }
 
 // ---------- Home / Lernpfad ----------
@@ -231,7 +228,7 @@ export function renderHome(host) {
       ${greetingHtml()}
       ${modeSwitchHtml('hebrew')}
 
-      ${todayHtml(dailyFrom, daily, goal)}
+      ${daily < goal || canClaimBonus() ? todayHtml(dailyFrom, daily, goal) : ''}
       ${canClaimBonus() ? bonusHtml(crossing) : ''}
 
       ${UNITS.map((u, i) => unitHtml(u, i, { unlocked, fresh })).join('')}

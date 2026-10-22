@@ -4,7 +4,7 @@ import { state } from './state.js';
 import { renderHome, renderReview, renderAchievements, renderSettings, greetingFor } from './screens.js';
 import { runLesson, runReview, runFreePractice } from './lesson.js';
 import { renderGiur, renderGiurTeil, runGiurRound } from './giur.js';
-import { renderRangliste, syncLeaderboard } from './rangliste.js';
+import { renderRangliste, syncLeaderboard, prefetchBoards } from './rangliste.js';
 import { scheduleReminder } from './notify.js';
 import { dueIds } from './srs.js';
 import { applyTheme, applyMotion, applySound } from './theme.js';
@@ -63,8 +63,12 @@ function route() {
   stopSpeech();
   window.scrollTo(0, 0);
   updateNav(hash);
-  // Neuen Stand für die Rangliste hochladen (nur mit Gruppe und wenn sich etwas geändert hat).
-  if (!inLesson) syncLeaderboard();
+  // Neuen Stand für die Rangliste hochladen (nur mit Gruppe und wenn sich etwas
+  // geändert hat) und die Tabellen vorab holen, damit der Tab fertig dasteht.
+  if (!inLesson) {
+    syncLeaderboard();
+    prefetchBoards();
+  }
 
   if (hash.startsWith('#/lesson/')) {
     runLesson(hash.slice('#/lesson/'.length), app);
@@ -125,6 +129,10 @@ window.addEventListener('hashchange', () => {
 // Bei „Automatisch“ dem Systemwechsel folgen, ohne dass die App neu geladen wird.
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
   if (state.settings.theme === 'auto') applyTheme();
+});
+// Kommt die App aus dem Hintergrund zurück, die Ranglisten-Tabellen auffrischen.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && !isInLesson()) prefetchBoards();
 });
 // Kommt die hebräische Stimme erst nachträglich, den aktuellen Screen neu zeichnen
 // (Alphabet-Liste und Einstellungen zeigen dann die Hörsymbole).

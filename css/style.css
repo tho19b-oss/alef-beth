@@ -363,7 +363,8 @@ button.greeting__he:focus-visible { outline: 3px solid var(--focus); outline-off
 @keyframes rl-rise { from { transform: scaleY(0.2); opacity: 0; } }
 
 /* Liste: Zeilen in einer Karte, durch Linien getrennt */
-.rl-list { list-style: none; margin: 0; padding: var(--space-1) 0; display: grid; }
+/* overflow: hidden schneidet die blaue eigene Zeile an den runden Ecken der Karte ab. */
+.rl-list { list-style: none; margin: 0; padding: 0; display: grid; overflow: hidden; }
 .rl-row { display: flex; align-items: center; gap: var(--space-3); min-height: 64px; padding: var(--space-2) var(--space-4); }
 .rl-row + .rl-row { border-top: 2px solid var(--line); }
 .rl-row.is-me { background: var(--tekhelet-soft); }

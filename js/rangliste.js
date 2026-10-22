@@ -389,6 +389,7 @@ export function renderRangliste(host, joinCode = null) {
   const g = me.groups.find((x) => x.code === me.current);
   const chip = (x) => `<button class="ab-chip rl-chip text-label" type="button" data-code="${x.code}"
     aria-pressed="${x.code === g.code}">${esc(x.name)}</button>`;
+  const boardNow = cachedBoardHtml(g.code);
 
   host.innerHTML = `
     <div class="screen rl">
@@ -401,7 +402,7 @@ export function renderRangliste(host, joinCode = null) {
         <button class="ab-chip rl-chip rl-chip--add text-label" type="button" id="rl-add">${icon('sparkle')}Neue Gruppe</button>
       </div>
 
-      <div class="rl-board" aria-live="polite"><p class="rl-status text-body">Wird geladen …</p></div>
+      <div class="rl-board" aria-live="polite">${boardNow}</div>
 
       <section class="ab-card rl-invite" aria-labelledby="rl-invite-title">
         <div class="rl-invite__text">
@@ -439,7 +440,7 @@ export function renderRangliste(host, joinCode = null) {
       toast(errorText(e), { tone: 'error' });
     }
   });
-  loadBoard(host, g.code);
+  loadBoard(host, g.code, boardNow);
 }
 
 // Die eigene Zeile mit dem Stand dieses Geräts überschreiben und neu sortieren
@@ -462,22 +463,53 @@ function cachedRows(code) {
   return c && c.week === weekStart() ? c.rows : null;
 }
 
-async function loadBoard(host, code) {
+// Inhalt des Ranglisten-Kastens: die gespeicherte Tabelle, sonst der Ladehinweis.
+function cachedBoardHtml(code) {
+  const rows = cachedRows(code);
+  return rows ? boardHtml(withRanks(withOwnStand(rows))) : '<p class="rl-status text-body">Wird geladen …</p>';
+}
+
+// ---------- Tabellen vorab laden ----------
+
+// Der Tab soll fertig dastehen, wenn man ihn öffnet. Deshalb holt die App die
+// Tabellen ihrer Gruppen schon vorher im Hintergrund: beim Start, bei jedem
+// Screenwechsel und wenn sie wieder in den Vordergrund kommt. Eine Tabelle,
+// die jünger als FRESH_MS ist, lädt sie nicht noch einmal.
+const FRESH_MS = 30 * 1000;
+const loading = new Map(); // code → laufende Anfrage
+
+function fetchBoard(code) {
+  if (loading.has(code)) return loading.get(code);
+  const p = board(code).then((rows) => {
+    if (rows.length) me.boards[code] = { week: weekStart(), rows, at: Date.now() };
+    else delete me.boards[code];
+    store();
+    return rows;
+  }).finally(() => loading.delete(code));
+  loading.set(code, p);
+  return p;
+}
+
+const isFresh = (code) => cachedRows(code) && Date.now() - (me.boards[code].at || 0) < FRESH_MS;
+
+export function prefetchBoards() {
+  for (const g of me.groups) {
+    if (!isFresh(g.code)) fetchBoard(g.code).catch(() => {});
+  }
+}
+
+// Beim Öffnen steht die gespeicherte Tabelle schon im Markup (shown). Ist sie
+// älter als FRESH_MS, kommt die frische nach und ersetzt sie, falls sich etwas
+// geändert hat.
+async function loadBoard(host, code, shown) {
   const box = host.querySelector('.rl-board');
-  let shown = '';
   const show = (html) => {
     if (html !== shown) box.innerHTML = shown = html;
   };
-  // Die gespeicherte Tabelle steht sofort da, die frische ersetzt sie.
+  if (isFresh(code) && !loading.has(code)) return;
   const cached = cachedRows(code);
-  if (cached) show(boardHtml(withRanks(withOwnStand(cached))));
-  // Der eigene Stand geht nebenher hoch; die Tabelle wartet nicht darauf.
-  syncLeaderboard();
   try {
-    const rows = await board(code);
-    if (rows.length) me.boards[code] = { week: weekStart(), rows };
-    else delete me.boards[code];
-    store();
+    const rows = await fetchBoard(code);
     if (!box.isConnected) return;
     show(rows.length
       ? boardHtml(withRanks(withOwnStand(rows)))

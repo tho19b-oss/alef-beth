@@ -24,7 +24,49 @@ const MAX_DUE = 7;     // so viele fällige Karten höchstens vorab, damit auch 
 const COMBO_FROM = 3;  // wie in den Lektionen: ab so vielen Treffern in Folge erscheint die Flamme
 const MAX_RETRY = 2;   // eine nicht gewusste Karte kommt höchstens zweimal zurück
 
+const MARKED_ROUND = 20; // so viele markierte Karten höchstens in einer Runde
+const MARKED = 'markiert'; // Pseudo-Teil in der Adresse: #/giur/markiert/run
+
 const cards = () => state.giur.cards;
+
+// ---------- Markieren zum Wiederholen ----------
+
+const marked = () => state.giur.marked;
+const isMarked = (id) => Boolean(marked()[id]);
+const markedIds = () => Object.keys(marked()).filter((id) => getQuestion(id));
+
+function toggleMark(id) {
+  if (isMarked(id)) delete marked()[id];
+  else marked()[id] = Date.now();
+  save();
+  return isMarked(id);
+}
+
+// Lesezeichen (gibt es im Design System noch nicht, deshalb hier als Pfad).
+const BOOKMARK = '<svg class="ab-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">'
+  + '<path d="M7 3.5h10a1.5 1.5 0 0 1 1.5 1.5v15.2a.6.6 0 0 1-1 .5L12 16.6l-5.5 4.1a.6.6 0 0 1-1-.5V5A1.5 1.5 0 0 1 7 3.5z" '
+  + 'stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg>';
+
+function markBtnHtml(id, extra = '') {
+  const on = isMarked(id);
+  return `<button class="giur-mark${extra}" type="button" data-mark="${id}" aria-pressed="${on}"
+    aria-label="Zum Wiederholen markieren" title="${on ? 'Markierung entfernen' : 'Zum Wiederholen markieren'}">${BOOKMARK}</button>`;
+}
+
+// Ein Klick auf ein Lesezeichen in scope schaltet die Markierung um.
+function wireMarks(scope, onChange) {
+  scope.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-mark]');
+    if (!btn) return;
+    e.preventDefault(); // in <summary> soll der Klick die Antwort nicht aufklappen
+    e.stopPropagation();
+    const on = toggleMark(btn.dataset.mark);
+    btn.setAttribute('aria-pressed', String(on));
+    btn.title = on ? 'Markierung entfernen' : 'Zum Wiederholen markieren';
+    replay(btn, 'is-bump');
+    onChange?.(on);
+  });
+}
 
 // ---------- Zahlen zu einem Teil ----------
 
@@ -95,6 +137,19 @@ function subLine(q) {
 
 // ---------- Übersicht: die 18 Teile ----------
 
+function markedTileHtml() {
+  const ids = markedIds();
+  if (!ids.length) return '';
+  const teile = new Set(ids.map((id) => getQuestion(id).teil)).size;
+  return `
+    <button class="ab-alpha giur-marked" type="button" id="giur-marked">
+      <span class="ab-alpha__glyph">${BOOKMARK}</span>
+      <span class="ab-alpha__text"><span class="text-strong">Markierte Fragen</span>
+        <span class="ab-alpha__sub text-caption">${ids.length} ${ids.length === 1 ? 'Karte' : 'Karten'} aus ${teile} ${teile === 1 ? 'Teil' : 'Teilen'}</span></span>
+      <span class="giur-chevron">${icon('chevron')}</span>
+    </button>`;
+}
+
 export function renderGiur(host) {
   const streak = currentStreak();
   const ready = TEILE.filter((t) => t.fragen.length);
@@ -145,11 +200,16 @@ export function renderGiur(host) {
           : `Alle ${catalog} Fragen des Katalogs sind aufbereitet.`}</p>
       </section>
 
+      ${markedTileHtml()}
+
       <ol class="giur-teile" aria-label="Teile des Prüfungskatalogs">${TEILE.map(row).join('')}</ol>
     </div>`;
 
   bumpCounters(host.querySelector('.giur'), streak);
   bindGreeting(host);
+  host.querySelector('#giur-marked')?.addEventListener('click', () => {
+    location.hash = `#/giur/${MARKED}/run`;
+  });
   host.querySelectorAll('[data-teil]').forEach((b) =>
     b.addEventListener('click', () => { location.hash = `#/giur/${b.dataset.teil}`; }));
 }
@@ -178,6 +238,7 @@ export function renderGiurTeil(host, teilId, { openPanel = false } = {}) {
       <summary>
         <span class="giur-q__nr text-label">${q.nr}</span>
         <span class="giur-q__text text-strong">${esc(q.q)}${subLine(q)}</span>
+        ${markBtnHtml(q.id)}
         <span class="giur-q__chev">${icon('chevron')}</span>
       </summary>
       <div class="giur-q__body">
@@ -214,6 +275,8 @@ export function renderGiurTeil(host, teilId, { openPanel = false } = {}) {
     location.hash = `#/giur/${teil.id}/run`;
   });
 
+  wireMarks(host.querySelector('.giur-list'));
+
   // Prüfung: Änderungen färben die Nummer der Frage und erneuern den Zähler.
   const panel = wirePanel(host.querySelector('.giur-export'), teil,
     () => renderGiurTeil(host, teil.id, { openPanel: true }));
@@ -226,15 +289,23 @@ export function renderGiurTeil(host, teilId, { openPanel = false } = {}) {
 
 // ---------- Die Karten-Runde ----------
 
+// Markierte Fragen über alle Teile, gemischt. Die Runde gilt als freies Üben:
+// Gewusstes verschiebt keine Termine, Nichtgewusstes holt die Karte zurück.
+function markedRound() {
+  const all = markedIds();
+  return { ids: sample(all, Math.min(MARKED_ROUND, all.length)), mode: 'practice' };
+}
+
 export function runGiurRound(teilId, host) {
-  const teil = getTeil(teilId);
-  if (!teil || !teil.fragen.length) {
+  const isMarkedRun = teilId === MARKED;
+  const teil = isMarkedRun ? null : getTeil(teilId);
+  const { ids, mode } = isMarkedRun ? markedRound() : teil?.fragen.length ? buildRound(teil) : { ids: [] };
+  if (!ids.length) {
     location.hash = '#/giur';
     return;
   }
-  const { ids, mode } = buildRound(teil);
   const queue = ids.map((id) => ({ id, retry: 0 }));
-  const exitHash = `#/giur/${teil.id}`;
+  const exitHash = isMarkedRun ? '#/giur' : `#/giur/${teil.id}`;
 
   let idx = 0;
   let xp = 0;
@@ -261,6 +332,7 @@ export function runGiurRound(teilId, host) {
   const bar = host.querySelector('#card-bar');
   const progress = host.querySelector('.ab-progress');
   const comboChip = host.querySelector('.ab-combo');
+  wireMarks(area);
   wireReview(area); // Die Prüfung gehört zur aufgedeckten Antwort; die Karten wechseln nur den Inhalt.
 
   host.querySelector('#quit').addEventListener('click', async () => {
@@ -304,7 +376,8 @@ export function runGiurRound(teilId, host) {
     else if (act === 'known') rate(true);
   });
 
-  // Am Rechner: Enter oder Leertaste deckt auf, danach 1 = Nochmal, 2 = Gewusst.
+  // Am Rechner: Enter oder Leertaste deckt auf, danach 1 = Nochmal, 2 = Gewusst;
+  // M markiert die Karte zum Wiederholen.
   function onKey(e) {
     if (!area.isConnected) {
       document.removeEventListener('keydown', onKey);
@@ -321,6 +394,8 @@ export function runGiurRound(teilId, host) {
       rate(false);
     } else if (revealed && e.key === '2') {
       rate(true);
+    } else if (e.key === 'm' || e.key === 'M') {
+      area.querySelector('[data-mark]')?.click();
     }
   }
   document.addEventListener('keydown', onKey);
@@ -375,8 +450,9 @@ export function runGiurRound(teilId, host) {
     area.innerHTML = `
       <article class="ab-card giur-card ab-enter">
         <div class="giur-tags">
-          <span class="ab-info__tag text-overline">${icon('book')}${esc(teil.title)} · Frage ${q.nr}</span>
+          <span class="ab-info__tag text-overline">${icon('book')}${esc(getTeil(q.teil).title)} · Frage ${q.nr}</span>
           <span class="giur-type text-label">${TYPE_LABEL[q.type]}</span>${statusPill(q)}
+          ${markBtnHtml(q.id, ' giur-mark--card')}
         </div>
         ${retry ? '<p class="giur-again text-caption">Noch einmal – diese Karte war eben nicht sicher.</p>' : ''}
         <h2 class="giur-card__q text-heading">${esc(q.q)}</h2>

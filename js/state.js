@@ -19,8 +19,9 @@ const DEFAULTS = {
   srs: {},       // itemId  -> { streak, due, seen }
   // Giur-Wissen: cards = Frage-ID -> { streak, due, seen } (getrennt von srs);
   // reviews = Frage-ID -> { urteil, notiz, am } (Prüfung der Antwort-Entwürfe);
-  // pruefer = wer geprüft hat (für die Weitergabe)
-  giur: { cards: {}, reviews: {}, pruefer: '' },
+  // pruefer = wer geprüft hat (für die Weitergabe);
+  // marked = Frage-ID -> Zeitpunkt (zum Wiederholen markiert)
+  giur: { cards: {}, reviews: {}, pruefer: '', marked: {} },
   daily: { day: null, xp: 0, claimed: false }, // XP des heutigen Tages fürs Tagesziel
   history: {},   // YYYY-MM-DD -> XP an diesem Tag (letzte Wochen, für die Wochenansicht)
   stats: { listenCorrect: 0, bestStreak: 0 },
@@ -69,6 +70,14 @@ function pruneReviews(reviews) {
   return clean;
 }
 
+function pruneMarked(marked) {
+  const clean = {};
+  for (const [id, at] of Object.entries(marked || {})) {
+    if (hasQuestion(id)) clean[id] = at;
+  }
+  return clean;
+}
+
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
@@ -94,7 +103,12 @@ function load() {
         },
         lessons: s.lessons || {},
         srs: pruneSrs(s.srs),
-        giur: { cards: pruneCards(s.giur?.cards), reviews: pruneReviews(s.giur?.reviews), pruefer: s.giur?.pruefer || '' },
+        giur: {
+          cards: pruneCards(s.giur?.cards),
+          reviews: pruneReviews(s.giur?.reviews),
+          pruefer: s.giur?.pruefer || '',
+          marked: pruneMarked(s.giur?.marked),
+        },
       };
     }
   } catch (e) {

@@ -20,15 +20,16 @@ const STORE = 'alefbeth-rangliste-v1';
 const NAME_MAX = 24;
 const GROUP_MAX = 30;
 
-// { id, secret, groups: [{ code, name }], current: code, sent: zuletzt hochgeladener Stand }
+// { id, secret, groups: [{ code, name }], current: code, sent: zuletzt hochgeladener Stand,
+//   boards: { [code]: { week, rows } } zuletzt geladene Tabelle je Gruppe }
 function load() {
   try {
     const raw = localStorage.getItem(STORE);
-    if (raw) return { groups: [], current: null, sent: null, ...JSON.parse(raw) };
+    if (raw) return { groups: [], current: null, sent: null, boards: {}, ...JSON.parse(raw) };
   } catch (e) {
     console.warn('Konnte die Ranglisten-Daten nicht laden:', e);
   }
-  return { id: null, secret: null, groups: [], current: null, sent: null };
+  return { id: null, secret: null, groups: [], current: null, sent: null, boards: {} };
 }
 
 const me = load();
@@ -43,12 +44,17 @@ function store() {
 
 export const hasGroups = () => me.groups.length > 0;
 
-async function rpc(fn, args) {
-  const res = await fetch(API + fn, {
-    method: 'POST',
-    headers: { apikey: API_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify(args),
-  });
+// Schreibende Funktionen gehen per POST. Reine Abfragen (stable im SQL) gehen
+// per GET mit allem in der URL: Ohne eigenen Header spart sich der Browser die
+// CORS-Vorabanfrage, also einen ganzen Umlauf zum Server.
+async function rpc(fn, args, { get = false } = {}) {
+  const res = await (get
+    ? fetch(`${API}${fn}?${new URLSearchParams({ ...args, apikey: API_KEY })}`, { cache: 'no-store' })
+    : fetch(API + fn, {
+      method: 'POST',
+      headers: { apikey: API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify(args),
+    }));
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     const err = new Error(body.message || res.statusText);
@@ -134,12 +140,13 @@ async function joinGroup(code) {
 async function leaveGroup(code) {
   await rpc('leaderboard_leave', { p_id: me.id, p_secret: me.secret, p_code: code });
   me.groups = me.groups.filter((g) => g.code !== code);
+  delete me.boards[code];
   me.current = me.groups[0]?.code || null;
   store();
 }
 
-const board = (code) => rpc('leaderboard_board', { p_code: code, p_week: weekStart() });
-const groupInfo = async (code) => (await rpc('leaderboard_group', { p_code: code }))[0] || null;
+const board = (code) => rpc('leaderboard_board', { p_code: code, p_week: weekStart() }, { get: true });
+const groupInfo = async (code) => (await rpc('leaderboard_group', { p_code: code }, { get: true }))[0] || null;
 
 // Platz pro Zeile: Gleichstand teilt sich den Platz (1, 2, 2, 4).
 function withRanks(rows) {
@@ -435,17 +442,49 @@ export function renderRangliste(host, joinCode = null) {
   loadBoard(host, g.code);
 }
 
+// Die eigene Zeile mit dem Stand dieses Geräts überschreiben und neu sortieren
+// (wie leaderboard_board im SQL). So steht man richtig da, auch wenn der
+// Upload noch unterwegs ist oder die gespeicherte Tabelle älter ist.
+function withOwnStand(rows) {
+  if (!rows.some((r) => r.player_id === me.id)) return rows;
+  const s = stand();
+  return rows
+    .map((r) => (r.player_id === me.id
+      ? { ...r, name: s.p_name || r.name, week_xp: s.p_week_xp, xp: s.p_xp, streak: s.p_streak }
+      : r))
+    .sort((a, b) => b.week_xp - a.week_xp || b.xp - a.xp || a.name.localeCompare(b.name, 'de'));
+}
+
+// Zuletzt geladene Tabelle einer Gruppe, nur aus der laufenden Woche. Eine aus
+// der Vorwoche zeigte noch die alten Wochen-XP.
+function cachedRows(code) {
+  const c = me.boards[code];
+  return c && c.week === weekStart() ? c.rows : null;
+}
+
 async function loadBoard(host, code) {
   const box = host.querySelector('.rl-board');
+  let shown = '';
+  const show = (html) => {
+    if (html !== shown) box.innerHTML = shown = html;
+  };
+  // Die gespeicherte Tabelle steht sofort da, die frische ersetzt sie.
+  const cached = cachedRows(code);
+  if (cached) show(boardHtml(withRanks(withOwnStand(cached))));
+  // Der eigene Stand geht nebenher hoch; die Tabelle wartet nicht darauf.
+  syncLeaderboard();
   try {
-    // Erst einen geänderten eigenen Stand hochladen, damit man sich gleich
-    // richtig einsortiert sieht.
-    await syncLeaderboard();
-    const rows = withRanks(await board(code));
+    const rows = await board(code);
+    if (rows.length) me.boards[code] = { week: weekStart(), rows };
+    else delete me.boards[code];
+    store();
     if (!box.isConnected) return;
-    box.innerHTML = rows.length ? boardHtml(rows) : '<p class="rl-status text-body">Die Gruppe gibt es nicht mehr.</p>';
+    show(rows.length
+      ? boardHtml(withRanks(withOwnStand(rows)))
+      : '<p class="rl-status text-body">Die Gruppe gibt es nicht mehr.</p>');
   } catch (e) {
-    if (box.isConnected) box.innerHTML = `<p class="rl-status text-body">${errorText(e)}</p>`;
+    // Ohne Netz bleibt die gespeicherte Tabelle stehen.
+    if (box.isConnected && !cached) show(`<p class="rl-status text-body">${errorText(e)}</p>`);
   }
 }
 

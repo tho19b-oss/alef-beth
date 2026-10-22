@@ -1,11 +1,10 @@
 // Giur-Wissen, Teil 15: Synagoge.
 //
 // Fragetexte stehen wörtlich im Prüfungskatalog (offensichtliche Tippfehler
-// berichtigt). Die Antworten wurden als ENTWURF geschrieben und sind noch von
-// keinem Rabbiner oder Lehrer durchgesehen: Alle Fragen tragen den
-// Standardstatus 'entwurf'. Erst was der Prüfbogen bestätigt oder korrigiert,
-// bekommt status 'geprueft'. Bräuche, die je nach Gemeinde abweichen, und
-// unklare Fragen stehen im Feld `check`.
+// berichtigt). Die Antworten wurden als ENTWURF geschrieben und am 22.10.2026
+// mit dem Prüfbogen durchgesehen: Alle zwölf sind bestätigt oder korrigiert und
+// tragen status 'geprueft'. Neue oder später geänderte Antworten bleiben
+// 'entwurf', bis ein Rabbiner oder Lehrer sie bestätigt hat.
 //
 // Die Fragen 5 bis 7 überschneiden sich mit den Begriffen aus Teil 11
 // (Mechiza, Esrat Naschim); die Antworten verweisen darauf.
@@ -18,6 +17,7 @@ export const SYNAGOGE = [
   {
     id: 'syn-01',
     nr: 1,
+    status: 'geprueft',
     q: 'An welchen Tagen wird die Tora gelesen?',
     type: 'fakt',
     kurz: 'Am Montag und Donnerstag (morgens), am Schabbat (morgens und nachmittags zu Mincha), an Rosch Chodesch, an allen Feiertagen und an Chol ha-Mo’ed, an Chanukka, an Purim und an den Fasttagen.',
@@ -31,6 +31,7 @@ export const SYNAGOGE = [
   {
     id: 'syn-02',
     nr: 2,
+    status: 'geprueft',
     q: 'Wie viele Alijot werden am Schabbat verteilt?',
     type: 'fakt',
     kurz: 'Sieben, dazu der Maftir (der Achte, der auch die Haftara liest).',
@@ -44,6 +45,7 @@ export const SYNAGOGE = [
   {
     id: 'syn-03',
     nr: 3,
+    status: 'geprueft',
     q: 'Aus welchem Grund wird eine Person mit einer „Alija“ geehrt? Nenne ein paar Beispiele.',
     kurz: 'Eine Alija ist eine Ehre, die man aus einem besonderen Anlass bekommt: zur Bar Mizwa, als Bräutigam am Schabbat vor der Hochzeit (Aufruf), als Vater nach der Geburt eines Kindes (Namensgebung der Tochter), am Jahrzeit eines Elternteils, nach überstandener Gefahr (zum Birkat ha-Gomel) oder als Gast.',
     punkte: [
@@ -55,15 +57,16 @@ export const SYNAGOGE = [
   {
     id: 'syn-04',
     nr: 4,
+    status: 'geprueft',
     q: 'Nenne den hebräischen Begriff für:',
     sub: ['„Heilige Lade“', 'Vorhang vor der „Heiligen Lade“', 'erhobene Plattform, auf der der Tisch zum Lesen der Tora steht', 'Ausheben der Tora', 'Zusammenrollen und Binden der Tora', 'Rabbi', 'Kantor', 'Sexton'],
     type: 'fakt',
-    kurz: 'Aron ha-Kodesch, Parochet, Bima, Hagba’a, Gelila, Raw, Chasan, Schammasch.',
+    kurz: 'Aron ha-Kodesch, Parochet, Bima, Hotza’at ha-Sefer Tora, Gelila, Raw, Chasan, Schammasch.',
     punkte: [
       'a. Aron ha-Kodesch: der Schrein für die Torarollen, an der Wand nach Jerusalem.',
       'b. Parochet: wie der Vorhang vor dem Allerheiligsten im Stiftszelt.',
       'c. Bima (auch Almemor oder bei Sefardim Tewa): meist in der Mitte der Synagoge.',
-      'd. Hagba’a: Die Torarolle wird nach der Lesung geöffnet hochgehoben, damit alle die Schrift sehen.',
+      'd. Hotza’at ha-Sefer Tora („Herausnahme der Torarolle“): die Rolle wird aus dem Aron ha-Kodesch geholt. Nicht verwechseln mit Hagba’a, dem Hochheben der geöffneten Rolle nach der Lesung.',
       'e. Gelila: Die Rolle wird zusammengerollt, gebunden und angezogen.',
       'f. Raw (Rabbiner, „Lehrer“).',
       'g. Chasan oder Schaliach Zibbur (Vorbeter, „Gesandter der Gemeinde“).',
@@ -73,17 +76,17 @@ export const SYNAGOGE = [
       { label: 'Heilige Lade', text: 'אֲרוֹן הַקֹּדֶשׁ', translit: 'aron ha-kodesch', de: 'heiliger Schrein' },
       { label: 'Vorhang', text: 'פָּרֹכֶת', translit: 'parochet', de: 'Vorhang' },
       { label: 'Plattform', text: 'בִּימָה', translit: 'bima', de: 'Bühne, Podest' },
-      { label: 'Ausheben', text: 'הַגְבָּהָה', translit: 'hagbaha', de: 'Hochheben' },
+      { label: 'Ausheben', text: 'הוֹצָאַת סֵפֶר תּוֹרָה', translit: 'hotza’at sefer tora', de: 'Herausnahme der Torarolle' },
       { label: 'Zusammenrollen', text: 'גְּלִילָה', translit: 'gelila', de: 'Rollen' },
       { label: 'Rabbi', text: 'רַב', translit: 'raw', de: 'Lehrer, Rabbiner' },
       { label: 'Kantor', text: 'חַזָּן', translit: 'chasan', de: 'Vorbeter' },
       { label: 'Synagogendiener', text: 'שַׁמָּשׁ', translit: 'schammasch', de: 'Diener' },
     ],
-    check: 'Für „Rabbi“ ist auch „Rabbiner“ oder „Raw“ üblich; welche Form erwartet wird, bitte klären.',
   },
   {
     id: 'syn-05',
     nr: 5,
+    status: 'geprueft',
     q: 'Wie heißt die Trennung zwischen Männern und Frauen?',
     type: 'fakt',
     kurz: 'Mechiza (Trennwand).',
@@ -92,6 +95,7 @@ export const SYNAGOGE = [
   {
     id: 'syn-06',
     nr: 6,
+    status: 'geprueft',
     q: 'Was ist eine Mechiza?',
     kurz: 'Die Trennwand, der Vorhang oder das Gitter in der Synagoge zwischen dem Bereich der Männer und dem der Frauen. Ohne Mechiza ist ein Raum nach orthodoxer Halacha für das gemeinsame Gebet nicht geeignet.',
     punkte: ['Die Frauen sitzen dahinter oder auf einer Empore. Die Höhe der Wand regeln die Autoritäten unterschiedlich.'],
@@ -99,6 +103,7 @@ export const SYNAGOGE = [
   {
     id: 'syn-07',
     nr: 7,
+    status: 'geprueft',
     q: 'Was ist Esrat Naschim?',
     kurz: 'Der Frauenbereich der Synagoge, hinter der Mechiza oder auf der Empore. Der Name stammt vom Vorhof der Frauen im Tempel in Jerusalem.',
     punkte: ['Siehe auch Teil 11, Begriffe 1.16 und 1.17.'],
@@ -106,6 +111,7 @@ export const SYNAGOGE = [
   {
     id: 'syn-08',
     nr: 8,
+    status: 'geprueft',
     q: 'Warum gibt es eine Teilung zwischen Männern und Frauen?',
     kurz: 'Damit jeder beim Gebet ganz auf G’tt ausgerichtet ist (Kawana) und nicht abgelenkt wird, und aus Zniut. Vorbild ist der Tempel: Bei der großen Feier an Sukkot baute man eine Empore für die Frauen, damit Männer und Frauen sich nicht mischen.',
     punkte: ['Die Trennung ist keine Wertung: Frauen und Männer haben vor G’tt den gleichen Wert, aber unterschiedliche Pflichten beim Gebet.'],
@@ -114,6 +120,7 @@ export const SYNAGOGE = [
   {
     id: 'syn-09',
     nr: 9,
+    status: 'geprueft',
     q: 'Was waren die Aufgaben der Leviten während der Zeit des Tempels?',
     kurz: 'Sie sangen und musizierten beim Opferdienst (jeden Tag einen eigenen Psalm), bewachten die Tore und Höfe des Tempels und halfen den Kohanim. In der Wüste trugen und bauten sie das Stiftszelt. Außerdem lehrten sie das Volk Tora.',
     punkte: [
@@ -126,6 +133,7 @@ export const SYNAGOGE = [
   {
     id: 'syn-10',
     nr: 10,
+    status: 'geprueft',
     q: 'Von welchen Aufgaben sind die Leviten und die Kohanim ausgeschlossen?',
     kurz: 'Sie sind von der Auslösung der Erstgeborenen (Pidjon ha-Ben) befreit, weil sie selbst G’tt geweiht sind. Leviten und Kohanim bekamen kein Erbteil im Land. Ein Kohen darf sich nicht an Toten unrein machen (keinen Friedhof betreten, außer bei nächsten Verwandten) und darf keine geschiedene Frau und keine Konvertitin heiraten.',
     punkte: [
@@ -133,11 +141,11 @@ export const SYNAGOGE = [
       'Gerade für Konvertitinnen wichtig: Eine Ehe mit einem Kohen ist nach der Halacha nicht erlaubt.',
     ],
     quelle: '3. Mose 21,1–7; 4. Mose 18,20–24; Talmud, Bechorot 47a',
-    check: 'Die Frage ist offen formuliert („ausgeschlossen“ kann „befreit“ oder „nicht erlaubt“ heißen); welche Antwort erwartet wird, bitte klären.',
   },
   {
     id: 'syn-11',
     nr: 11,
+    status: 'geprueft',
     q: 'Wie drückt sich die Ehrfurcht vor G’tt in den Gottesdiensten aus? Nenne ein paar Beispiele.',
     kurz: 'Man kleidet sich ordentlich und bedeckt den Kopf (Kippa), redet nicht während des Gebets und der Toralesung, steht bei der Amida mit geschlossenen Füßen in Richtung Jerusalem und verneigt sich, steht auf, wenn der Toraschrein geöffnet ist oder die Tora getragen wird, und küsst die Tora mit dem Tallit oder Gebetbuch.',
     punkte: [
@@ -151,6 +159,7 @@ export const SYNAGOGE = [
   {
     id: 'syn-12',
     nr: 12,
+    status: 'geprueft',
     q: 'Darf man eine nicht-orthodoxe heilige Stätte betreten? Warum?',
     kurz: 'Eine Kirche betritt man nach der Halacha nicht, weil viele Autoritäten das Christentum mit seinem Glauben an die Dreifaltigkeit als Götzendienst (Awoda Sara) einstufen. Eine Moschee ist nach vielen erlaubt zu betreten, weil der Islam an einen einzigen G’tt glaubt, aber man betet dort nicht. In einer nicht-orthodoxen (liberalen) Synagoge soll man nicht beten, weil Mechiza und Gebetsordnung nicht der Halacha entsprechen.',
     punkte: [
@@ -158,6 +167,5 @@ export const SYNAGOGE = [
       'Beim Besuch als Tourist (Museum, Kathedrale) urteilen Rabbiner ebenfalls unterschiedlich.',
     ],
     quelle: 'Schulchan Aruch, Jore De’a 150; Rambam, Hilchot Awoda Sara 9,4',
-    check: 'Die Frage ist mehrdeutig („nicht-orthodox“ = liberale Synagoge oder anderer Glaube?); bitte klären, wie das Beit Din sie versteht und was erlaubt ist.',
   },
 ];

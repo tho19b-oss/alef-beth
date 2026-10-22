@@ -83,7 +83,10 @@ einfaches Öffnen der `index.html` per Doppelklick reicht dafür nicht.)
   des Prüfungskatalogs fürs Beit Din in 18 Teilen. Pro Teil gibt es die Fragen zum
   Nachlesen und eine Karten-Runde: Frage lesen, laut antworten, aufdecken,
   „Gewusst“ oder „Nochmal“. Die Karten laufen durch dieselbe Wiederholungsleiter
-  wie die Hebräisch-Karten, aber getrennt davon. Aufbereitet sind alle 18 Teile
+  wie die Hebräisch-Karten, aber getrennt davon. Das Lesezeichen an jeder Frage
+  (in der Liste, auf der Karte oder mit der Taste M) markiert sie zum Wiederholen;
+  die Kachel „Markierte Fragen“ startet eine Runde mit bis zu 20 davon aus allen
+  Teilen. Diese Runde zählt als freies Üben und verschiebt keine Termine. Aufbereitet sind alle 18 Teile
   (von Kaschrut bis Taharat Hamischpacha); Antworten beginnen als **Entwurf**, den ein Rabbiner oder Lehrer prüfen
   muss, und tragen das sichtbar als Status („Entwurf“ oder „Geprüft“). Bei jeder
   Antwort lässt sich festhalten,

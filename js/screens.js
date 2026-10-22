@@ -12,6 +12,7 @@ import { applyTheme, applyMotion, applySound } from './theme.js';
 import { dueIds, nextDue } from './srs.js';
 import { speakTapped, canSpeak, ttsSupported, voiceAvailable, voiceInfo, audioActive, listenPausedUntil } from './audio.js';
 import { activeVersion, checkForUpdate } from './version.js';
+import { accountSettingsHtml, wireAccountSettings, accountHintHtml, wireAccountHint } from './konto.js';
 import { todayStr, esc } from './util.js';
 import { holidayFor, hebrewDateText } from './kalender.js';
 import { GREETINGS } from '../data/greetings.js';
@@ -227,6 +228,7 @@ export function renderHome(host) {
       ${topbarHtml(streak)}
       ${greetingHtml()}
       ${modeSwitchHtml('hebrew')}
+      ${accountHintHtml()}
 
       ${daily < goal || canClaimBonus() ? todayHtml(dailyFrom, daily, goal) : ''}
       ${canClaimBonus() ? bonusHtml(crossing) : ''}
@@ -237,6 +239,7 @@ export function renderHome(host) {
   const home = host.querySelector('.home');
   bumpCounters(home, streak);
   bindGreeting(home);
+  wireAccountHint(home, () => renderHome(host));
   home.addEventListener('click', (e) => {
     const claim = e.target.closest('#claim-bonus');
     if (claim) {
@@ -674,6 +677,9 @@ export function renderSettings(host) {
       </div>
       ${hint('name-hint', 'speaker', '')}
 
+      <h2 class="screen__section text-heading">Konto</h2>
+      ${accountSettingsHtml()}
+
       <h2 class="screen__section text-heading">Lernen</h2>
       <div class="ab-settings">
         <div class="ab-setting">
@@ -729,8 +735,9 @@ export function renderSettings(host) {
       <h2 class="screen__section text-heading">Über die App</h2>
       <section class="ab-card about">
         <p class="text-body"><b>Alef Beth</b> – Hebräisch lesen lernen, vom Alphabet bis zu Wörtern
-          aus Siddur und Alltag. Läuft offline; dein Fortschritt bleibt auf diesem Gerät, ohne Konto.
-          Nur wenn du einer Rangliste beitrittst, gehen dein Name, deine XP und deine Serie an den Server.</p>
+          aus Siddur und Alltag. Läuft offline; dein Fortschritt bleibt auf diesem Gerät. Erst wenn du
+          dein Konto mit deiner E-Mail sicherst, liegt eine Kopie davon bei Supabase in Frankfurt. Trittst du
+          einer Rangliste bei, gehen dein Name, deine XP und deine Serie an den Server.</p>
         <p class="text-body">Viel Erfolg auf deinem Weg – ${he('בְּהַצְלָחָה', 'glyph-sm')}!</p>
       </section>
       <div class="ab-settings">
@@ -745,6 +752,7 @@ export function renderSettings(host) {
     </div>`;
 
   renderVersion(host);
+  wireAccountSettings(host, () => renderSettings(host));
 
   // Namen: jede Eingabe sofort speichern, beim Verlassen Leerzeichen kappen.
   // Der Hören-Knopf erscheint, sobald es einen hebräischen Namen und eine

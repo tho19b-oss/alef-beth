@@ -6,6 +6,7 @@ import { runLesson, runReview, runFreePractice } from './lesson.js';
 import { renderGiur, renderGiurTeil, runGiurRound } from './giur.js';
 import { renderRangliste, syncLeaderboard, prefetchBoards } from './rangliste.js';
 import { scheduleReminder } from './notify.js';
+import { accessToken, syncProgress } from './konto.js';
 import { dueIds } from './srs.js';
 import { applyTheme, applyMotion, applySound } from './theme.js';
 import { replay, splash } from './ui.js';
@@ -65,7 +66,9 @@ function route() {
   updateNav(hash);
   // Neuen Stand für die Rangliste hochladen (nur mit Gruppe und wenn sich etwas
   // geändert hat) und die Tabellen vorab holen, damit der Tab fertig dasteht.
+  // Mit gesichertem Konto geht auch der Fortschritt ins Backup.
   if (!inLesson) {
+    syncProgress();
     syncLeaderboard();
     prefetchBoards();
   }
@@ -131,8 +134,11 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
   if (state.settings.theme === 'auto') applyTheme();
 });
 // Kommt die App aus dem Hintergrund zurück, die Ranglisten-Tabellen auffrischen.
+// Geht sie in den Hintergrund, den Fortschritt sichern: Danach wird sie oft
+// ganz geschlossen.
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && !isInLesson()) prefetchBoards();
+  if (document.visibilityState === 'hidden') syncProgress();
 });
 // Kommt die hebräische Stimme erst nachträglich, den aktuellen Screen neu zeichnen
 // (Alphabet-Liste und Einstellungen zeigen dann die Hörsymbole).
@@ -183,6 +189,9 @@ applySound();
 // Abzeichen abgleichen: beim ersten Start nach ihrer Einführung wird das
 // bisher Erreichte still übernommen (gefeiert wird erst, was danach dazukommt).
 syncBadges();
+// Still eine Sitzung holen (beim ersten Start eine anonyme). Ohne Netz klappt
+// es beim nächsten Aufruf, der eine braucht.
+accessToken();
 route();
 scheduleReminder();
 startSplash();

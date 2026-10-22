@@ -168,6 +168,22 @@ button.greeting__he:focus-visible { outline: 3px solid var(--focus); outline-off
 .giur-chevron .ab-icon { width: var(--icon-sm); height: var(--icon-sm); }
 .giur-meter__note { margin: var(--space-2) 0 0; color: var(--ink-soft); }
 
+/* Markieren zum Wiederholen: Lesezeichen in Liste und Karte, Kachel auf der Übersicht */
+.giur-mark {
+  flex: none; display: grid; place-items: center; width: var(--tap-target); height: var(--tap-target);
+  margin: -8px -4px -8px 0; padding: 0; border: 0; border-radius: var(--radius-full);
+  background: none; color: var(--ink-soft); cursor: pointer;
+}
+.giur-mark .ab-icon { width: var(--icon-md); height: var(--icon-md); fill: none; }
+.giur-mark[aria-pressed="true"] { color: var(--gold); }
+.giur-mark[aria-pressed="true"] .ab-icon { fill: currentColor; }
+.giur-mark:focus-visible { outline: 3px solid var(--tekhelet); outline-offset: -3px; }
+.giur-mark--card { margin-left: auto; }
+.giur-marked { width: 100%; background: var(--gold-soft); border-color: var(--gold); }
+.giur-marked .ab-alpha__glyph { background: var(--card); color: var(--gold); }
+.giur-marked .ab-alpha__glyph .ab-icon { width: var(--icon-md); height: var(--icon-md); fill: currentColor; }
+.giur-marked .ab-alpha__sub { color: var(--gold-ink); }
+
 /* Ein Teil */
 .giur-back { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--tap-target); width: fit-content; color: var(--tekhelet-ink); }
 .giur-back .ab-icon { width: var(--icon-sm); height: var(--icon-sm); transform: scaleX(-1); }
@@ -406,3 +422,15 @@ button.greeting__he:focus-visible { outline: 3px solid var(--focus); outline-off
 .rl-dialog:not([open]) { display: none; }
 .rl-dialog .ab-dialog__title { margin: 0; text-align: left; }
 .rl-dialog__close { position: absolute; top: var(--space-3); right: var(--space-3); }
+
+/* Konto: Abschnitt in den Einstellungen, Hinweis auf der Startseite, Dialog */
+.konto-card { display: grid; gap: var(--space-3); }
+.konto-card p { margin: 0; }
+.konto-card__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.konto-delete { justify-self: start; margin-top: var(--space-2); }
+.konto-hint { align-items: center; }
+.konto-hint__actions { display: flex; align-items: center; gap: var(--space-1); flex: none; }
+.konto-first { margin: 0; color: var(--ink-soft); text-align: center; }
+.konto-link { border: 0; padding: 0; background: none; color: var(--tekhelet-ink); text-decoration: underline; cursor: pointer; }
+.konto-dialog__text { margin: 0; padding-right: var(--space-6); }
+.konto-code { letter-spacing: 0.3em; }

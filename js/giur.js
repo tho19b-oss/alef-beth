@@ -11,6 +11,7 @@ import { applyResult, dueIds } from './srs.js';
 import { sample, esc } from './util.js';
 import { topbarHtml, bumpCounters, modeSwitchHtml, pipsHtml, greetingHtml, bindGreeting } from './screens.js';
 import { renderCelebration } from './lesson.js';
+import { syncBadges } from './badges.js';
 import {
   reviewHtml, wireReview, reviewOf, panelHtml, wirePanel,
 } from './giur-pruefung.js';
@@ -406,11 +407,12 @@ export function runGiurRound(teilId, host) {
     addXp(xp + bonus);
     touchStreak();
     save();
+    const badges = syncBadges(); // neu erreichte Abzeichen
 
     setTimeout(() => {
       if (!area.isConnected) return;
       renderCelebration(host, {
-        opts: { mode: 'giur' }, accuracy, gained: xp + bonus, streakBefore, streak: currentStreak(), exitHash, badges: [],
+        opts: { mode: 'giur' }, accuracy, gained: xp + bonus, streakBefore, streak: currentStreak(), exitHash, badges,
       });
     }, reducedMotion() ? 0 : 450);
   }

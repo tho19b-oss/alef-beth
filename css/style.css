@@ -128,8 +128,6 @@ button.greeting__he:focus-visible { outline: 3px solid var(--focus); outline-off
 .screen__count { margin-left: var(--space-2); color: var(--ink-soft); }
 
 /* Einstellungen */
-.stats { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.stats__lessons .ab-icon { color: var(--gold-ink); }
 /* Über dich: Namensfelder. Schmal wird die Zeile zweistöckig. */
 .profile-field { flex-wrap: wrap; }
 .profile-field .ab-setting__text { flex: 1 1 12rem; }

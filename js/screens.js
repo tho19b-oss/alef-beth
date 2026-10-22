@@ -518,6 +518,14 @@ function medalHtml(b) {
     </li>`;
 }
 
+// Abzeichen eines Lernbereichs, mit Zähler neben der Überschrift.
+function medalSection(title, badges) {
+  const earned = badges.filter((b) => state.badges?.[b.id]).length;
+  return `
+    <h2 class="screen__section text-heading">${title} <span class="screen__count text-caption">${earned} von ${badges.length}</span></h2>
+    <ul class="ab-medals">${badges.map(medalHtml).join('')}</ul>`;
+}
+
 // Unter der Überschrift: wessen Erfolge das sind, mit dem hebräischen Namen.
 function ownerHtml() {
   const { name, nameHe } = state.profile;
@@ -547,11 +555,6 @@ export function renderAchievements(host) {
       + `<span class="ab-day__name text-caption" aria-hidden="true">${name}</span></li>`;
   }).join('');
 
-  const earned = BADGES.filter((b) => state.badges?.[b.id]).length;
-  const best = state.stats.bestStreak;
-  const lessonsDone = Object.keys(state.lessons).length;
-  const cards = Object.keys(state.srs).length;
-
   host.innerHTML = `
     <div class="screen">
       <h1 class="screen__title text-title">Erfolge</h1>
@@ -569,16 +572,8 @@ export function renderAchievements(host) {
         <p class="ab-streak__note text-body">${streakNote(streak, learnedToday)}</p>
       </article>
 
-      <h2 class="screen__section text-heading">Abzeichen <span class="screen__count text-caption">${earned} von ${BADGES.length}</span></h2>
-      <ul class="ab-medals">${BADGES.map(medalHtml).join('')}</ul>
-
-      <h2 class="screen__section text-heading">Insgesamt</h2>
-      <div class="stats" role="list">
-        <span class="ab-chip ab-chip--xp text-label" role="listitem">${icon('bolt')}${num(state.xp)} XP</span>
-        <span class="ab-chip ab-chip--streak${best ? '' : ' is-cold'} text-label" role="listitem">${icon('flame')}Beste Serie: ${best} ${best === 1 ? 'Tag' : 'Tage'}</span>
-        <span class="ab-chip stats__lessons text-label" role="listitem">${icon('crown')}${lessonsDone} von ${orderedLessons().length} Lektionen</span>
-        <span class="ab-chip ab-chip--due text-label" role="listitem">${icon('repeat')}${cards} ${cards === 1 ? 'Karte' : 'Karten'} im Training</span>
-      </div>
+      ${medalSection('Hebräisch lesen', BADGES.filter((b) => !b.area))}
+      ${medalSection('Giur-Wissen', BADGES.filter((b) => b.area === 'giur'))}
     </div>`;
 
   if (popToday) {

@@ -26,6 +26,27 @@ const MAX_RETRY = 2;   // eine nicht gewusste Karte kommt höchstens zweimal zur
 
 const cards = () => state.giur.cards;
 
+// ---------- Unterbrochene Runden ----------
+
+// Der Stand einer angefangenen Runde liegt nach jeder Karte in localStorage,
+// je Teil (oder „markiert“) ein Eintrag. Beim nächsten Start geht es dort weiter.
+const PAUSE_KEY = 'alefbeth-giur-pause';
+
+function pausedRuns() {
+  try { return JSON.parse(localStorage.getItem(PAUSE_KEY)) || {}; } catch { return {}; }
+}
+function setPaused(teilId, run) {
+  const all = pausedRuns();
+  if (run) all[teilId] = run;
+  else delete all[teilId];
+  try { localStorage.setItem(PAUSE_KEY, JSON.stringify(all)); } catch { /* ohne Speicher kein Fortsetzen */ }
+}
+function pausedRun(teilId) {
+  const run = pausedRuns()[teilId];
+  if (!run || !run.queue?.every((ex) => getQuestion(ex.id)) || run.idx >= run.queue.length) return null;
+  return run;
+}
+
 // ---------- Zahlen zu einem Teil ----------
 
 function teilStats(teil) {
@@ -171,6 +192,10 @@ export function renderGiurTeil(host, teilId, { openPanel = false } = {}) {
     ? 'Alles gelernt und nichts fällig. Freies Üben verschiebt keine Termine, hilft aber trotzdem.'
     : `${round.ids.length} ${round.ids.length === 1 ? 'Karte' : 'Karten'} in dieser Runde${s.due ? `, davon ${Math.min(s.due, MAX_DUE)} zur Wiederholung` : ''}.`;
 
+  const paused = pausedRun(teil.id);
+  const pausedNote = paused
+    ? `Angefangene Runde: Karte ${paused.idx + 1} von ${paused.queue.length}.` : '';
+
   const allDraft = teil.fragen.every((q) => q.status === 'entwurf');
 
   const item = (q) => `
@@ -199,8 +224,9 @@ export function renderGiurTeil(host, teilId, { openPanel = false } = {}) {
         <h2 class="text-heading" id="giur-start">Fragen gelernt<span class="ab-sr">: ${s.learned} von ${s.total}</span></h2>
         <div class="ab-progress ab-progress--gold ab-progress--slim giur-card-progress" role="progressbar" aria-label="Gelernt"
              aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><div class="ab-progress__fill" style="width:${pct}%"></div></div>
-        <p class="review-card__text text-body">${note}</p>
-        <button class="ab-btn text-button" type="button" id="giur-run">${cta}</button>
+        <p class="review-card__text text-body">${paused ? pausedNote : note}</p>
+        <button class="ab-btn text-button" type="button" id="giur-run">${paused ? 'Runde fortsetzen' : cta}</button>
+        ${paused ? '<button class="ab-btn ab-btn--ghost text-button" type="button" id="giur-fresh">Neue Runde beginnen</button>' : ''}
       </section>
 
       ${panelHtml(teil, openPanel)}
@@ -211,6 +237,10 @@ export function renderGiurTeil(host, teilId, { openPanel = false } = {}) {
     </div>`;
 
   host.querySelector('#giur-run').addEventListener('click', () => {
+    location.hash = `#/giur/${teil.id}/run`;
+  });
+  host.querySelector('#giur-fresh')?.addEventListener('click', () => {
+    setPaused(teil.id, null);
     location.hash = `#/giur/${teil.id}/run`;
   });
 
@@ -232,17 +262,22 @@ export function runGiurRound(teilId, host) {
     location.hash = '#/giur';
     return;
   }
-  const { ids, mode } = buildRound(teil);
-  const queue = ids.map((id) => ({ id, retry: 0 }));
+  const resume = pausedRun(teilId);
+  const { ids, mode } = resume || buildRound(teil);
+  const queue = resume ? resume.queue : ids.map((id) => ({ id, retry: 0 }));
   const exitHash = `#/giur/${teil.id}`;
 
-  let idx = 0;
-  let xp = 0;
+  let idx = resume?.idx || 0;
+  let xp = resume?.xp || 0;
   let combo = 0;
-  let firstTry = 0;
-  let firstTryCorrect = 0;
+  let firstTry = resume?.firstTry || 0;
+  let firstTryCorrect = resume?.firstTryCorrect || 0;
   let revealed = false;
-  const failed = new Set();
+  const failed = new Set(resume?.failed || []);
+
+  const pause = () => setPaused(teilId, {
+    ids, mode, queue, idx, xp, firstTry, firstTryCorrect, failed: [...failed],
+  });
 
   host.innerHTML = `
     <div class="lesson giur-round">
@@ -265,9 +300,9 @@ export function runGiurRound(teilId, host) {
 
   host.querySelector('#quit').addEventListener('click', async () => {
     const quit = await confirmDialog({
-      title: 'Runde wirklich beenden?',
-      text: 'Der Fortschritt dieser Runde geht verloren.',
-      confirm: 'Beenden',
+      title: 'Runde unterbrechen?',
+      text: 'Beim nächsten Start dieser Runde machst du bei der aktuellen Karte weiter.',
+      confirm: 'Unterbrechen',
       cancel: 'Weiter lernen',
     });
     if (quit && area.isConnected) location.hash = exitHash;
@@ -359,6 +394,7 @@ export function runGiurRound(teilId, host) {
     if (known) sound('richtig', { step: combo - 1, flame: combo === COMBO_FROM });
     else sound('falsch');
     idx += 1;
+    if (idx < queue.length) pause();
     step();
   }
 
@@ -390,6 +426,7 @@ export function runGiurRound(teilId, host) {
   }
 
   function finish() {
+    setPaused(teilId, null);
     document.removeEventListener('keydown', onKey);
     setProgress(progress, 100);
 
@@ -417,5 +454,6 @@ export function runGiurRound(teilId, host) {
     }, reducedMotion() ? 0 : 450);
   }
 
+  if (!resume) pause();
   step();
 }

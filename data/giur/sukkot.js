@@ -1,10 +1,9 @@
 // Giur-Wissen, Teil 5: Sukkot.
 //
 // Fragetexte stehen wörtlich im Prüfungskatalog. Die Antworten wurden als ENTWURF
-// geschrieben und sind noch von keinem Rabbiner oder Lehrer durchgesehen: Alle
-// Fragen tragen den Standardstatus 'entwurf'. Erst was der Prüfbogen bestätigt
-// oder korrigiert, bekommt status 'geprueft'. Bräuche, die je nach Gemeinde
-// abweichen, und unklare Fragen stehen im Feld `check`.
+// geschrieben und am 22.10.2026 mit dem Prüfbogen durchgesehen: Alle 17 sind
+// bestätigt und tragen status 'geprueft'. Neue oder später geänderte Antworten
+// bleiben 'entwurf', bis ein Rabbiner oder Lehrer sie bestätigt hat.
 //
 // Die Antworten gehen vom Leben außerhalb Israels aus (zwei Festtage).
 //
@@ -20,6 +19,7 @@ export const SUKKOT = [
   {
     id: 'suk-01',
     nr: 1,
+    status: 'geprueft',
     q: 'Auf welches Datum des jüdischen Kalenders feiern wir Sukkot?',
     type: 'fakt',
     kurz: 'Am 15. Tischri, fünf Tage nach Jom Kippur. Sukkot dauert bis zum 21. Tischri (Hoschana Rabba).',
@@ -29,6 +29,7 @@ export const SUKKOT = [
   {
     id: 'suk-02',
     nr: 2,
+    status: 'geprueft',
     q: 'Wie viele Tage feiern wir Sukkot?',
     type: 'fakt',
     kurz: 'Sieben Tage (15. bis 21. Tischri). Außerhalb Israels sind die ersten zwei Tage volle Feiertage (Jom Tow), die übrigen Halbfeiertage (Chol ha-Mo’ed). Mit Schmini Azeret und Simchat Tora sind es neun Festtage.',
@@ -41,6 +42,7 @@ export const SUKKOT = [
   {
     id: 'suk-03',
     nr: 3,
+    status: 'geprueft',
     q: 'Warum wird Sukkot auch als „Jahreszeit des Erfreuens“ bezeichnet? Worüber erfreuen wir uns?',
     kurz: 'Sukkot heißt im Gebet „Seman Simchatenu“ („Zeit unserer Freude“), weil die Tora an diesem Fest ausdrücklich Freude gebietet: „Du sollst dich freuen an deinem Fest“ (5. Mose 16,14). Man freut sich über die eingebrachte Ernte, über die Vergebung von Jom Kippur und über G’ttes Schutz in der Wüste.',
     punkte: [
@@ -55,6 +57,7 @@ export const SUKKOT = [
   {
     id: 'suk-04',
     nr: 4,
+    status: 'geprueft',
     q: 'Wie wird eine Sukka gebaut? Woran soll es uns erinnern?',
     kurz: 'Eine Sukka ist eine Hütte unter freiem Himmel mit mindestens drei Wänden (zwei ganzen und einer teilweisen) und einem Dach aus Pflanzen (Sechach, Frage 5). Sie erinnert an die Hütten, in denen G’tt die Israeliten nach dem Auszug aus Ägypten wohnen ließ – nach Rabbi Elieser an die Wolken der Herrlichkeit, die sie schützten (3. Mose 23,42–43).',
     punkte: [
@@ -71,6 +74,7 @@ export const SUKKOT = [
   {
     id: 'suk-05',
     nr: 5,
+    status: 'geprueft',
     q: 'Woraus wird das Dach gemacht? Welche Richtlinien müssen beim Errichten des Daches beachtet werden?',
     kurz: 'Das Dach (Sechach) besteht aus Pflanzenmaterial, das aus dem Boden gewachsen und von ihm getrennt ist und nicht als Gerät oder Lebensmittel dient: Zweige, Schilf, Bambus oder koschere Sechach-Matten. Es muss mehr Schatten als Sonne geben, aber so locker sein, dass man bei Nacht die Sterne sehen kann.',
     punkte: [
@@ -85,6 +89,7 @@ export const SUKKOT = [
   {
     id: 'suk-06',
     nr: 6,
+    status: 'geprueft',
     q: 'Welche vier Pflanzen werden für den feierlichen Brauch verwendet?',
     type: 'fakt',
     kurz: 'Die „Arba’a Minim“ (vier Arten): Etrog (Zitrusfrucht), Lulaw (Palmzweig), Hadassim (drei Myrtenzweige) und Arawot (zwei Bachweidenzweige). Man nimmt sie an jedem Tag von Sukkot außer am Schabbat, spricht den Segen und schüttelt sie in alle sechs Richtungen.',
@@ -108,6 +113,7 @@ export const SUKKOT = [
   {
     id: 'suk-07',
     nr: 7,
+    status: 'geprueft',
     q: 'Welchen Segensspruch wird während des Essens in der Sukka gesprochen? Wann sprechen wir diesen Segen?',
     kurz: '„le-schew ba-Sukka“ („in der Sukka zu sitzen“). Man sagt ihn, wenn man in der Sukka Brot oder Gebäck (mehr als eine Eigröße) isst, nach dem Segen über das Brot oder beim Kiddusch. Am ersten Abend folgt nach dem Segen Schehechejanu.',
     punkte: [
@@ -126,6 +132,7 @@ export const SUKKOT = [
   {
     id: 'suk-08',
     nr: 8,
+    status: 'geprueft',
     q: 'Wann ist der letzte Tag in dem in der Sukka gegessen wird? Was ist die Mukze am Schabbat von Sukkot?',
     kurz: 'Mit Segen isst man zuletzt an Hoschana Rabba, dem 21. Tischri, in der Sukka. Außerhalb Israels sitzen viele auch an Schmini Azeret noch in der Sukka, aber ohne den Segen. Am Schabbat von Sukkot sind die vier Arten Mukze, weil man sie am Schabbat nicht benutzt. Sechach und Sukka-Schmuck sind während des ganzen Festes Mukze.',
     punkte: [
@@ -134,11 +141,11 @@ export const SUKKOT = [
       'Den Etrog darf man am Schabbat riechen, wenn man es so bestimmt hat, das ist eine Einzelfrage.',
     ],
     quelle: 'Schulchan Aruch, Orach Chajim 638 und 658,2',
-    check: 'Ob man an Schmini Azeret noch in der Sukka isst, ist Brauch der Gemeinde (manche chassidische Gemeinden anders).',
   },
   {
     id: 'suk-09',
     nr: 9,
+    status: 'geprueft',
     q: 'Wann und warum feiern wir Hoschana Rabba?',
     kurz: 'Hoschana Rabba ist der siebte Tag von Sukkot, der 21. Tischri. An diesem Tag wird das Urteil von Jom Kippur endgültig abgeschlossen, und an Sukkot wird über den Regen des Jahres entschieden. Deshalb betet man besonders viel um Rettung und Regen.',
     punkte: [
@@ -151,6 +158,7 @@ export const SUKKOT = [
   {
     id: 'suk-10',
     nr: 10,
+    status: 'geprueft',
     q: 'Wie wird Hoschana Rabba gefeiert? Welche Zeremonie wird dabei abgehalten?',
     kurz: 'Im Morgengebet umkreist die Gemeinde siebenmal mit den vier Arten die Bima und sagt die Hoschanot („Hilf doch!“), wie die Priester im Tempel den Altar umkreisten. Danach schlägt jeder ein Bündel von fünf Bachweiden (die „Hoschanot“) auf den Boden.',
     punkte: [
@@ -164,6 +172,7 @@ export const SUKKOT = [
   {
     id: 'suk-11',
     nr: 11,
+    status: 'geprueft',
     q: 'Welche Jamim Towim folgen unmittelbar nach Sukkot?',
     type: 'fakt',
     kurz: 'Schmini Azeret („der achte Tag der Versammlung“, 22. Tischri) und außerhalb Israels am Tag darauf Simchat Tora („Freude der Tora“, 23. Tischri). In Israel fallen beide auf einen Tag.',
@@ -176,6 +185,7 @@ export const SUKKOT = [
   {
     id: 'suk-12',
     nr: 12,
+    status: 'geprueft',
     q: 'Was bedeutet das Gebet für „Geschem“? Wann wird es gesagt?',
     kurz: 'Tefillat Geschem ist das Gebet um Regen für das Land Israel. Der Vorbeter sagt es an Schmini Azeret im Mussaf-Gebet, im weißen Kittel. Ab dann fügt man „maschiw ha-ru’ach u-morid ha-geschem“ („der den Wind wehen und den Regen fallen lässt“) in die Amida ein, bis zum ersten Tag Pessach.',
     punkte: [
@@ -188,6 +198,7 @@ export const SUKKOT = [
   {
     id: 'suk-13',
     nr: 13,
+    status: 'geprueft',
     q: 'Wann und warum wird das Buch des Ecclesiastes (Kohelet) gelesen?',
     kurz: 'Am Schabbat von Chol ha-Mo’ed Sukkot (fällt keiner in die Festwoche, liest man es an Schmini Azeret). Kohelet erinnert mitten in der Fest- und Erntefreude daran, dass Besitz vergänglich ist („Alles ist Windhauch“) und was wirklich zählt: „Fürchte G’tt und halte Seine Gebote“ (Kohelet 12,13).',
     punkte: [
@@ -201,6 +212,7 @@ export const SUKKOT = [
   {
     id: 'suk-14',
     nr: 14,
+    status: 'geprueft',
     q: 'Was passiert in der Synagoge an Simchat Tora? Wozu werden die Kinder ermutigt?',
     kurz: 'Am Abend und am Morgen werden alle Torarollen aus dem Schrank genommen. Die Gemeinde tanzt mit ihnen in sieben Runden (Hakafot) um die Bima. Am Morgen wird jeder Mann zur Tora aufgerufen. Die Kinder tanzen mit Fähnchen mit, bekommen Süßigkeiten und werden gemeinsam unter einem großen Tallit zur Tora aufgerufen („Kol ha-Ne’arim“).',
     punkte: [
@@ -212,6 +224,7 @@ export const SUKKOT = [
   {
     id: 'suk-15',
     nr: 15,
+    status: 'geprueft',
     q: 'Wie viele Torarollen werden an Simchat Tora geöffnet? Warum?',
     type: 'fakt',
     kurz: 'Zum Lesen öffnet man drei Torarollen: In der ersten liest man das Ende der Tora (Wesot ha-Bracha), in der zweiten gleich den Anfang (Bereschit) und in der dritten den Abschnitt für das Fest (Maftir). Für die Hakafot holt man alle Rollen heraus.',
@@ -225,6 +238,7 @@ export const SUKKOT = [
   {
     id: 'suk-16',
     nr: 16,
+    status: 'geprueft',
     q: 'Warum feiert man Simchat Tora? Wie wird die Torahlesung durchgeführt?',
     kurz: 'Man feiert, dass die jährliche Lesung der Tora abgeschlossen ist und sofort wieder von vorn beginnt. Den letzten Abschnitt (Wesot ha-Bracha) liest man so oft, bis jeder Mann aufgerufen wurde. Dann kommen die Kinder (Kol ha-Ne’arim), der Chatan Tora liest das Ende, der Chatan Bereschit den Anfang der Tora, zuletzt folgt Maftir und Haftara (Josua 1).',
     punkte: [
@@ -238,6 +252,7 @@ export const SUKKOT = [
   {
     id: 'suk-17',
     nr: 17,
+    status: 'geprueft',
     q: 'Wer sind die „Chatan Tora“ und die „Chatan Bereschit“?',
     kurz: 'Zwei Männer, denen die Gemeinde eine große Ehre gibt: Der Chatan Tora („Bräutigam der Tora“) wird zum letzten Abschnitt der Tora aufgerufen, der Chatan Bereschit („Bräutigam von Bereschit“) zum ersten Abschnitt der Schöpfung.',
     punkte: [

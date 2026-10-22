@@ -43,12 +43,17 @@ function store() {
 
 export const hasGroups = () => me.groups.length > 0;
 
-async function rpc(fn, args) {
-  const res = await fetch(API + fn, {
-    method: 'POST',
-    headers: { apikey: API_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify(args),
-  });
+// Schreibende Funktionen gehen per POST. Reine Abfragen (stable im SQL) gehen
+// per GET mit allem in der URL: Ohne eigenen Header spart sich der Browser die
+// CORS-Vorabanfrage, also einen ganzen Umlauf zum Server.
+async function rpc(fn, args, { get = false } = {}) {
+  const res = await (get
+    ? fetch(`${API}${fn}?${new URLSearchParams({ ...args, apikey: API_KEY })}`, { cache: 'no-store' })
+    : fetch(API + fn, {
+      method: 'POST',
+      headers: { apikey: API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify(args),
+    }));
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     const err = new Error(body.message || res.statusText);
@@ -138,8 +143,8 @@ async function leaveGroup(code) {
   store();
 }
 
-const board = (code) => rpc('leaderboard_board', { p_code: code, p_week: weekStart() });
-const groupInfo = async (code) => (await rpc('leaderboard_group', { p_code: code }))[0] || null;
+const board = (code) => rpc('leaderboard_board', { p_code: code, p_week: weekStart() }, { get: true });
+const groupInfo = async (code) => (await rpc('leaderboard_group', { p_code: code }, { get: true }))[0] || null;
 
 // Platz pro Zeile: Gleichstand teilt sich den Platz (1, 2, 2, 4).
 function withRanks(rows) {

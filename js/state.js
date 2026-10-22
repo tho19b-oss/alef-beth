@@ -5,7 +5,8 @@ import { todayStr } from './util.js';
 import { hasItem } from '../data/curriculum.js';
 import { hasQuestion } from '../data/giur.js';
 
-const KEY = 'alefbeth-state-v1';
+export const STATE_KEY = 'alefbeth-state-v1';
+const KEY = STATE_KEY;
 const DAY = 86400000;
 
 // Bonus für ein erreichtes Tagesziel (Gamification-Regeln im Design System).

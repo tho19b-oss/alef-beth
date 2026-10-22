@@ -7,10 +7,16 @@
 // kennt (der Server speichert davon nur den Hash). Beides liegt unter einem
 // eigenen localStorage-Schlüssel. So bleibt man nach „Allen Fortschritt
 // löschen“ in seinen Gruppen und fängt dort nur wieder bei 0 an.
+//
+// Seit es Konten gibt (konto.js), schickt die App ihre Sitzung mit. Der
+// Server bindet den Spieler beim nächsten Hochladen an das Konto. Auf einem
+// neuen Gerät holt konto.js den Spieler darüber zurück (adoptPlayer), dort
+// reicht dann die Sitzung, ein Geheimnis gibt es nicht.
 
 import { state, save, currentStreak } from './state.js';
 import { todayStr, esc } from './util.js';
 import { icon, toast, confirmDialog } from './ui.js';
+import { accessToken } from './konto.js';
 
 const API = 'https://qtrutjgrfapelbesxbdd.supabase.co/rest/v1/rpc/';
 // Öffentlicher Schlüssel (publishable): darf im Code stehen, er erlaubt nur
@@ -21,7 +27,8 @@ const NAME_MAX = 24;
 const GROUP_MAX = 30;
 
 // { id, secret, groups: [{ code, name }], current: code, sent: zuletzt hochgeladener Stand,
-//   boards: { [code]: { week, rows } } zuletzt geladene Tabelle je Gruppe }
+//   boards: { [code]: { week, rows } } zuletzt geladene Tabelle je Gruppe,
+//   linked: der letzte Upload hatte eine Sitzung, der Spieler hängt am Konto }
 function load() {
   try {
     const raw = localStorage.getItem(STORE);
@@ -47,12 +54,17 @@ export const hasGroups = () => me.groups.length > 0;
 // Schreibende Funktionen gehen per POST. Reine Abfragen (stable im SQL) gehen
 // per GET mit allem in der URL: Ohne eigenen Header spart sich der Browser die
 // CORS-Vorabanfrage, also einen ganzen Umlauf zum Server.
+async function authHeader() {
+  const token = await accessToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 async function rpc(fn, args, { get = false } = {}) {
   const res = await (get
     ? fetch(`${API}${fn}?${new URLSearchParams({ ...args, apikey: API_KEY })}`, { cache: 'no-store' })
     : fetch(API + fn, {
       method: 'POST',
-      headers: { apikey: API_KEY, 'Content-Type': 'application/json' },
+      headers: { apikey: API_KEY, 'Content-Type': 'application/json', ...(await authHeader()) },
       body: JSON.stringify(args),
     }));
   if (!res.ok) {
@@ -100,8 +112,10 @@ async function upload() {
     store();
   }
   const s = stand();
+  const linked = !!(await accessToken());
   await rpc('leaderboard_sync', { p_id: me.id, p_secret: me.secret, ...s });
   me.sent = JSON.stringify(s);
+  me.linked = linked;
   store();
 }
 
@@ -112,9 +126,23 @@ async function upload() {
 let syncing = null;
 export function syncLeaderboard() {
   if (syncing) return syncing;
-  if (!hasGroups() || !playerName() || JSON.stringify(stand()) === me.sent) return Promise.resolve();
+  // Ein Spieler von vor den Konten lädt einmal neu hoch, damit der Server ihn
+  // an die Sitzung bindet, auch wenn sich am Stand nichts geändert hat.
+  if (!hasGroups() || !playerName() || (JSON.stringify(stand()) === me.sent && me.linked)) return Promise.resolve();
   syncing = upload().catch(() => {}).finally(() => { syncing = null; });
   return syncing;
+}
+
+// Spieler eines Kontos übernehmen, nach dem Anmelden auf einem Gerät.
+export function adoptPlayer({ id, groups }) {
+  Object.assign(me, { id, secret: null, groups, current: groups[0]?.code || null, sent: null, boards: {}, linked: true });
+  store();
+}
+
+// Nach dem Abmelden oder Löschen des Kontos: Dieses Gerät ist kein Spieler mehr.
+export function forgetPlayer() {
+  Object.assign(me, { id: null, secret: null, groups: [], current: null, sent: null, boards: {}, linked: false });
+  store();
 }
 
 // ---------- Gruppen ----------

@@ -406,3 +406,15 @@ button.greeting__he:focus-visible { outline: 3px solid var(--focus); outline-off
 .rl-dialog:not([open]) { display: none; }
 .rl-dialog .ab-dialog__title { margin: 0; text-align: left; }
 .rl-dialog__close { position: absolute; top: var(--space-3); right: var(--space-3); }
+
+/* Konto: Abschnitt in den Einstellungen, Hinweis auf der Startseite, Dialog */
+.konto-card { display: grid; gap: var(--space-3); }
+.konto-card p { margin: 0; }
+.konto-card__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.konto-delete { justify-self: start; margin-top: var(--space-2); }
+.konto-hint { align-items: center; }
+.konto-hint__actions { display: flex; align-items: center; gap: var(--space-1); flex: none; }
+.konto-first { margin: 0; color: var(--ink-soft); text-align: center; }
+.konto-link { border: 0; padding: 0; background: none; color: var(--tekhelet-ink); text-decoration: underline; cursor: pointer; }
+.konto-dialog__text { margin: 0; padding-right: var(--space-6); }
+.konto-code { letter-spacing: 0.3em; }

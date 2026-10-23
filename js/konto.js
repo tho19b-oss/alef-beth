@@ -299,13 +299,25 @@ export function openAccountDialog(mode = 'save', onDone = () => {}) {
           <input class="ab-input text-strong konto-code" type="text" name="code" inputmode="numeric"
                  autocomplete="one-time-code" maxlength="10" required>
         </label>
+        ${navigator.clipboard?.readText ? '<button class="ab-btn ab-btn--ghost text-label konto-paste" type="button">Code einfügen</button>' : ''}
         <button class="ab-btn text-button" type="submit">Bestätigen</button>
         <button class="ab-btn ab-btn--ghost text-label konto-dialog__switch" type="button">Andere E-Mail</button>
       </form>`;
     wireClose();
     const form = dlg.querySelector('form');
     const input = form.querySelector('[name="code"]');
-    input.addEventListener('input', () => { input.value = input.value.replace(/\D/g, ''); });
+    const fill = (text) => {
+      input.value = text.replace(/\D/g, '');
+      if (input.value.length === 6 && !form.querySelector('[type="submit"]').disabled) form.requestSubmit();
+    };
+    input.addEventListener('input', () => fill(input.value));
+    form.querySelector('.konto-paste')?.addEventListener('click', async () => {
+      try {
+        fill(await navigator.clipboard.readText());
+      } catch {
+        input.focus();
+      }
+    });
     form.querySelector('.konto-dialog__switch').addEventListener('click', emailStep);
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
